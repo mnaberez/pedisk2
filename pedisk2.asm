@@ -415,7 +415,7 @@ l_eba0:
     jsr l_ec55          ;delay for A * $C6 * ?? cycles
 
     lda fdc_cmdst       ;get the WD1793 status register
-    and #$80            ;mask x000 0000, drive not ready
+    and #%10000000      ;mask x000 0000, drive not ready
     bne l_ec05          ;if the drive is not ready go do disk error $13
 
 l_ebcd:
@@ -433,7 +433,7 @@ l_ebd3:
     bpl l_ebff          ;if > max go do disk error $15
 
     sta fdc_data        ;write the target track to the WD1793 data register
-    lda #$98            ;mask x00x x000,
+    lda #%10011000      ;mask x00x x000,
                         ;     x          drive not ready
                         ;        x       record not found
                         ;          x     CRC error
@@ -515,7 +515,7 @@ l_ec25:
     ldx #$ff            ;set the inner loop count
 l_ec27:
     lda fdc_cmdst       ;get the WD1793 status register
-    and #$01            ;mask 0000 000x, busy
+    and #%00000001      ;mask 0000 000x, busy
     beq l_ec4c          ;if not busy go return not counted out
 
     lda #$23            ;set the wait count
@@ -701,7 +701,7 @@ l_ecee:
     lda #$0a
     sta $7f8c
 l_ecf3:
-    lda #$de            ;mask xx0x xxx0,
+    lda #%11011110      ;mask xx0x xxx0,
                         ;     x          drive not ready
                         ;      x         write protected
                         ;        x       record not found
@@ -719,7 +719,7 @@ l_ecf3:
     jsr l_ecc0          ;write a WD1793 command and wait a bit
 l_ed05:
     lda fdc_cmdst       ;get the WD1793 status register
-    and #$16            ;mask 000x 0xx0,
+    and #%00010110      ;mask 000x 0xx0,
                         ;        x       record not found
                         ;           x    lost data
                         ;            x   data request
@@ -781,14 +781,14 @@ l_ed44:
     bne l_ed38
 
     lda fdc_cmdst       ;get the WD1793 status register
-    and #$40            ;mask 0x00 0000, write protected
+    and #%01000000      ;mask 0x00 0000, write protected
     bne do_protected    ;if write protected go do "PROTECTED!" message and exit
 
 l_ed50:
     lda #$0a
     sta $7f8c
 l_ed55:
-    lda #$fc            ;mask xxxx xx00,
+    lda #%11111100      ;mask xxxx xx00,
                         ;     x          drive not ready
                         ;      x         write protected
                         ;       x        write fault
@@ -805,7 +805,7 @@ l_ed55:
     jsr l_ecc0          ;write a WD1793 command and wait a bit
 l_ed67:
     lda fdc_cmdst       ;get the WD1793 status register
-    and #$d6            ;mask xx0x 0xx0,
+    and #%11010110      ;mask xx0x 0xx0,
                         ;     x          drive not ready
                         ;      x         write protected
                         ;        x       record not found
@@ -820,7 +820,7 @@ l_ed67:
 
 l_ed74:
     lda fdc_cmdst       ;get the WD1793 status register
-    and #$96            ;mask x00x 0xx0,
+    and #%10010110      ;mask x00x 0xx0,
                         ;     x          drive not ready
                         ;        x       record not found
                         ;           x    lost data
