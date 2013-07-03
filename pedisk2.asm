@@ -131,20 +131,14 @@ LAB_E983:
     !byte $BB,$9A,$BF,$FA,$5B,$FB,$7A,$7B,$00,$00,$00,$02,$40,$00,$00,$00
     !byte $DA,$AA,$FB,$BF,$FE,$FE,$7E,$3E,$04,$04,$00,$44,$00,$00,$04,$20
 
-; initialization is done with a SYS call to here
-
-;LAB_EA00:
-    JMP LAB_EA9A
-;LAB_EA03:
+LAB_EA00:
+    JMP LAB_EA9A        ;initialization is done with a SYS call to here
     JMP LAB_EF83
-;LAB_EA06:
     JMP LAB_ECE4        ;read <n> sector(s) to memory ??
-;LAB_EA09:
     JMP LAB_ED3F        ;write <n> sector(s) to disk ??
-;LAB_EA0C:
     JMP LAB_EE33
-;LAB_EA0F:
     JMP LAB_EE9E
+
 LAB_EA12:
     !word $7812-1
     !word LAB_EE98-1
@@ -155,6 +149,7 @@ LAB_EA12:
     !word $780c-1
     !word $780f-1
     !word $7815-1
+
 LAB_EA24:
     !byte $9E           ;token for SYS
     !byte $93           ;token for LOAD
