@@ -46,7 +46,7 @@ LAB_FFE4    = $FFE4     ;character in from keyboard
     !byte $7A,$1A,$F2,$78,$FF,$3E,$3A,$5A,$00,$00,$20,$00,$00,$00,$00,$01
     !byte $FA,$FE,$3E,$FA,$FB,$FF,$BE,$BA,$00,$20,$48,$0C,$00,$20,$00,$05
 
-LAB_E900
+LAB_E900:
     !byte $C5           ;drive select latch ??
                         ;bit function
                         ;=== ======
@@ -506,25 +506,25 @@ LAB_EBF2:
 
     ; do disk error $15
 
-LAB_EBFF
+LAB_EBFF:
     LDA #$15            ;set error $15
     !byte $2C           ;makes next line BIT $xxxx
 
     ; do disk error $17
 
-LAB_EC02
+LAB_EC02:
     LDA #$17            ;set error $17
     !byte $2C           ;makes next line BIT $xxxx
 
     ; do disk error $13, drive not ready
 
-LAB_EC05
+LAB_EC05:
     LDA #$13            ;set error $13
     !byte $2C           ;makes next line BIT $xxxx
 
     ; do disk error $14
 
-LAB_EC08
+LAB_EC08:
     LDA #$14            ;set error $14
     JMP LAB_EC96        ;do "DISK ERROR" message and ??
 
@@ -992,7 +992,7 @@ LAB_EE05:
 
 LAB_EE0F:
     INY
-    LDA ($24   ),Y
+    LDA ($24),Y
     AND #$03
     TAX
     LDA LAB_EA2F,X
@@ -1245,16 +1245,16 @@ LAB_EF41:
 LAB_EF44:
 ; test and evaluate a hex digit
 ;
-    CMP #'0'            ;compare the charater with "0"
+    CMP #'0'            ;compare the character with "0"
     BCC LAB_EF3F        ;if < "0" go return non hex
 
-    CMP #'9'+1          ;compare the charater with "9"+1
+    CMP #'9'+1          ;compare the character with "9"+1
     BCC LAB_EF54        ;if < "9"+1 go evaluate the hex digit
 
-    CMP #'A'            ;compare the charater with "A"
+    CMP #'A'            ;compare the character with "A"
     BCC LAB_EF3F        ;if < "A" go return non hex
 
-    CMP #'F'+1          ;compare the charater with "F"+1
+    CMP #'F'+1          ;compare the character with "F"+1
     BCS LAB_EF3F        ;if >= "F"+1 go return non hex
 
     ; evaluate the hex digit
@@ -1394,7 +1394,6 @@ LAB_EFED:
 
 LAB_EFF8:
     RTS
-
 
     ; unused ??
     !byte $68,$07,$01,$2B,$FF,$09,$5E
