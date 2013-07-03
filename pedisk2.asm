@@ -28,7 +28,7 @@ l_ffe4      = $ffe4     ;character in from keyboard
 
     *=$e800
 
-;l_E800
+;l_e800:
     !byte $04,$45,$45,$05,$07,$80,$c5,$44,$7f,$ff,$df,$ff,$f7,$df,$fb,$ff
     !byte $00,$04,$01,$04,$41,$05,$80,$05,$fe,$ff,$ff,$fb,$ff,$fb,$fb,$bf
     !byte $44,$41,$45,$45,$05,$24,$24,$25,$ff,$ff,$d7,$ff,$ff,$ff,$ff,$ff
@@ -56,7 +56,7 @@ l_e900:
                         ;1  drive 2 select
                         ;0  drive 1 select
 
-;l_e901
+;l_e901:
     !byte $25,$c5,$c5,$c1,$25,$64,$21,$df,$ff,$ff,$fb,$fe,$ff,$df,$ff
     !byte $01,$65,$04,$05,$91,$14,$04,$01,$fa,$fe,$ff,$ff,$ff,$ff,$f7,$fb
     !byte $85,$02,$07,$40,$46,$20,$04,$01,$ff,$ff,$fb,$bf,$ff,$fb,$df,$ff
@@ -121,7 +121,7 @@ l_e982:
 l_e983:
     !byte $8d           ;data register
 
-;l_e984
+;l_e984:
     !byte $04,$d5,$67,$44,$ff,$ff,$ff,$bf,$fb,$bf,$fa,$ff
     !byte $20,$05,$05,$04,$55,$e6,$85,$44,$bb,$ff,$bf,$ff,$ff,$ff,$ff,$ff
     !byte $24,$45,$84,$45,$05,$45,$41,$04,$ff,$fb,$ff,$ff,$ff,$ff,$bb,$ff
@@ -132,12 +132,12 @@ l_e983:
     !byte $da,$aa,$fb,$bf,$fe,$fe,$7e,$3e,$04,$04,$00,$44,$00,$00,$04,$20
 
 l_ea00:
-    jmp l_ea9a          ;initialization is done with a SYS call to here
-    jmp l_ef83
-    jmp l_ece4          ;read <n> sector(s) to memory ??
-    jmp l_ed3f          ;write <n> sector(s) to disk ??
-    jmp l_ee33
-    jmp l_ee9e
+    jmp e_ea9a          ;initialization is done with a SYS call to here
+    jmp e_ef83
+    jmp e_ece4          ;read <n> sector(s) to memory ??
+    jmp e_ed3f          ;write <n> sector(s) to disk ??
+    jmp e_ee33
+    jmp e_ee9e
 
 l_ea12:
     !word $7812-1
@@ -169,7 +169,7 @@ l_ea2f:
 l_ea32:
 ;get BASIC byte patch
 ;
-    CMP #'!'            ;compare the character with "!";compare the character with "!"
+    CMP #'!'            ;compare the character with "!"
     bne l_ea44          ;if not "!" go test ":"
 
 ; found a "!" character
@@ -183,7 +183,7 @@ l_ea32:
     ldy $7f8a           ;restore Y
     lda #$21            ;restore A
 l_ea44:
-    CMP #':'            ;compare the character with ":";compare the character with ":"
+    CMP #':'            ;compare the character with ":"
     bcs l_ea4b          ;if >= ":" just exit
 
     jmp l_007d          ;else return to get BASIC byte routine
@@ -254,7 +254,7 @@ l_ea8c:
     jmp l_edbd
 
 
-l_ea9a:
+e_ea9a:
 ; initialization routine
 ;
     cld
@@ -320,7 +320,7 @@ l_eace:
     ldx #$09            ;set the sector number
     stx $7f93           ;save the WD1793 sector number
 
-    jsr l_ece4          ;read <n> sector(s) to memory ??
+    jsr e_ece4          ;read <n> sector(s) to memory ??
     bne l_eb0b          ;if ?? go deselect the drives and stop the motors ??
 
     lda #$4c            ;set JMP opcode
@@ -723,7 +723,7 @@ l_ecdf:
     sta $7f96           ;save the sector count
 
 
-l_ece4:
+e_ece4:
 ; read <n> sector(s) to memory ??
 ;
     jsr l_eba0
@@ -806,7 +806,7 @@ l_ed3a:
     sta $7f96           ;save the sector count
 
 
-l_ed3f:
+e_ed3f:
 ; write <n> sector(s) to disk ??
 ;
     jsr l_eba0
@@ -1012,7 +1012,7 @@ l_ee32:
     rts
 
 
-l_ee33:
+e_ee33:
 ;TODO ??
 ;
     lda $7fb1
@@ -1087,14 +1087,14 @@ l_ee95:
 l_ee98:
 ;LOAD ??
 ;
-    jsr l_ee9e
+    jsr e_ee9e
     jmp l_eb5e
 
 
-l_ee9e:
+e_ee9e:
 ;TODO ??
 ;
-    jsr l_ee33
+    jsr e_ee33
     tax
     bne l_eee6
 
@@ -1130,7 +1130,7 @@ l_eebe:
     iny
     lda ($22),y
     sta $7f96           ;save the sector count
-    jsr l_ece4          ;read <n> sector(s) to memory ??
+    jsr e_ece4          ;read <n> sector(s) to memory ??
     bne l_eef0
 
     ldx #$00
@@ -1298,7 +1298,7 @@ l_ef7b:
     jmp l_ffd2          ;do character out
 
 
-l_ef83:
+e_ef83:
 ; ??
 ;
     jsr l_eefb          ;get a hex address into $66   /67
@@ -1331,7 +1331,7 @@ l_efae:
     stx $27             ;save the line index
     jsr l_ef59          ;get a character and ??
     cmp #$0d            ;compare it with [CR]
-    beq l_ef83          ;if [CR] go get another hex address
+    beq e_ef83          ;if [CR] go get another hex address
 
     cmp #$20            ;compare it with [SPACE]
     bne l_efc0          ;if not [SPACE] go evaluate a hex digit
