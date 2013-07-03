@@ -132,16 +132,16 @@ l_e983:
     !byte $da,$aa,$fb,$bf,$fe,$fe,$7e,$3e,$04,$04,$00,$44,$00,$00,$04,$20
 
 l_ea00:
-    jmp e_ea9a          ;initialization is done with a SYS call to here
-    jmp e_ef83
-    jmp e_ece4          ;read <n> sector(s) to memory ??
-    jmp e_ed3f          ;write <n> sector(s) to disk ??
+    jmp init            ;Initialize the system (SYS 55904)
+    jmp enter_monitor   ;Enter the monitor ("ADDR?")
+    jmp read_sectors    ;?? Read <n> sector(s) to memory ??
+    jmp write_sectors   ;?? Write <n> sector(s) to disk ??
     jmp e_ee33
     jmp e_ee9e
 
 l_ea12:
     !word $7812-1
-    !word l_ee98  -1
+    !word l_ee98-1
     !word $7800-1
     !word $7803-1
     !word $7806-1
@@ -177,7 +177,7 @@ l_ea32:
     sty $7f8a           ;save Y
 
     ldy #$01            ;set the index to the following byte
-    lda (l_77),  y      ;get the following byte
+    lda (l_77),y        ;get the following byte
     bmi l_ea4c          ;if it's a token go test it
 
     ldy $7f8a           ;restore Y
@@ -254,8 +254,8 @@ l_ea8c:
     jmp l_edbd
 
 
-e_ea9a:
-; initialization routine
+init:
+;Initialize the system
 ;
     cld
     lda #<$7800
@@ -320,7 +320,7 @@ l_eace:
     ldx #$09            ;set the sector number
     stx $7f93           ;save the WD1793 sector number
 
-    jsr e_ece4          ;read <n> sector(s) to memory ??
+    jsr read_sectors    ;read <n> sector(s) to memory ??
     bne l_eb0b          ;if ?? go deselect the drives and stop the motors ??
 
     lda #$4c            ;set JMP opcode
@@ -343,21 +343,15 @@ l_eb11:
 ; startup message
 ;
     !byte $93
-    !text "PEDISK II SYSTEM"
-    !byte $0d
-    !text "CGRS MICROTECH"
-    !byte $0d
-    !text "LANGHORNE,PA.19047 C1981"
-    !byte $0d
-    !byte $00           ;end marker
+    !text "PEDISK II SYSTEM",$0d
+    !text "CGRS MICROTECH",$0d
+    !text "LANGHORNE,PA.19047 C1981",$0d,$00
 
 
 l_eb4c:
 ; memory error message
 ;
-    !byte $0d
-    !text "MEM ERROR"
-    !byte $00           ;end marker
+    !text $0d,"MEM ERROR",$00
 
 
 l_eb57:
@@ -414,15 +408,10 @@ l_eb84:
     rts
 
 
-;***********************************************************************************;
-;
-
 l_eb94:
 ;disk error message
 ;
-    !byte $0d
-    !text "DISK ERROR"
-    !byte $00           ;end marker
+    !text $0d,"DISK ERROR",$00
 
 
 l_eba0:
@@ -723,7 +712,7 @@ l_ecdf:
     sta $7f96           ;save the sector count
 
 
-e_ece4:
+read_sectors:
 ; read <n> sector(s) to memory ??
 ;
     jsr l_eba0
@@ -762,7 +751,7 @@ l_ed05:
     beq l_ed05          ;if no data request or error go try again
 
     lda l_e983          ;read the WD1793 data register
-    sta (l_b7),  y      ;save the byte to memory
+    sta (l_b7),y        ;save the byte to memory
     iny                 ;increment the index
     dex                 ;decrement the count
     bne l_ed05          ;loop if more to do
@@ -806,7 +795,7 @@ l_ed3a:
     sta $7f96           ;save the sector count
 
 
-e_ed3f:
+write_sectors:
 ; write <n> sector(s) to disk ??
 ;
     jsr l_eba0
@@ -864,7 +853,7 @@ l_ed74:
     beq l_ed74          ;if no flags set go wait some more
 
 l_ed7b:
-    lda (l_b7),  y      ;get a byte from memory
+    lda (l_b7),y        ;get a byte from memory
     sta l_e983          ;write the WD1793 data register
     iny                 ;inccrement the index
     dex                 ;decrement the byte count
@@ -910,9 +899,7 @@ l_eda7:
 l_edb1:
 ; "PROTECTED!" message
 ;
-    !byte $0d
-    !text "PROTECTED!"
-    !byte $00           ;end marker
+    !text $0d,"PROTECTED!",$00
 
 
 l_edbd:
@@ -1106,12 +1093,12 @@ e_ee9e:
     bne l_eebe
 
     ldy #$06
-    lda ($22   ),y
+    lda ($22),y
     clc
     adc $28
     sta $2a
     iny
-    lda ($22   ),y
+    lda ($22),y
     adc $29
     sta $2b
 l_eebe:
@@ -1130,7 +1117,7 @@ l_eebe:
     iny
     lda ($22),y
     sta $7f96           ;save the sector count
-    jsr e_ece4          ;read <n> sector(s) to memory ??
+    jsr read_sectors    ;read <n> sector(s) to memory ??
     bne l_eef0
 
     ldx #$00
@@ -1153,11 +1140,9 @@ l_eef0:
 
 
 l_eef4:
-;monitor prompt
+;enter_monitor prompt
 ;
-    !byte $0d
-    !text "ADDR?"
-    !byte $00           ;end marker
+    !text $0d,"ADDR?",$00
 
 
 l_eefb:
@@ -1298,7 +1283,7 @@ l_ef7b:
     jmp l_ffd2          ;do character out
 
 
-e_ef83:
+enter_monitor:
 ; ??
 ;
     jsr l_eefb          ;get a hex address into $66   /67
@@ -1331,7 +1316,7 @@ l_efae:
     stx $27             ;save the line index
     jsr l_ef59          ;get a character and ??
     cmp #$0d            ;compare it with [CR]
-    beq e_ef83          ;if [CR] go get another hex address
+    beq enter_monitor   ;if [CR] go get another hex address
 
     cmp #$20            ;compare it with [SPACE]
     bne l_efc0          ;if not [SPACE] go evaluate a hex digit
