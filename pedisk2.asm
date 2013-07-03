@@ -63,30 +63,21 @@ fdc_data     = fdc+3    ;  Data register
 ;                     0  busy
 ;
 
-l_30        = $30       ;BASIC end of strings low byte
-l_31        = $31       ;BASIC end of strings high byte
-l_32        = $32       ;utility string pointer low byte
-l_33        = $33       ;utility string pointer high byte
-l_34        = $34       ;BASIC top of memory low byte
-l_35        = $35       ;BASIC top of memory high byte
-
-l_0070      = $0070     ;get the next BASIC byte
-l_77        = $77       ;BASIC byte pointer low byte
-l_78        = $78       ;BASIC byte pointer high byte
-l_79        = $79       ;patch get BASIC byte JMP
-l_7a        = $7a       ;patch get BASIC byte address low byte
-l_7b        = $7b       ;patch get BASIC byte address high byte
-l_007d      = $007d     ;return from get BASIC byte patch
+fretop      = $30       ;Pointer: Bottom of string storage
+frespc      = $32       ;Pointer: Utility string
+memsiz      = $34       ;Pointer: Highest address used by BASIC
+chrget      = $70       ;Subroutine: Get Next Byte of BASIC Text
+txtptr      = $77       ;Pointer: Current Byte of BASIC Text
 
 l_b7        = $b7       ;memory pointer low byte
 l_b8        = $b8       ;memory pointer high byte
 
-l_c12b      = $c12b     ;find variable
+ptrget      = $c12b     ;find a variable
 l_d722      = $d722     ;output A as a two digit hex Byte
 l_d78d      = $d78d     ;evaluate a hex digit
 
-l_ffd2      = $ffd2     ;character out to screen
-l_ffe4      = $ffe4     ;character in from keyboard
+chrout      = $ffd2     ;KERNAL Send a char to the current output device
+getin       = $ffe4     ;KERNAL Read a char from the current input device
 
     *=$e800
 
@@ -170,7 +161,7 @@ l_ea32:
     sty $7f8a           ;save Y
 
     ldy #$01            ;set the index to the following byte
-    lda (l_77),y        ;get the following byte
+    lda (txtptr),y        ;get the following byte
     bmi l_ea4c          ;if it's a token go test it
 
     ldy $7f8a           ;restore Y
@@ -179,7 +170,7 @@ l_ea44:
     CMP #':'            ;compare the character with ":"
     bcs l_ea4b          ;if >= ":" just exit
 
-    jmp l_007d          ;else return to get BASIC byte routine
+    jmp $007d           ;else return to get BASIC byte routine
 
 l_ea4b:
     rts
@@ -202,7 +193,7 @@ l_ea57:
 
     txs
     cli                 ;enable interrupts
-    jsr l_0070          ;get the next BASIC byte
+    jsr chrget          ;get the next BASIC byte
     ldx #$08            ;set the test index to the last entry
 l_ea67:
     cmp l_ea24,x        ;compare the token byte with a table token
@@ -252,20 +243,20 @@ init:
 ;
     cld
     lda #<$7800
-    sta l_34            ;BASIC top of memory low byte
-    sta l_30            ;BASIC end of strings low byte
+    sta memsiz            ;BASIC top of memory low byte
+    sta fretop            ;BASIC end of strings low byte
     lda #>$7800
-    sta l_35            ;BASIC top of memory high byte
-    sta l_31            ;BASIC end of strings high byte
+    sta memsiz+1          ;BASIC top of memory high byte
+    sta fretop+1          ;BASIC end of strings high byte
 
     lda #<$77ff
-    sta l_32            ;utility string pointer low byte
+    sta frespc            ;utility string pointer low byte
     lda #>$77ff
-    sta l_33            ;utility string pointer high byte
+    sta frespc+1          ;utility string pointer high byte
 
-    lda #<banner        ;set the message pointer low byte
-    ldy #>banner        ;set the message pointer high byte
-    jsr puts            ;message out
+    lda #<banner          ;set the message pointer low byte
+    ldy #>banner          ;set the message pointer high byte
+    jsr puts              ;message out
 
     ldx #$f2
 l_eab8:
@@ -317,11 +308,11 @@ l_eace:
     bne l_eb0b          ;if ?? go deselect the drives and stop the motors ??
 
     lda #$4c            ;set JMP opcode
-    sta l_79            ;save the JMP opcode
+    sta $79             ;save the JMP opcode
     lda #<l_ea32        ;set the JMP address low byte
-    sta l_7a            ;save the JMP address low byte
+    sta $7a             ;save the JMP address low byte
     lda #>l_ea32        ;set the JMP address high byte
-    sta l_7b            ;save the JMP address high byte
+    sta $7b             ;save the JMP address high byte
 
 
 l_eb0b:
@@ -372,7 +363,7 @@ l_eb7a:
 ; output a [SPACE] character
 ;
     lda #$20            ;set [SPACE]
-    jmp l_ffd2          ;do character out and return
+    jmp chrout          ;do character out and return
 
 
 l_eb7f:
@@ -887,20 +878,20 @@ protected:
 l_edbd:
 ;TODO ??
 ;
-    jsr l_0070          ;get the next BASIC byte
+    jsr chrget          ;get the next BASIC byte
     cmp #$22
     php
     bne l_edd3
 
-    jsr l_0070          ;get the next BASIC byte
-    lda l_77
+    jsr chrget          ;get the next BASIC byte
+    lda txtptr
     sta $24
-    lda l_78
+    lda txtptr+1
     sta $25
     jmp l_edea
 
 l_edd3:
-    jsr l_c12b          ;find variable
+    jsr ptrget          ;find variable
     bit $07
     bmi l_eddf
 
@@ -966,17 +957,17 @@ l_ee0f:
 
     tya
     clc
-    adc l_77
-    sta l_77
+    adc txtptr
+    sta txtptr
     bcc l_ee28
 
-    inc l_78
+    inc txtptr+1
 l_ee28:
-    jsr l_0070          ;get the next BASIC byte
+    jsr chrget          ;get the next BASIC byte
     cmp #$22
     bne l_edf6
 
-    jsr l_0070          ;get the next BASIC byte
+    jsr chrget          ;get the next BASIC byte
 l_ee32:
     rts
 
@@ -1112,7 +1103,7 @@ l_eee6:
     ldx #$06            ;set the "?" count
     lda #$3f            ;set "?"
 l_eeea:
-    jsr l_ffd2          ;do character out
+    jsr chrout          ;do character out
     dex                 ;decrement the count
     bne l_eeea          ;loop if more to do
 
@@ -1187,10 +1178,10 @@ l_ef32:
 ; ??
 ;
     lda #$3f            ;set "?"
-    jsr l_ffd2          ;do character out
+    jsr chrout          ;do character out
     lda #$9d
-    jsr l_ffd2          ;do character out
-    jsr l_ffd2          ;do character out
+    jsr chrout          ;do character out
+    jsr chrout          ;do character out
 l_ef3f:
     sec                 ;flag error
     rts
@@ -1235,9 +1226,9 @@ l_ef59:
     pha                 ;save Y
 
     lda #$e6
-    jsr l_ffd2          ;do character out
+    jsr chrout          ;do character out
     lda #$9d
-    jsr l_ffd2          ;do character out
+    jsr chrout          ;do character out
 
     jsr l_ef7b          ;wait for and echo a character
     sta $7f88           ;save the charater
@@ -1257,10 +1248,10 @@ l_ef59:
 l_ef7b:
 ; wait for and echo a character
 ;
-    jsr l_ffe4          ;do character in
+    jsr getin          ;do character in
     beq l_ef7b          ;if no character just wait
 
-    jmp l_ffd2          ;do character out
+    jmp chrout          ;do character out
 
 
 enter_monitor:
@@ -1269,7 +1260,7 @@ enter_monitor:
     jsr l_eefb          ;get a hex address into $66   /67
 l_ef86:
     lda #$0d            ;set [CR]
-    jsr l_ffd2          ;do character out
+    jsr chrout          ;do character out
 
     lda $67             ;get the address high byte
     jsr l_eb7f          ;output [SPACE] <A> as a two digit hex Byte
@@ -1285,7 +1276,7 @@ l_ef97:
     bmi l_ef97          ;loop if more to do
 
     lda #$0d            ;set [CR]
-    jsr l_ffd2          ;do character out
+    jsr chrout          ;do character out
     ldx #$06            ;set the [SPACE] count
 l_efa8:
     jsr l_eb7a          ;output a [SPACE] character
@@ -1348,7 +1339,7 @@ puts_loop:
     lda ($6c),y         ;get the next character
     beq puts_done       ;if it's the end marker just exit
 
-    jsr l_ffd2          ;do character out
+    jsr chrout          ;do character out
     clc                 ;clear carry
     bcc puts_loop       ;go do the next character, branch always
 puts_done:
