@@ -270,9 +270,9 @@ init:
     lda #>$77ff
     sta l_33            ;utility string pointer high byte
 
-    lda #<l_eb11        ;set the message pointer low byte
-    ldy #>l_eb11        ;set the message pointer high byte
-    jsr l_efe7          ;message out
+    lda #<banner        ;set the message pointer low byte
+    ldy #>banner        ;set the message pointer high byte
+    jsr puts            ;message out
 
     ldx #$f2
 l_eab8:
@@ -289,7 +289,7 @@ l_eac3:
     cmp $7800,x
     beq l_eace
 
-    jmp l_eb57          ;do "MEM ERROR" message and return
+    jmp puts_mem_err    ;do "MEM ERROR" message and return
 
 l_eace:
     dex
@@ -339,27 +339,20 @@ l_eb0b:
     rts
 
 
-l_eb11:
-; startup message
-;
-    !byte $93
-    !text "PEDISK II SYSTEM",$0d
+banner:
+    !text $93,"PEDISK II SYSTEM",$0d
     !text "CGRS MICROTECH",$0d
     !text "LANGHORNE,PA.19047 C1981",$0d,$00
 
 
-l_eb4c:
-; memory error message
-;
+mem_error:
     !text $0d,"MEM ERROR",$00
 
 
-l_eb57:
-; do "MEM ERROR" message
-;
-    lda #<l_eb4c        ;set the message pointer low byte
-    ldy #>l_eb4c        ;set the message pointer high byte
-    jmp l_efe7          ;message out and return
+puts_mem_err:
+    lda #<mem_error     ;set the message pointer low byte
+    ldy #>mem_error     ;set the message pointer high byte
+    jmp puts            ;message out and return
 
 
 l_eb5e:
@@ -408,9 +401,7 @@ l_eb84:
     rts
 
 
-l_eb94:
-;disk error message
-;
+disk_error:
     !text $0d,"DISK ERROR",$00
 
 
@@ -648,9 +639,9 @@ l_ec96:
 
     ; do "DISK ERROR" message
 
-    lda #<l_eb94        ;set the message pointer low byte
-    ldy #>l_eb94        ;set the message pointer high byte
-    jsr l_efe7          ;message out
+    lda #<disk_error    ;set the message pointer low byte
+    ldy #>disk_error    ;set the message pointer high byte
+    jsr puts            ;message out
 
     pla                 ;pull Y
     tay                 ;restore Y
@@ -807,7 +798,7 @@ l_ed44:
 
     lda l_e980          ;get the WD1793 status register
     and #$40            ;mask 0x00 0000, write protected
-    bne l_eda7          ;if write protected go do "PROTECTED!" message and exit
+    bne do_protected    ;if write protected go do "PROTECTED!" message and exit
 
 l_ed50:
     lda #$0a
@@ -886,19 +877,17 @@ l_eda2:
     jmp l_ec96          ;do "DISK ERROR" message and ??
 
 
-l_eda7:
+do_protected:
 ; do "PROTECTED!" message
 ;
-    lda #<l_edb1        ;set the message pointer low byte
-    ldy #>l_edb1        ;set the message pointer high byte
-    jsr l_efe7          ;message out
+    lda #<protected     ;set the message pointer low byte
+    ldy #>protected     ;set the message pointer high byte
+    jsr puts            ;message out
     clc
     bcc l_eda2          ;do disk error $50, branch always
 
 
-l_edb1:
-; "PROTECTED!" message
-;
+protected:
     !text $0d,"PROTECTED!",$00
 
 
@@ -1139,22 +1128,20 @@ l_eef0:
     bne l_eee3          ;branch always
 
 
-l_eef4:
-;enter_monitor prompt
-;
+addr_prompt:
     !text $0d,"ADDR?",$00
 
 
 l_eefb:
-; get a hex address into $66   /67
+; get a hex address into $66/67
 ;
     pha                 ;save A
     tya                 ;copy Y
     pha                 ;save Y
 
-    lda #<l_eef4        ;set the message pointer low byte
-    ldy #>l_eef4        ;set the message pointer high byte
-    jsr l_efe7          ;message out
+    lda #<addr_prompt   ;set the message pointer low byte
+    ldy #>addr_prompt   ;set the message pointer high byte
+    jsr puts            ;message out
 
     pla                 ;pull Y
     tay                 ;restore Y
@@ -1357,22 +1344,21 @@ l_efe2:
     bcs l_ef86          ;branch always
 
 
-l_efe7:
+puts:
 ; message out
 ;
     sta $6c             ;save the message pointer low byte
     sty $6d             ;save the message pointer high byte
     ldy #$ff            ;set -1 for pre increment
-l_efed:
+puts_loop:
     iny                 ;increment the index
     lda ($6c),y         ;get the next character
-    beq l_eff8          ;if it's the end marker just exit
+    beq puts_done       ;if it's the end marker just exit
 
     jsr l_ffd2          ;do character out
     clc                 ;clear carry
-    bcc l_efed          ;go do the next character, branch always
-
-l_eff8:
+    bcc puts_loop       ;go do the next character, branch always
+puts_done:
     rts
 
     ; unused ??
