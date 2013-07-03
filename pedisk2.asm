@@ -1,6 +1,68 @@
 ;This is a bit correct disassembly of the PEDISK II ROM
 ;Lee Davison 2013/07/02
 
+drive_sel   = $e900     ;Drive Select Latch (??)
+                        ;  bit function
+                        ;  === ======
+                        ;  7-4 not used
+                        ;  3   motor ??
+                        ;  2   drive 3 select
+                        ;  1   drive 2 select
+                        ;  0   drive 1 select
+
+fdc          = $e980    ;WD1793 Floppy Disk Controller
+fdc_cmdst    = fdc+0    ;  Command/status register
+fdc_track    = fdc+1    ;  Track register
+fdc_sector   = fdc+2    ;  Sector register
+fdc_data     = fdc+3    ;  Data register
+
+;WD1793 Floppy Disk Controller
+;
+;    Command           b7 b6 b5 b4 b3 b2 b1 b0
+;I   Restore           0  0  0  0  h  V  r1 r0
+;I   Seek              0  0  0  1  h  V  r1 r0
+;I   Step              0  0  1  T  h  V  r1 r0
+;I   Step-In           0  1  0  T  h  V  r1 r0
+;I   Step-Out          0  1  1  T  h  V  r1 r0
+;II  Read Sector       1  0  0  m  S  E  C  0
+;II  Write Sector      1  0  1  m  S  E  C  a0
+;III Read Address      1  1  0  0  0  E  0  0
+;III Read Track        1  1  1  0  0  E  0  0
+;III Write Track       1  1  1  1  0  E  0  0
+;IV  Force Interrupt   1  1  0  1  i3 i2 i1 i0
+;
+;   r1 r0  Stepping Motor Rate
+;    1  1   30 ms
+;    1  0   20 ms
+;    0  1   12 ms
+;    0  0   6 ms
+;     V      Track Number Verify Flag (0: no verify, 1: verify on dest track)
+;     h      Head Load Flag (1: load head at beginning, 0: unload head)
+;       T      Track Update Flag (0: no update, 1: update Track Register)
+;       a0     Data Address Mark (0: FB, 1: F8 (deleted DAM))
+;       C      Side Compare Flag (0: disable side compare, 1: enable side comp)
+;       E      15 ms delay (0: no 15ms delay, 1: 15 ms delay)
+;       S      Side Compare Flag (0: compare for side 0, 1: compare for side 1)
+;       m      Multiple Record Flag (0: single record, 1: multiple records)
+;           i3 i2 i1 i0    Interrupt Condition Flags
+;              i3-i0 = 0 Terminate with no interrupt (INTRQ)
+;                    i3 = 1 Immediate interrupt, requires a reset
+;                    i2 = 1 Index pulse
+;                    i1 = 1 Ready to not ready transition
+;                    i0 = 1 Not ready to ready transition
+;
+;status bits         bit when 1
+;                    === ======
+;                     7  drive not ready
+;                     6  write protect
+;                     5  write error
+;                     4  seek error
+;                     3  crc error
+;                     2  track zero/lost data
+;                     1  data request
+;                     0  busy
+;
+
 l_30        = $30       ;BASIC end of strings low byte
 l_31        = $31       ;BASIC end of strings high byte
 l_32        = $32       ;utility string pointer low byte
@@ -28,7 +90,7 @@ l_ffe4      = $ffe4     ;character in from keyboard
 
     *=$e800
 
-;l_e800:
+unknown:
     !byte $04,$45,$45,$05,$07,$80,$c5,$44,$7f,$ff,$df,$ff,$f7,$df,$fb,$ff
     !byte $00,$04,$01,$04,$41,$05,$80,$05,$fe,$ff,$ff,$fb,$ff,$fb,$fb,$bf
     !byte $44,$41,$45,$45,$05,$24,$24,$25,$ff,$ff,$d7,$ff,$ff,$ff,$ff,$ff
@@ -45,19 +107,7 @@ l_ffe4      = $ffe4     ;character in from keyboard
     !byte $b3,$fa,$7a,$fe,$ff,$1a,$fa,$ba,$00,$04,$2c,$04,$80,$00,$44,$04
     !byte $7a,$1a,$f2,$78,$ff,$3e,$3a,$5a,$00,$00,$20,$00,$00,$00,$00,$01
     !byte $fa,$fe,$3e,$fa,$fb,$ff,$be,$ba,$00,$20,$48,$0c,$00,$20,$00,$05
-
-l_e900:
-    !byte $c5           ;drive select latch ??
-                        ;bit function
-                        ;=== ======
-                        ;7-4 not used
-                        ;3  motor ??
-                        ;2  drive 3 select
-                        ;1  drive 2 select
-                        ;0  drive 1 select
-
-;l_e901:
-    !byte $25,$c5,$c5,$c1,$25,$64,$21,$df,$ff,$ff,$fb,$fe,$ff,$df,$ff
+    !byte $c5,$25,$c5,$c5,$c1,$25,$64,$21,$df,$ff,$ff,$fb,$fe,$ff,$df,$ff
     !byte $01,$65,$04,$05,$91,$14,$04,$01,$fa,$fe,$ff,$ff,$ff,$ff,$f7,$fb
     !byte $85,$02,$07,$40,$46,$20,$04,$01,$ff,$ff,$fb,$bf,$ff,$fb,$df,$ff
     !byte $80,$01,$44,$40,$05,$40,$04,$04,$ff,$bf,$ff,$ff,$df,$bf,$ff,$fb
@@ -65,64 +115,7 @@ l_e900:
     !byte $fb,$f3,$fb,$ab,$3e,$fa,$b8,$bb,$00,$40,$04,$04,$00,$00,$40,$84
     !byte $8a,$fa,$3f,$fb,$3b,$7a,$7f,$5b,$44,$20,$00,$04,$00,$00,$00,$c0
     !byte $ff,$ba,$ff,$fb,$7e,$fa,$fe,$fe,$44,$00,$04,$41,$04,$44,$08,$00
-
-;WD1793 floppy disk controller
-;
-;    Command           b7 b6 b5 b4 b3 b2 b1 b0
-;I   Restore           0  0  0  0  h  V  r1 r0
-;I   Seek              0  0  0  1  h  V  r1 r0
-;I   Step              0  0  1  T  h  V  r1 r0
-;I   Step-In           0  1  0  T  h  V  r1 r0
-;I   Step-Out          0  1  1  T  h  V  r1 r0
-;II  Read Sector       1  0  0  m  S  E  C  0
-;II  Write Sector      1  0  1  m  S  E  C  a0
-;III Read Address      1  1  0  0  0  E  0  0
-;III Read Track        1  1  1  0  0  E  0  0
-;III Write Track       1  1  1  1  0  E  0  0
-;IV  Force Interrupt   1  1  0  1  i3 i2 i1 i0
-
-;   r1 r0  Stepping Motor Rate
-;    1  1   30 ms
-;    1  0   20 ms
-;    0  1   12 ms
-;    0  0   6 ms
-;     V      Track Number Verify Flag (0: no verify, 1: verify on dest track)
-;     h      Head Load Flag (1: load head at beginning, 0: unload head)
-;       T      Track Update Flag (0: no update, 1: update Track Register)
-;       a0     Data Address Mark (0: FB, 1: F8 (deleted DAM))
-;       C      Side Compare Flag (0: disable side compare, 1: enable side comp)
-;       E      15 ms delay (0: no 15ms delay, 1: 15 ms delay)
-;       S      Side Compare Flag (0: compare for side 0, 1: compare for side 1)
-;       m      Multiple Record Flag (0: single record, 1: multiple records)
-;           i3 i2 i1 i0    Interrupt Condition Flags
-;              i3-i0 = 0 Terminate with no interrupt (INTRQ)
-;                    i3 = 1 Immediate interrupt, requires a reset
-;                    i2 = 1 Index pulse
-;                    i1 = 1 Ready to not ready transition
-;                    i0 = 1 Not ready to ready transition
-
-;status bits            ;bit when 1
-                        ;=== ======
-                        ; 7  drive not ready
-                        ; 6  write protect
-                        ; 5  write error
-                        ; 4  seek error
-                        ; 3  crc error
-                        ; 2  track zero/lost data
-                        ; 1  data request
-                        ; 0  busy
-
-l_e980:
-    !byte $05           ;command/status register
-l_e981:
-    !byte $40           ;track register
-l_e982:
-    !byte $45           ;sector register
-l_e983:
-    !byte $8d           ;data register
-
-;l_e984:
-    !byte $04,$d5,$67,$44,$ff,$ff,$ff,$bf,$fb,$bf,$fa,$ff
+    !byte $05,$40,$45,$8d,$04,$d5,$67,$44,$ff,$ff,$ff,$bf,$fb,$bf,$fa,$ff
     !byte $20,$05,$05,$04,$55,$e6,$85,$44,$bb,$ff,$bf,$ff,$ff,$ff,$ff,$ff
     !byte $24,$45,$84,$45,$05,$45,$41,$04,$ff,$fb,$ff,$ff,$ff,$ff,$bb,$ff
     !byte $00,$af,$c5,$05,$81,$85,$21,$05,$df,$ff,$ff,$ef,$fb,$fb,$ef,$ff
@@ -335,7 +328,7 @@ l_eb0b:
 ; deselect the drives and stop the motors ??
 ;
     lda #$08
-    sta l_e900
+    sta drive_sel
     rts
 
 
@@ -415,7 +408,7 @@ l_eba0:
     lda $7f91           ;get the drive number ??
     beq l_ec08          ;if zero go do disk error $14
 
-    lda l_e900
+    lda drive_sel
     and #$07
     cmp $7f91           ;compare it with the drive number ??
     beq l_ebcd
@@ -425,12 +418,12 @@ l_eba0:
     bcs l_ec08          ;if ?? go do disk error $14
 
     ora #$08
-    sta l_e900
+    sta drive_sel
 
     lda #$23
     jsr l_ec55          ;delay for A * $C6 * ?? cycles
 
-    lda l_e980          ;get the WD1793 status register
+    lda fdc_cmdst       ;get the WD1793 status register
     and #$80            ;mask x000 0000, drive not ready
     bne l_ec05          ;if the drive is not ready go do disk error $13
 
@@ -448,7 +441,7 @@ l_ebd3:
     cmp #$4d            ;compare it with max + 1
     bpl l_ebff          ;if > max go do disk error $15
 
-    sta l_e983          ;write the target track to the WD1793 data register
+    sta fdc_data        ;write the target track to the WD1793 data register
     lda #$98            ;mask x00x x000,
                         ;x          drive not ready
                         ;x       record not found
@@ -460,7 +453,7 @@ l_ebd3:
     bne l_ebf2          ;go handle any returned error
 
     lda $7f92           ;get the WD1793 track number
-    cmp l_e981          ;compare it with the WD1793 track register
+    cmp fdc_track       ;compare it with the WD1793 track register
     bne l_ebf2          ;go handle any difference
 
     rts
@@ -511,7 +504,7 @@ l_ec0d:
     bcs l_ec02          ;if counted out go do disk error $17
 
     sta $7f95           ;save the WD1793 command register copy
-    sta l_e980          ;save the WD1793 command
+    sta fdc_cmdst       ;save the WD1793 command
 
     jsr l_ec53          ;delay for $C6 * ?? cycles
     jmp l_ecd0          ;wait for WD1793 not busy mask the status and return
@@ -530,7 +523,7 @@ l_ec1e:
 l_ec25:
     ldx #$ff            ;set the inner loop count
 l_ec27:
-    lda l_e980          ;get the WD1793 status register
+    lda fdc_cmdst       ;get the WD1793 status register
     and #$01            ;mask 0000 000x, busy
     beq l_ec4c          ;if not busy go return not counted out
 
@@ -548,7 +541,7 @@ l_ec33:
 
     lda #$d8            ;set force interrupt command, immediate interrupt
     sta $7f95           ;save the WD1793 command register copy
-    sta l_e980          ;save the WD1793 command
+    sta fdc_cmdst       ;save the WD1793 command
     jsr l_ec53          ;delay for $C6 * ?? cycles
     sec                 ;flag counted out
     bcs l_ec4d          ;return the flag, branch always
@@ -658,7 +651,7 @@ l_eca8:
     bmi l_eca8          ;loop if more to do
 
     lda #$02            ;set restore command, 20ms step rate
-    sta l_e980          ;save the WD1793 command
+    sta fdc_cmdst       ;save the WD1793 command
 
     cli                 ;enable interrupts
     jsr l_eb0b          ;deselect the drives and stop the motors ??
@@ -672,7 +665,7 @@ l_ecc0:
 ; write a WD1793 command and wait a bit
 ;
     sta $7f95           ;save the WD1793 command register copy
-    sta l_e980          ;save the WD1793 command
+    sta fdc_cmdst       ;save the WD1793 command
 
     ldy #$00            ;clear Y
     ldx #$12            ;set the delay count
@@ -690,7 +683,7 @@ l_ecd0:
     jsr l_ec1e          ;wait for WD1793 not busy
     bcs l_ecbd          ;if counted out go return $FF
 
-    lda l_e980          ;get the WD1793 status register
+    lda fdc_cmdst       ;get the WD1793 status register
     sta $7f94           ;save the WD1793 status register copy
     and $7f90           ;AND it with the WD1793 status byte mask
     rts
@@ -729,19 +722,19 @@ l_ecf3:
     lda $7f93           ;get the WD1793 sector number
     beq l_ed33          ;if zero go do disk error $40
 
-    sta l_e982          ;save the WD1793 sector register
+    sta fdc_sector      ;save the WD1793 sector register
 
     lda #$88            ;set read single sector command, side 1
     jsr l_ecc0          ;write a WD1793 command and wait a bit
 l_ed05:
-    lda l_e980          ;get the WD1793 status register
+    lda fdc_cmdst       ;get the WD1793 status register
     and #$16            ;mask 000x 0xx0,
                         ;x       record not found
                         ;x    lost data
                         ;x   data request
     beq l_ed05          ;if no data request or error go try again
 
-    lda l_e983          ;read the WD1793 data register
+    lda fdc_data        ;read the WD1793 data register
     sta (l_b7),y        ;save the byte to memory
     iny                 ;increment the index
     dex                 ;decrement the count
@@ -757,7 +750,7 @@ l_ed05:
     bcs l_ed38          ;if error just exit
 
     lda $7f92           ;get the WD1793 track number
-    cmp l_e981          ;WD1793 track register
+    cmp fdc_track       ;WD1793 track register
     beq l_ecee
 
     bne l_ece9
@@ -796,7 +789,7 @@ l_ed44:
     jsr l_ebce          ;seek to track with retries ??
     bne l_ed38
 
-    lda l_e980          ;get the WD1793 status register
+    lda fdc_cmdst       ;get the WD1793 status register
     and #$40            ;mask 0x00 0000, write protected
     bne do_protected    ;if write protected go do "PROTECTED!" message and exit
 
@@ -816,11 +809,11 @@ l_ed55:
     lda $7f93           ;get the WD1793 sector number
     beq l_eda2          ;if zero go do disk error $50
 
-    sta l_e982          ;save the WD1793 sector register
+    sta fdc_sector      ;save the WD1793 sector register
     lda #$a8            ;set write single sector command, side 1
     jsr l_ecc0          ;write a WD1793 command and wait a bit
 l_ed67:
-    lda l_e980          ;get the WD1793 status register
+    lda fdc_cmdst       ;get the WD1793 status register
     and #$d6            ;mask xx0x 0xx0,
                         ;x          drive not ready
                         ;x         write protected
@@ -835,7 +828,7 @@ l_ed67:
     bne l_ed84          ;else go handle everything else, branch always
 
 l_ed74:
-    lda l_e980          ;get the WD1793 status register
+    lda fdc_cmdst       ;get the WD1793 status register
     and #$96            ;mask x00x 0xx0,
                         ;x          drive not ready
                         ;x       record not found
@@ -845,7 +838,7 @@ l_ed74:
 
 l_ed7b:
     lda (l_b7),y        ;get a byte from memory
-    sta l_e983          ;write the WD1793 data register
+    sta fdc_data        ;write the WD1793 data register
     iny                 ;inccrement the index
     dex                 ;decrement the byte count
     bne l_ed74          ;loop if more to do
@@ -861,7 +854,7 @@ l_ed84:
     bcs l_ed38          ;if error just exit
 
     lda $7f92           ;get the WD1793 track number
-    cmp l_e981          ;WD1793 track register
+    cmp fdc_track       ;WD1793 track register
     beq l_ed50
 
     bne l_ed44
