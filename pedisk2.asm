@@ -1,31 +1,12 @@
 ; This is a bit correct disassembly of the PEDISK II ROM
 ; Lee Davison 2013/07/02
 
-LAB_07      = $07
-LAB_22      = $22
-LAB_23      = $23
-LAB_24      = $24
-LAB_25      = $25
-LAB_26      = $26
-LAB_27      = $27
-LAB_28      = $28
-LAB_29      = $29
-LAB_2A      = $2A
-LAB_2B      = $2B
 LAB_30      = $30       ;BASIC end of strings low byte
 LAB_31      = $31       ;BASIC end of strings high byte
 LAB_32      = $32       ;utility string pointer low byte
 LAB_33      = $33       ;utility string pointer high byte
 LAB_34      = $34       ;BASIC top of memory low byte
 LAB_35      = $35       ;BASIC top of memory high byte
-LAB_37      = $37
-LAB_44      = $44
-LAB_56      = $56
-LAB_57      = $57
-LAB_66      = $66
-LAB_67      = $67
-LAB_6C      = $6C
-LAB_6D      = $6D
 
 LAB_0070    = $0070     ;get the next BASIC byte
 LAB_77      = $77       ;BASIC byte pointer low byte
@@ -38,49 +19,12 @@ LAB_007D    = $007D     ;return from get BASIC byte patch
 LAB_B7      = $B7       ;memory pointer low byte
 LAB_B8      = $B8       ;memory pointer high byte
 
-LAB_01E0    = $01E0
+LAB_C12B    = $C12B     ;find variable
+LAB_D722    = $D722     ;output A as a two digit hex Byte
+LAB_D78D    = $D78D     ;evaluate a hex digit
 
-LAB_7800    = $7800
-LAB_77FF    = LAB_7800-1
-LAB_7803    = $7803
-LAB_7806    = $7806
-LAB_7809    = $7809
-LAB_780C    = $780C
-LAB_780F    = $780F
-LAB_7812    = $7812
-LAB_7815    = $7815
-
-LAB_7A00    = $7A00
-LAB_7E80    = $7E80
-LAB_7EA0    = $7EA0
-LAB_7EC0    = $7EC0
-LAB_7EE0    = $7EE0
-LAB_7F09    = $7F09
-LAB_7F0A    = $7F0A
-LAB_7F88    = $7F88
-LAB_7F89    = $7F89
-LAB_7F8A    = $7F8A
-LAB_7F8B    = $7F8B
-LAB_7F8C    = $7F8C
-LAB_7F8D    = $7F8D
-LAB_7F8E    = $7F8E
-LAB_7F90    = $7F90           ; WD1793 status byte mask
-LAB_7F91    = $7F91           ; drive number ??
-LAB_7F92    = $7F92           ; WD1793 track number
-LAB_7F93    = $7F93           ; WD1793 sector number
-LAB_7F94    = $7F94           ; WD1793 status register copy
-LAB_7F95    = $7F95           ; WD1793 command register copy
-LAB_7F96    = $7F96           ; sector count
-LAB_7FA0    = $7FA0
-LAB_7FB1    = $7FB1
-LAB_7FE0    = $7FE0
-
-LAB_C12B    = $C12B           ; find variable
-LAB_D722    = $D722           ; output A as a two digit hex Byte
-LAB_D78D    = $D78D           ; evaluate a hex digit
-
-LAB_FFD2    = $FFD2           ; character out to screen
-LAB_FFE4    = $FFE4           ; character in from keyboard
+LAB_FFD2    = $FFD2     ;character out to screen
+LAB_FFE4    = $FFE4     ;character in from keyboard
 
     *=$E800
 
@@ -188,7 +132,7 @@ LAB_E983
     !byte $BB,$9A,$BF,$FA,$5B,$FB,$7A,$7B,$00,$00,$00,$02,$40,$00,$00,$00
     !byte $DA,$AA,$FB,$BF,$FE,$FE,$7E,$3E,$04,$04,$00,$44,$00,$00,$04,$20
 
-; initialisation is done with a SYS call to here
+; initialization is done with a SYS call to here
 
 ;LAB_EA00:
     JMP   LAB_EA9A
@@ -203,15 +147,15 @@ LAB_E983
 ;LAB_EA0F:
     JMP   LAB_EE9E
 LAB_EA12:
-    !word LAB_7812-1
+    !word $7812-1
     !word LAB_EE98-1
-    !word LAB_7800-1
-    !word LAB_7803-1
-    !word LAB_7806-1
-    !word LAB_7809-1
-    !word LAB_780C-1
-    !word LAB_780F-1
-    !word LAB_7815-1
+    !word $7800-1
+    !word $7803-1
+    !word $7806-1
+    !word $7809-1
+    !word $780c-1
+    !word $780f-1
+    !word $7815-1
 LAB_EA24:
     !byte $9E           ;token for SYS
     !byte $93           ;token for LOAD
@@ -238,13 +182,13 @@ LAB_EA32:
 
 ; found a "!" character
 
-    STY   LAB_7F8A      ;save Y
+    STY   $7f8a         ;save Y
 
     LDY   #$01          ;set the index to the following byte
     LDA   (LAB_77),Y    ;get the following byte
     BMI   LAB_EA4C      ;if it's a token go test it
 
-    LDY   LAB_7F8A      ;restore Y
+    LDY   $7f8a         ;restore Y
     LDA   #$21          ;restore A
 LAB_EA44:
     CMP   #':'          ;compare the character with ":"
@@ -262,14 +206,14 @@ LAB_EA4B:
 
 LAB_EA4C:
     CLD                 ;clear decimal mode
-    STX   LAB_7F89
+    STX   $7f89
     TSX
-    STX   LAB_7F8B
+    STX   $7f8b
     LDX   #$1F
     SEI                 ;disable interrupts
 LAB_EA57:
-    LDA   LAB_01E0,X
-    STA   LAB_7FE0,X
+    LDA   $01e0   ,X
+    STA   $7fe0,X
     DEX
     BPL   LAB_EA57
 
@@ -293,17 +237,17 @@ LAB_EA71:
     CPX   #$02
     BCS   LAB_EA8C      ;X <= $02
 
-    LDY   LAB_37
+    LDY   $37
     INY
     BNE   LAB_EA87
 
     TXA
     BNE   LAB_EA8C
 
-    JMP   LAB_7812
+    JMP   $7812
 
 LAB_EA84:
-    JMP   LAB_7815
+    JMP   $7815
 
 LAB_EA87:
     LDA   #$01
@@ -322,20 +266,20 @@ LAB_EA8C:
 
 ;***********************************************************************************;
 ;
-; initialisation routine
+; initialization routine
 
 LAB_EA9A:
     CLD
-    LDA   #<LAB_7800
+    LDA   #<$7800
     STA   LAB_34        ;BASIC top of memory low byte
     STA   LAB_30        ;BASIC end of strings low byte
-    LDA   #>LAB_7800
+    LDA   #>$7800
     STA   LAB_35        ;BASIC top of memory high byte
     STA   LAB_31        ;BASIC end of strings high byte
 
-    LDA   #<LAB_77FF
+    LDA   #<$77ff
     STA   LAB_32        ;utility string pointer low byte
-    LDA   #>LAB_77FF
+    LDA   #>$77ff
     STA   LAB_33        ;utility string pointer high byte
 
     LDA   #<LAB_EB11    ;set the message pointer low byte
@@ -346,7 +290,7 @@ LAB_EA9A:
 LAB_EAB8:
     TXA
     EOR   #$FF
-    STA   LAB_7800,X
+    STA   $7800,X
     DEX
     BPL   LAB_EAB8
 
@@ -354,7 +298,7 @@ LAB_EAB8:
 LAB_EAC3:
     TXA
     EOR   #$FF
-    CMP   LAB_7800,X
+    CMP   $7800,X
     BEQ   LAB_EACE
 
     JMP   LAB_EB57      ;do "MEM ERROR" message and return
@@ -364,29 +308,29 @@ LAB_EACE:
     BPL   LAB_EAC3
 
     LDA   #$FF
-    STA   LAB_7E80
-    STA   LAB_7EA0
-    STA   LAB_7EC0
-    STA   LAB_7EE0
+    STA   $7e80
+    STA   $7ea0
+    STA   $7ec0
+    STA   $7ee0
 
-; load the boot code into memory @ LAB_7800 ??
+; load the boot code into memory @ $7800 ??
 
-    LDA   #<LAB_7800    ;set the memory pointer low byte
+    LDA   #<$7800       ;set the memory pointer low byte
     STA   LAB_B7        ;save the memory pointer low byte
-    LDA   #>LAB_7800    ;set the memory pointer high byte
+    LDA   #>$7800       ;set the memory pointer high byte
     STA   LAB_B8        ;save the memory pointer high byte
 
     LDX   #$00          ;set track zero
-    STX   LAB_7F92      ;save the WD1793 track number
+    STX   $7f92         ;save the WD1793 track number
 
     INX                 ;set drive 1
-    STX   LAB_7F91      ;save the drive number ??
+    STX   $7f91         ;save the drive number ??
 
     LDX   #$0D          ;set the sector count
-    STX   LAB_7F96      ;save the sector count
+    STX   $7f96         ;save the sector count
 
     LDX   #$09          ;set the sector number
-    STX   LAB_7F93      ;save the WD1793 sector number
+    STX   $7f93         ;save the WD1793 sector number
 
     JSR   LAB_ECE4      ;read <n> sector(s) to memory ??
     BNE   LAB_EB0B      ;if ?? go deselect the drives and stop the motors ??
@@ -452,16 +396,16 @@ LAB_EB5E:
     LDX   #$1F          ;set the byte count
     SEI                 ;disable interrupts
 LAB_EB61:
-    LDA   LAB_7FE0,X
-    STA   LAB_01E0,X
+    LDA   $7fe0,X
+    STA   $01e0,X
     DEX                 ;decrement the byte count
     BPL   LAB_EB61      ;loop if more to do
 
-    LDX   LAB_7F8B
+    LDX   $7f8b
     TXS
     CLI                 ;enable interrupts
-    LDY   LAB_7F8A
-    LDX   LAB_7F89
+    LDY   $7f8a
+    LDX   $7f89
     LDA   #$00
     JMP   LAB_EA44
 
@@ -490,11 +434,11 @@ LAB_EB7F:
 ; output A as a two digit hex Byte
 
 LAB_EB84:
-    STA   LAB_7F8D      ;save X
-    STX   LAB_7F8E      ;save A
+    STA   $7f8d         ;save X
+    STX   $7f8e         ;save A
     JSR   LAB_D722      ;output A as a two digit hex Byte
-    LDX   LAB_7F8E      ;restore X
-    LDA   LAB_7F8D      ;restore A
+    LDX   $7f8e         ;restore X
+    LDA   $7f8d         ;restore A
     RTS
 
 
@@ -514,18 +458,18 @@ LAB_EB94:
 
 LAB_EBA0:
     LDA   #$00          ;clear A
-    STA   LAB_7F94      ;clear the WD1793 status register copy
+    STA   $7f94         ;clear the WD1793 status register copy
     SEI                 ;disable interrupts
 
-    LDA   LAB_7F91      ;get the drive number ??
+    LDA   $7f91         ;get the drive number ??
     BEQ   LAB_EC08      ;if zero go do disk error $14
 
     LDA   LAB_E900
     AND   #$07
-    CMP   LAB_7F91      ;compare it with the drive number ??
+    CMP   $7f91         ;compare it with the drive number ??
     BEQ   LAB_EBCD
 
-    LDA   LAB_7F91      ;get the drive number ??
+    LDA   $7f91         ;get the drive number ??
     CMP   #$07
     BCS   LAB_EC08      ;if ?? go do disk error $14
 
@@ -549,9 +493,9 @@ LAB_EBCD:
 
 LAB_EBCE:
     LDA   #$03          ;set the retry count
-    STA   LAB_7F8C      ;save the retry count
+    STA   $7f8c         ;save the retry count
 LAB_EBD3:
-    LDA   LAB_7F92      ;get the WD1793 track number
+    LDA   $7f92         ;get the WD1793 track number
     CMP   #$4D          ;compare it with max + 1
     BPL   LAB_EBFF      ;if > max go do disk error $15
 
@@ -560,13 +504,13 @@ LAB_EBD3:
                         ;x          drive not ready
                         ;x       record not found
                         ;x     CRC error
-    STA   LAB_7F90      ;save the WD1793 status byte mask
+    STA   $7f90         ;save the WD1793 status byte mask
 
     LDA   #$16          ;set seek command, verify track, 20ms step rate
     JSR   LAB_EC0D      ;wait for WD1793 not busy and do command A
     BNE   LAB_EBF2      ;go handle any returned error
 
-    LDA   LAB_7F92      ;get the WD1793 track number
+    LDA   $7f92         ;get the WD1793 track number
     CMP   LAB_E981      ;compare it with the WD1793 track register
     BNE   LAB_EBF2      ;go handle any difference
 
@@ -578,7 +522,7 @@ LAB_EBF2:
     LDA   #$02          ;set restore command, 20ms step rate
     JSR   LAB_EC0D      ;wait for WD1793 not busy and do command A
 
-    DEC   LAB_7F8C      ;decrement the retry count
+    DEC   $7f8c         ;decrement the retry count
     BNE   LAB_EBD3      ;if not all done go try again
 
 ; else do disk error $10
@@ -619,7 +563,7 @@ LAB_EC0D:
     JSR   LAB_EC1E      ;wait for WD1793 not busy
     BCS   LAB_EC02      ;if counted out go do disk error $17
 
-    STA   LAB_7F95      ;save the WD1793 command register copy
+    STA   $7f95         ;save the WD1793 command register copy
     STA   LAB_E980      ;save the WD1793 command
 
     JSR   LAB_EC53      ;delay for $C6 * ?? cycles
@@ -646,9 +590,9 @@ LAB_EC27:
     BEQ   LAB_EC4C      ;if not busy go return not counted out
 
     LDA   #$23          ;set the wait count
-    STA   LAB_7F8D      ;save the wait count
+    STA   $7f8d         ;save the wait count
 LAB_EC33:
-    DEC   LAB_7F8D      ;decrement the wait count
+    DEC   $7f8d         ;decrement the wait count
     BNE   LAB_EC33      ;loop if more to do
 
     DEX                 ;decrement the inner loop count
@@ -658,7 +602,7 @@ LAB_EC33:
     BNE   LAB_EC25      ;loop if more to do
 
     LDA   #$D8          ;set force interrupt command, immediate interrupt
-    STA   LAB_7F95      ;save the WD1793 command register copy
+    STA   $7f95         ;save the WD1793 command register copy
     STA   LAB_E980      ;save the WD1793 command
     JSR   LAB_EC53      ;delay for $C6 * ?? cycles
     SEC                 ;flag counted out
@@ -688,18 +632,18 @@ LAB_EC53:
 ; delay for A * $C6 * ?? cycles
 
 LAB_EC55:
-    STA   LAB_7F8D      ;save the outer loop count
-    STX   LAB_7F8E      ;save X
+    STA   $7f8d         ;save the outer loop count
+    STX   $7f8e         ;save X
 LAB_EC5B:
     LDX   #$C6          ;set the inner loop count
 LAB_EC5D:
     DEX                 ;decrement the inner loop count
     BNE   LAB_EC5D      ;loop if more to do
 
-    DEC   LAB_7F8D      ;decrement the outer loop count
+    DEC   $7f8d         ;decrement the outer loop count
     BNE   LAB_EC5B      ;loop if more to do
 
-    LDX   LAB_7F8E      ;restore X
+    LDX   $7f8e         ;restore X
     RTS
 
 
@@ -716,20 +660,20 @@ LAB_EC69:
 
     INC   LAB_B8        ;else increment the memory pointer high byte
 LAB_EC74:
-    LDX   LAB_7F93      ;get the WD1793 sector number
+    LDX   $7f93         ;get the WD1793 sector number
     INX                 ;increment the sector number
     CPX   #$1B          ;compare it with max + 1
     BMI   LAB_EC89      ;if < max + 1 just exit
 
-    LDX   LAB_7F92      ;get the WD1793 track number
+    LDX   $7f92         ;get the WD1793 track number
     INX                 ;increment the track number
-    STX   LAB_7F92      ;save the WD1793 track number
+    STX   $7f92         ;save the WD1793 track number
     CPX   #$4D          ;compare it with max + 1
     BPL   LAB_EC94      ;if > max go do disk error $11
 
     LDX   #$01
 LAB_EC89:
-    STX   LAB_7F93      ;save the WD1793 sector number
+    STX   $7f93         ;save the WD1793 sector number
     CLC                 ;flag ok
     RTS
 
@@ -774,7 +718,7 @@ LAB_EC96:
 
     LDX   #$00          ;clear the index
 LAB_ECA8:
-    LDA   LAB_7F90,X
+    LDA   $7f90,X
     JSR   LAB_EB7F      ;output [SPACE] <A> as a two digit hex Byte
     INX                 ;increment the index
     CPX   #$07          ;compare it with max + 1
@@ -796,7 +740,7 @@ LAB_ECBD:
 ; write a WD1793 command and wait a bit
 
 LAB_ECC0:
-    STA   LAB_7F95      ;save the WD1793 command register copy
+    STA   $7f95         ;save the WD1793 command register copy
     STA   LAB_E980      ;save the WD1793 command
 
     LDY   #$00          ;clear Y
@@ -818,8 +762,8 @@ LAB_ECD0:
     BCS   LAB_ECBD      ;if counted out go return $FF
 
     LDA   LAB_E980      ;get the WD1793 status register
-    STA   LAB_7F94      ;save the WD1793 status register copy
-    AND   LAB_7F90      ;AND it with the WD1793 status byte mask
+    STA   $7f94         ;save the WD1793 status register copy
+    AND   $7f90         ;AND it with the WD1793 status byte mask
     RTS
 
 
@@ -829,7 +773,7 @@ LAB_ECD0:
 
 LAB_ECDF:
     LDA   #$01          ;set the sector count
-    STA   LAB_7F96      ;save the sector count
+    STA   $7f96         ;save the sector count
 
 
 ;***********************************************************************************;
@@ -846,7 +790,7 @@ LAB_ECE9:
 
 LAB_ECEE:
     LDA   #$0A
-    STA   LAB_7F8C
+    STA   $7f8c
 LAB_ECF3:
     LDA   #$DE          ;mask xx0x xxx0,
                         ;x          drive not ready
@@ -855,9 +799,9 @@ LAB_ECF3:
                         ;x     CRC error
                         ;x    lost data
                         ;x   data request
-    STA   LAB_7F90      ;save the WD1793 status byte mask
+    STA   $7f90         ;save the WD1793 status byte mask
 
-    LDA   LAB_7F93      ;get the WD1793 sector number
+    LDA   $7f93         ;get the WD1793 sector number
     BEQ   LAB_ED33      ;if zero go do disk error $40
 
     STA   LAB_E982      ;save the WD1793 sector register
@@ -881,20 +825,20 @@ LAB_ED05:
     JSR   LAB_ECD0      ;wait for WD1793 not busy and mask the status
     BNE   LAB_ED2E      ;if any bits set go ??
 
-    DEC   LAB_7F96      ;deccrement the sector count
+    DEC   $7f96         ;deccrement the sector count
     BEQ   LAB_ED38      ;if all done just exit
 
     JSR   LAB_EC69      ;increment pointers to the next sector ??
     BCS   LAB_ED38      ;if error just exit
 
-    LDA   LAB_7F92      ;get the WD1793 track number
+    LDA   $7f92         ;get the WD1793 track number
     CMP   LAB_E981      ;WD1793 track register
     BEQ   LAB_ECEE
 
     BNE   LAB_ECE9
 
 LAB_ED2E:
-    DEC   LAB_7F8C
+    DEC   $7f8c
     BNE   LAB_ECF3
 
 ; do disk error $40
@@ -916,7 +860,7 @@ LAB_ED38:
 
 ;LAB_ED3A:
     LDA   #$01          ;set a single sector
-    STA   LAB_7F96      ;save the sector count
+    STA   $7f96         ;save the sector count
 
 
 ;***********************************************************************************;
@@ -937,7 +881,7 @@ LAB_ED44:
 
 LAB_ED50:
     LDA   #$0A
-    STA   LAB_7F8C
+    STA   $7f8c
 LAB_ED55:
     LDA   #$FC          ;mask xxxx xx00,
                         ;x          drive not ready
@@ -946,9 +890,9 @@ LAB_ED55:
                         ;x       record not found
                         ;x     CRC error
                         ;x    lost data
-    STA   LAB_7F90      ;save the WD1793 status byte mask
+    STA   $7f90         ;save the WD1793 status byte mask
 
-    LDA   LAB_7F93      ;get the WD1793 sector number
+    LDA   $7f93         ;get the WD1793 sector number
     BEQ   LAB_EDA2      ;if zero go do disk error $50
 
     STA   LAB_E982      ;save the WD1793 sector register
@@ -989,20 +933,20 @@ LAB_ED84:
     JSR   LAB_ECD0      ;wait for WD1793 not busy and mask the status
     BNE   LAB_ED9D      ;if any bits set go ??
 
-    DEC   LAB_7F96      ;deccrement the sector count
+    DEC   $7f96         ;deccrement the sector count
     BEQ   LAB_ED38      ;if all done just exit
 
     JSR   LAB_EC69      ;increment pointers to the next sector ??
     BCS   LAB_ED38      ;if error just exit
 
-    LDA   LAB_7F92      ;get the WD1793 track number
+    LDA   $7f92         ;get the WD1793 track number
     CMP   LAB_E981      ;WD1793 track register
     BEQ   LAB_ED50
 
     BNE   LAB_ED44
 
 LAB_ED9D:
-    DEC   LAB_7F8C
+    DEC   $7f8c
     BNE   LAB_ED55
 
 ; do disk error $50
@@ -1046,14 +990,14 @@ LAB_EDBD:
 
     JSR   LAB_0070      ;get the next BASIC byte
     LDA   LAB_77
-    STA   LAB_24
+    STA   $24
     LDA   LAB_78
-    STA   LAB_25
+    STA   $25
     JMP   LAB_EDEA
 
 LAB_EDD3:
     JSR   LAB_C12B      ;find variable
-    BIT   LAB_07
+    BIT   $07
     BMI   LAB_EDDF
 
     LDA   #$03
@@ -1068,11 +1012,11 @@ LAB_EDDC:
 
 LAB_EDDF:
     LDY   #$01
-    LDA   (LAB_44),Y
-    STA   LAB_24
+    LDA   ($44),Y
+    STA   $24
     INY
-    LDA   (LAB_44),Y
-    STA   LAB_25
+    LDA   ($44),Y
+    STA   $25
 
 
 ;***********************************************************************************;
@@ -1082,7 +1026,7 @@ LAB_EDDF:
 LAB_EDEA:
     LDY   #$00
 LAB_EDEC:
-    LDA   (LAB_24),Y
+    LDA   ($24),Y
     CMP   #$3A
     BEQ   LAB_EE01
 
@@ -1094,7 +1038,7 @@ LAB_EDF6:
     JMP   LAB_EDDC
 
 LAB_EDFB:
-    STA   LAB_7FA0,Y
+    STA   $7fa0,Y
     INY
     BPL   LAB_EDEC
 
@@ -1106,17 +1050,17 @@ LAB_EE05:
     CPX   #$06
     BCS   LAB_EE0F
 
-    STA   LAB_7FA0,X
+    STA   $7fa0,X
     INX
     BPL   LAB_EE05
 
 LAB_EE0F:
     INY
-    LDA   (LAB_24),Y
+    LDA   ($24   ),Y
     AND   #$03
     TAX
     LDA   LAB_EA2F,X
-    STA   LAB_7FB1
+    STA   $7fb1
     PLP
     BNE   LAB_EE32
 
@@ -1142,30 +1086,30 @@ LAB_EE32:
 ; ??
 
 LAB_EE33:
-    LDA   LAB_7FB1
-    STA   LAB_7F91      ;save the drive number ??
+    LDA   $7fb1
+    STA   $7f91         ;save the drive number ??
     LDY   #$00
-    STY   LAB_7F92      ;save the WD1793 track number
+    STY   $7f92         ;save the WD1793 track number
     INY
-    STY   LAB_7F93      ;save the WD1793 sector number
+    STY   $7f93         ;save the WD1793 sector number
     LDA   #$00
     STA   LAB_B7        ;save the memory pointer low byte
     LDA   #$7F
     STA   LAB_B8        ;save the memory pointer high byte
-    STA   LAB_23
+    STA   $23
     JSR   LAB_ECDF      ;read one sector to memory ??
     BNE   LAB_EE94
 
-    LDA   LAB_7F09
-    STA   LAB_56
-    LDA   LAB_7F0A
-    STA   LAB_57
+    LDA   $7f09
+    STA   $56
+    LDA   $7f0a
+    STA   $57
     LDA   #$10
 LAB_EE5D:
-    STA   LAB_22
+    STA   $22
 LAB_EE5F:
     LDY   #$00
-    LDA   (LAB_22),Y
+    LDA   ($22),Y
     CMP   #$FF
     BEQ   LAB_EE95
 
@@ -1175,25 +1119,25 @@ LAB_EE5F:
 ; ??
 
 LAB_EE67:
-    CMP   LAB_7FA0,Y
+    CMP   $7fa0,Y
     BNE   LAB_EE76
 
     INY
     CPY   #$06
     BPL   LAB_EE92
 
-    LDA   (LAB_22),Y
+    LDA   ($22),Y
     JMP   LAB_EE67
 
 LAB_EE76:
-    LDA   LAB_22
+    LDA   $22
     CLC
     ADC   #$10
-    STA   LAB_22
+    STA   $22
     BPL   LAB_EE5F
 
-    INC   LAB_7F93      ;increment the WD1793 sector number
-    LDA   LAB_7F93      ;get the WD1793 sector number
+    INC   $7f93         ;increment the WD1793 sector number
+    LDA   $7f93         ;get the WD1793 sector number
     CMP   #$09
     BPL   LAB_EE95
 
@@ -1232,37 +1176,37 @@ LAB_EE9E:
     BNE   LAB_EEE6
 
     LDY   #$0A
-    LDA   (LAB_22),Y
+    LDA   ($22),Y
     CMP   #$03
     BMI   LAB_EEE6
 
     BNE   LAB_EEBE
 
     LDY   #$06
-    LDA   (LAB_22),Y
+    LDA   ($22   ),Y
     CLC
-    ADC   LAB_28
-    STA   LAB_2A
+    ADC   $28
+    STA   $2a
     INY
-    LDA   (LAB_22),Y
-    ADC   LAB_29
-    STA   LAB_2B
+    LDA   ($22   ),Y
+    ADC   $29
+    STA   $2b
 LAB_EEBE:
     LDY   #$08
-    LDA   (LAB_22),Y
+    LDA   ($22),Y
     STA   LAB_B7        ;save the memory pointer low byte
     INY
-    LDA   (LAB_22),Y
+    LDA   ($22),Y
     STA   LAB_B8        ;save the memory pointer high byte
     LDY   #$0C
-    LDA   (LAB_22),Y
-    STA   LAB_7F92      ;save the WD1793 track number
+    LDA   ($22),Y
+    STA   $7f92         ;save the WD1793 track number
     INY
-    LDA   (LAB_22),Y
-    STA   LAB_7F93      ;save the WD1793 sector number
+    LDA   ($22),Y
+    STA   $7f93         ;save the WD1793 sector number
     INY
-    LDA   (LAB_22),Y
-    STA   LAB_7F96      ;save the sector count
+    LDA   ($22),Y
+    STA   $7f96         ;save the sector count
     JSR   LAB_ECE4      ;read <n> sector(s) to memory ??
     BNE   LAB_EEF0
 
@@ -1297,7 +1241,7 @@ LAB_EEF4:
 
 ;***********************************************************************************;
 ;
-; get a hex address into LAB_66/67
+; get a hex address into $66   /67
 
 LAB_EEFB:
     PHA                 ;save A
@@ -1315,9 +1259,9 @@ LAB_EF08:
     JSR   LAB_EF1B      ;get and evaluate a hex byte
     BCS   LAB_EF08      ;if error get another byte
 
-    STA   LAB_67        ;save the address high byte
+    STA   $67           ;save the address high byte
     JSR   LAB_EF1B      ;get and evaluate a hex byte
-    STA   LAB_66        ;save the address low byte
+    STA   $66           ;save the address low byte
     BCC   LAB_EF2E      ;if no error just exit
 
     JSR   LAB_EF2F
@@ -1343,11 +1287,11 @@ LAB_EF1E:
     ASL                 ;.. low nibble ..
     ASL                 ;.. to the ..
     ASL                 ;.. high nibble
-    STA   LAB_26
+    STA   $26
     JSR   LAB_EF41      ;get and evaluate a hex character
     BCS   LAB_EF2F
 
-    ORA   LAB_26        ;OR it with the high nibble
+    ORA   $26           ;OR it with the high nibble
     CLC                 ;flag ok
 LAB_EF2E:
     RTS
@@ -1426,18 +1370,18 @@ LAB_EF59:
     JSR   LAB_FFD2      ;do character out
 
     JSR   LAB_EF7B      ;wait for and echo a character
-    STA   LAB_7F88      ;save the charater
+    STA   $7f88         ;save the charater
 
     PLA                 ;pull Y
     TAY                 ;restore Y
     PLA                 ;pull X
     TAX                 ;restore X
 
-    LDA   LAB_7F88      ;restore the charater
+    LDA   $7f88         ;restore the charater
     CMP   #$03          ;compare it with ??
     BNE   LAB_EF58      ;if ?? just exit
 
-    JMP   LAB_7A00
+    JMP   $7a00
 
 
 ;***********************************************************************************;
@@ -1456,19 +1400,19 @@ LAB_EF7B:
 ; ??
 
 LAB_EF83:
-    JSR   LAB_EEFB      ;get a hex address into LAB_66/67
+    JSR   LAB_EEFB      ;get a hex address into $66   /67
 LAB_EF86:
     LDA   #$0D          ;set [CR]
     JSR   LAB_FFD2      ;do character out
 
-    LDA   LAB_67        ;get the address high byte
+    LDA   $67           ;get the address high byte
     JSR   LAB_EB7F      ;output [SPACE] <A> as a two digit hex Byte
-    LDA   LAB_66        ;get the address low byte
+    LDA   $66           ;get the address low byte
     JSR   LAB_EB84      ;output A as a two digit hex Byte
 
     LDY   #$00          ;clear the index
 LAB_EF97:
-    LDA   (LAB_66),Y    ;get a byte from memory
+    LDA   ($66),Y       ;get a byte from memory
     JSR   LAB_EB7F      ;output [SPACE] <A> as a two digit hex Byte
     INY                 ;increment the index
     CPY   #$08          ;compare it with max + 1
@@ -1483,7 +1427,7 @@ LAB_EFA8:
     BNE   LAB_EFA8      ;loop if more to do
 
 LAB_EFAE:
-    STX   LAB_27        ;save the line index
+    STX   $27           ;save the line index
     JSR   LAB_EF59      ;get a character and ??
     CMP   #$0D          ;compare it with [CR]
     BEQ   LAB_EF83      ;if [CR] go get another hex address
@@ -1500,20 +1444,20 @@ LAB_EFC0:
     BCS   LAB_EFAE      ;if error go ??
 
     LDY   #$00          ;clear the index
-    STA   (LAB_66),Y    ;save the byte
-    CMP   (LAB_66),Y    ;compare the byte with the saved copy
+    STA   ($66),Y       ;save the byte
+    CMP   ($66),Y       ;compare the byte with the saved copy
     BNE   LAB_EFE2      ;if not the same go ??
 
 ; the byte saved or [SPACE] was returned
 
 LAB_EFD0:
     JSR   LAB_EB7A      ;output a [SPACE] character
-    INC   LAB_66        ;inrement the address low byte
+    INC   $66           ;inrement the address low byte
     BNE   LAB_EFD9      ;if no rollover skip the high byte increment
 
-    INC   LAB_67        ;else increment the high byte
+    INC   $67           ;else increment the high byte
 LAB_EFD9:
-    LDX   LAB_27        ;get the line index
+    LDX   $27           ;get the line index
     INX                 ;inccrement it
     CPX   #$08          ;compare it with max + 1
     BMI   LAB_EFAE      ;if not there yet go ??
@@ -1532,12 +1476,12 @@ LAB_EFE2:
 ; message out
 
 LAB_EFE7:
-    STA   LAB_6C        ;save the message pointer low byte
-    STY   LAB_6D        ;save the message pointer high byte
+    STA   $6c           ;save the message pointer low byte
+    STY   $6d           ;save the message pointer high byte
     LDY   #$FF          ;set -1 for pre increment
 LAB_EFED:
     INY                 ;increment the index
-    LDA   (LAB_6C),Y    ;get the next character
+    LDA   ($6c),Y       ;get the next character
     BEQ   LAB_EFF8      ;if it's the end marker just exit
 
     JSR   LAB_FFD2      ;do character out
