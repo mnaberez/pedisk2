@@ -1196,16 +1196,16 @@ l_ef41:
 l_ef44:
 ; test and evaluate a hex digit
 ;
-    CMP #'0'            ;compare the character with "0";compare the character with "0"
+    CMP #'0'            ;compare the character with "0"
     bcc l_ef3f          ;if < "0" go return non hex
 
-    CMP #'9'+1          ;compare the character with "9"+1;compare the character with "9"+1
+    CMP #'9'+1          ;compare the character with "9"+1
     bcc l_ef54          ;if < "9"+1 go evaluate the hex digit
 
-    CMP #'A'            ;compare the character with "A";compare the character with "A"
+    CMP #'A'            ;compare the character with "A"
     bcc l_ef3f          ;if < "A" go return non hex
 
-    CMP #'F'+1          ;compare the character with "F"+1;compare the character with "F"+1
+    CMP #'F'+1          ;compare the character with "F"+1
     bcs l_ef3f          ;if >= "F"+1 go return non hex
 
     ; evaluate the hex digit
