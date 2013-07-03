@@ -1,7 +1,7 @@
 ;This is a bit correct disassembly of the PEDISK II ROM
 ;Lee Davison 2013/07/02
 
-drive_sel   = $e900     ;Drive Select Latch (??)
+drive_sel    = $e900    ;Drive Select Latch (??)
                         ;  bit function
                         ;  === ======
                         ;  7-4 not used
@@ -161,7 +161,7 @@ l_ea32:
     sty $7f8a           ;save Y
 
     ldy #$01            ;set the index to the following byte
-    lda (txtptr),y        ;get the following byte
+    lda (txtptr),y      ;get the following byte
     bmi l_ea4c          ;if it's a token go test it
 
     ldy $7f8a           ;restore Y
@@ -434,9 +434,9 @@ l_ebd3:
 
     sta fdc_data        ;write the target track to the WD1793 data register
     lda #$98            ;mask x00x x000,
-                        ;x          drive not ready
-                        ;x       record not found
-                        ;x     CRC error
+                        ;     x          drive not ready
+                        ;        x       record not found
+                        ;          x     CRC error
     sta $7f90           ;save the WD1793 status byte mask
 
     lda #$16            ;set seek command, verify track, 20ms step rate
@@ -702,12 +702,12 @@ l_ecee:
     sta $7f8c
 l_ecf3:
     lda #$de            ;mask xx0x xxx0,
-                        ;x          drive not ready
-                        ;x         write protected
-                        ;x       record not found
-                        ;x     CRC error
-                        ;x    lost data
-                        ;x   data request
+                        ;     x          drive not ready
+                        ;      x         write protected
+                        ;        x       record not found
+                        ;          x     CRC error
+                        ;           x    lost data
+                        ;            x   data request
     sta $7f90           ;save the WD1793 status byte mask
 
     lda $7f93           ;get the WD1793 sector number
@@ -720,9 +720,9 @@ l_ecf3:
 l_ed05:
     lda fdc_cmdst       ;get the WD1793 status register
     and #$16            ;mask 000x 0xx0,
-                        ;x       record not found
-                        ;x    lost data
-                        ;x   data request
+                        ;        x       record not found
+                        ;           x    lost data
+                        ;            x   data request
     beq l_ed05          ;if no data request or error go try again
 
     lda fdc_data        ;read the WD1793 data register
@@ -789,12 +789,12 @@ l_ed50:
     sta $7f8c
 l_ed55:
     lda #$fc            ;mask xxxx xx00,
-                        ;x          drive not ready
-                        ;x         write protected
-                        ;x        write fault
-                        ;x       record not found
-                        ;x     CRC error
-                        ;x    lost data
+                        ;     x          drive not ready
+                        ;      x         write protected
+                        ;       x        write fault
+                        ;        x       record not found
+                        ;          x     CRC error
+                        ;           x    lost data
     sta $7f90           ;save the WD1793 status byte mask
 
     lda $7f93           ;get the WD1793 sector number
@@ -806,11 +806,11 @@ l_ed55:
 l_ed67:
     lda fdc_cmdst       ;get the WD1793 status register
     and #$d6            ;mask xx0x 0xx0,
-                        ;x          drive not ready
-                        ;x         write protected
-                        ;x       record not found
-                        ;x    lost data
-                        ;x   data request
+                        ;     x          drive not ready
+                        ;      x         write protected
+                        ;        x       record not found
+                        ;           x    lost data
+                        ;            x   data request
     beq l_ed67          ;if no flags set go wait some more
 
     cmp #$02            ;compare it with data request
@@ -821,10 +821,10 @@ l_ed67:
 l_ed74:
     lda fdc_cmdst       ;get the WD1793 status register
     and #$96            ;mask x00x 0xx0,
-                        ;x          drive not ready
-                        ;x       record not found
-                        ;x    lost data
-                        ;x   data request
+                        ;     x          drive not ready
+                        ;        x       record not found
+                        ;           x    lost data
+                        ;            x   data request
     beq l_ed74          ;if no flags set go wait some more
 
 l_ed7b:
