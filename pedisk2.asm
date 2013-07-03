@@ -88,28 +88,28 @@ LAB_D78D    = $D78D           ; evaluate a hex digit
 LAB_FFD2    = $FFD2           ; character out to screen
 LAB_FFE4    = $FFE4           ; character in from keyboard
 
-      .ORG  $E800
+      *=$E800
 
 ;LAB_E800
-      .byte $04,$45,$45,$05,$07,$80,$C5,$44,$7F,$FF,$DF,$FF,$F7,$DF,$FB,$FF
-      .byte $00,$04,$01,$04,$41,$05,$80,$05,$FE,$FF,$FF,$FB,$FF,$FB,$FB,$BF
-      .byte $44,$41,$45,$45,$05,$24,$24,$25,$FF,$FF,$D7,$FF,$FF,$FF,$FF,$FF
-      .byte $04,$04,$01,$45,$05,$04,$80,$04,$FF,$FF,$FD,$FF,$FF,$FF,$FE,$FB
-      .byte $7B,$FA,$7A,$FE,$BA,$FF,$FB,$3A,$00,$00,$04,$00,$00,$05,$45,$40
-      .byte $FA,$7A,$BE,$DE,$FB,$BB,$BE,$BB,$04,$20,$00,$40,$01,$01,$04,$00
-      .byte $3E,$16,$BF,$FA,$FE,$BF,$FA,$FE,$00,$00,$00,$01,$00,$00,$00,$04
-      .byte $D2,$BA,$7A,$FF,$FA,$DA,$7A,$FA,$01,$01,$00,$04,$40,$00,$40,$05
-      .byte $46,$C4,$95,$05,$C4,$02,$43,$44,$FF,$FF,$FF,$FB,$FF,$FF,$FF,$FF
-      .byte $21,$23,$81,$41,$45,$05,$45,$C0,$BF,$BF,$FF,$BF,$FF,$FF,$FF,$FF
-      .byte $A7,$65,$0C,$24,$10,$01,$04,$01,$FF,$FF,$EB,$FF,$FF,$FB,$9F,$BB
-      .byte $05,$C5,$42,$04,$95,$84,$14,$00,$FF,$FB,$FE,$FB,$BB,$FF,$FF,$FB
-      .byte $FE,$DC,$FA,$BC,$9A,$4B,$FA,$7B,$00,$00,$00,$00,$00,$40,$00,$04
-      .byte $B3,$FA,$7A,$FE,$FF,$1A,$FA,$BA,$00,$04,$2C,$04,$80,$00,$44,$04
-      .byte $7A,$1A,$F2,$78,$FF,$3E,$3A,$5A,$00,$00,$20,$00,$00,$00,$00,$01
-      .byte $FA,$FE,$3E,$FA,$FB,$FF,$BE,$BA,$00,$20,$48,$0C,$00,$20,$00,$05
+      !byte $04,$45,$45,$05,$07,$80,$C5,$44,$7F,$FF,$DF,$FF,$F7,$DF,$FB,$FF
+      !byte $00,$04,$01,$04,$41,$05,$80,$05,$FE,$FF,$FF,$FB,$FF,$FB,$FB,$BF
+      !byte $44,$41,$45,$45,$05,$24,$24,$25,$FF,$FF,$D7,$FF,$FF,$FF,$FF,$FF
+      !byte $04,$04,$01,$45,$05,$04,$80,$04,$FF,$FF,$FD,$FF,$FF,$FF,$FE,$FB
+      !byte $7B,$FA,$7A,$FE,$BA,$FF,$FB,$3A,$00,$00,$04,$00,$00,$05,$45,$40
+      !byte $FA,$7A,$BE,$DE,$FB,$BB,$BE,$BB,$04,$20,$00,$40,$01,$01,$04,$00
+      !byte $3E,$16,$BF,$FA,$FE,$BF,$FA,$FE,$00,$00,$00,$01,$00,$00,$00,$04
+      !byte $D2,$BA,$7A,$FF,$FA,$DA,$7A,$FA,$01,$01,$00,$04,$40,$00,$40,$05
+      !byte $46,$C4,$95,$05,$C4,$02,$43,$44,$FF,$FF,$FF,$FB,$FF,$FF,$FF,$FF
+      !byte $21,$23,$81,$41,$45,$05,$45,$C0,$BF,$BF,$FF,$BF,$FF,$FF,$FF,$FF
+      !byte $A7,$65,$0C,$24,$10,$01,$04,$01,$FF,$FF,$EB,$FF,$FF,$FB,$9F,$BB
+      !byte $05,$C5,$42,$04,$95,$84,$14,$00,$FF,$FB,$FE,$FB,$BB,$FF,$FF,$FB
+      !byte $FE,$DC,$FA,$BC,$9A,$4B,$FA,$7B,$00,$00,$00,$00,$00,$40,$00,$04
+      !byte $B3,$FA,$7A,$FE,$FF,$1A,$FA,$BA,$00,$04,$2C,$04,$80,$00,$44,$04
+      !byte $7A,$1A,$F2,$78,$FF,$3E,$3A,$5A,$00,$00,$20,$00,$00,$00,$00,$01
+      !byte $FA,$FE,$3E,$FA,$FB,$FF,$BE,$BA,$00,$20,$48,$0C,$00,$20,$00,$05
 
 LAB_E900
-      .byte $C5               ; drive select latch ??
+      !byte $C5               ; drive select latch ??
                               ; bit function
                               ; === ======
                               ; 7-4 not used
@@ -119,19 +119,19 @@ LAB_E900
                               ;  0  drive 1 select
 
 ;LAB_E901
-      .byte $25,$C5,$C5,$C1,$25,$64,$21,$DF,$FF,$FF,$FB,$FE,$FF,$DF,$FF
-      .byte $01,$65,$04,$05,$91,$14,$04,$01,$FA,$FE,$FF,$FF,$FF,$FF,$F7,$FB
-      .byte $85,$02,$07,$40,$46,$20,$04,$01,$FF,$FF,$FB,$BF,$FF,$FB,$DF,$FF
-      .byte $80,$01,$44,$40,$05,$40,$04,$04,$FF,$BF,$FF,$FF,$DF,$BF,$FF,$FB
-      .byte $FF,$7A,$9A,$79,$CA,$BA,$BB,$AB,$00,$41,$00,$00,$00,$00,$44,$00
-      .byte $FB,$F3,$FB,$AB,$3E,$FA,$B8,$BB,$00,$40,$04,$04,$00,$00,$40,$84
-      .byte $8A,$FA,$3F,$FB,$3B,$7A,$7F,$5B,$44,$20,$00,$04,$00,$00,$00,$C0
-      .byte $FF,$BA,$FF,$FB,$7E,$FA,$FE,$FE,$44,$00,$04,$41,$04,$44,$08,$00
+      !byte $25,$C5,$C5,$C1,$25,$64,$21,$DF,$FF,$FF,$FB,$FE,$FF,$DF,$FF
+      !byte $01,$65,$04,$05,$91,$14,$04,$01,$FA,$FE,$FF,$FF,$FF,$FF,$F7,$FB
+      !byte $85,$02,$07,$40,$46,$20,$04,$01,$FF,$FF,$FB,$BF,$FF,$FB,$DF,$FF
+      !byte $80,$01,$44,$40,$05,$40,$04,$04,$FF,$BF,$FF,$FF,$DF,$BF,$FF,$FB
+      !byte $FF,$7A,$9A,$79,$CA,$BA,$BB,$AB,$00,$41,$00,$00,$00,$00,$44,$00
+      !byte $FB,$F3,$FB,$AB,$3E,$FA,$B8,$BB,$00,$40,$04,$04,$00,$00,$40,$84
+      !byte $8A,$FA,$3F,$FB,$3B,$7A,$7F,$5B,$44,$20,$00,$04,$00,$00,$00,$C0
+      !byte $FF,$BA,$FF,$FB,$7E,$FA,$FE,$FE,$44,$00,$04,$41,$04,$44,$08,$00
 
 ; WD1793 floppy disk controller
 
 LAB_E980
-      .byte $05               ; command/status register
+      !byte $05               ; command/status register
 
 ;     Command           b7 b6 b5 b4 b3 b2 b1 b0
 ; I   Restore           0  0  0  0  h  V  r1 r0
@@ -164,7 +164,7 @@ LAB_E980
 ;                     i3 = 1 Immediate interrupt, requires a reset
 ;                     i2 = 1 Index pulse
 ;                     i1 = 1 Ready to not ready transition
-;                     i0 = 1 Not ready to ready transition  
+;                     i0 = 1 Not ready to ready transition
 
 ; status bits                 ; bit when 1
                               ; === ======
@@ -178,21 +178,21 @@ LAB_E980
                               ;  0  busy
 
 LAB_E981
-      .byte $40               ; track register
+      !byte $40               ; track register
 LAB_E982
-      .byte $45               ; sector register
+      !byte $45               ; sector register
 LAB_E983
-      .byte $8D               ; data register
+      !byte $8D               ; data register
 
 ;LAB_E984
-      .byte $04,$D5,$67,$44,$FF,$FF,$FF,$BF,$FB,$BF,$FA,$FF
-      .byte $20,$05,$05,$04,$55,$E6,$85,$44,$BB,$FF,$BF,$FF,$FF,$FF,$FF,$FF
-      .byte $24,$45,$84,$45,$05,$45,$41,$04,$FF,$FB,$FF,$FF,$FF,$FF,$BB,$FF
-      .byte $00,$AF,$C5,$05,$81,$85,$21,$05,$DF,$FF,$FF,$EF,$FB,$FB,$EF,$FF
-      .byte $FF,$7A,$FA,$FE,$FF,$FE,$FA,$DA,$00,$44,$00,$04,$00,$00,$40,$05
-      .byte $FA,$BA,$6A,$BA,$DB,$BB,$BF,$FE,$04,$40,$00,$04,$00,$00,$04,$20
-      .byte $BB,$9A,$BF,$FA,$5B,$FB,$7A,$7B,$00,$00,$00,$02,$40,$00,$00,$00
-      .byte $DA,$AA,$FB,$BF,$FE,$FE,$7E,$3E,$04,$04,$00,$44,$00,$00,$04,$20
+      !byte $04,$D5,$67,$44,$FF,$FF,$FF,$BF,$FB,$BF,$FA,$FF
+      !byte $20,$05,$05,$04,$55,$E6,$85,$44,$BB,$FF,$BF,$FF,$FF,$FF,$FF,$FF
+      !byte $24,$45,$84,$45,$05,$45,$41,$04,$FF,$FB,$FF,$FF,$FF,$FF,$BB,$FF
+      !byte $00,$AF,$C5,$05,$81,$85,$21,$05,$DF,$FF,$FF,$EF,$FB,$FB,$EF,$FF
+      !byte $FF,$7A,$FA,$FE,$FF,$FE,$FA,$DA,$00,$44,$00,$04,$00,$00,$40,$05
+      !byte $FA,$BA,$6A,$BA,$DB,$BB,$BF,$FE,$04,$40,$00,$04,$00,$00,$04,$20
+      !byte $BB,$9A,$BF,$FA,$5B,$FB,$7A,$7B,$00,$00,$00,$02,$40,$00,$00,$00
+      !byte $DA,$AA,$FB,$BF,$FE,$FE,$7E,$3E,$04,$04,$00,$44,$00,$00,$04,$20
 
 ; initialisation is done with a SYS call to here
 
@@ -209,29 +209,29 @@ LAB_E983
 ;LAB_EA0F:
       JMP   LAB_EE9E          ;.
 LAB_EA12:
-      .word LAB_7812-1        ;.
-      .word LAB_EE98-1        ;.
-      .word LAB_7800-1        ;.
-      .word LAB_7803-1        ;.
-      .word LAB_7806-1        ;.
-      .word LAB_7809-1        ;.
-      .word LAB_780C-1        ;.
-      .word LAB_780F-1        ;.
-      .word LAB_7815-1        ;.
+      !word LAB_7812-1        ;.
+      !word LAB_EE98-1        ;.
+      !word LAB_7800-1        ;.
+      !word LAB_7803-1        ;.
+      !word LAB_7806-1        ;.
+      !word LAB_7809-1        ;.
+      !word LAB_780C-1        ;.
+      !word LAB_780F-1        ;.
+      !word LAB_7815-1        ;.
 LAB_EA24:
-      .byte $9E               ; token for SYS
-      .byte $93               ; token for LOAD
-      .byte $94               ; token for SAVE
-      .byte $9F               ; token for OPEN
-      .byte $A0               ; token for CLOSE
-      .byte $85               ; token for INPUT
-      .byte $99               ; token for PRINT
-      .byte $8A               ; token for RUN
-      .byte $9B               ; token for LIST
-      .byte $FF,$00           ;.
+      !byte $9E               ; token for SYS
+      !byte $93               ; token for LOAD
+      !byte $94               ; token for SAVE
+      !byte $9F               ; token for OPEN
+      !byte $A0               ; token for CLOSE
+      !byte $85               ; token for INPUT
+      !byte $99               ; token for PRINT
+      !byte $8A               ; token for RUN
+      !byte $9B               ; token for LIST
+      !byte $FF,$00           ;.
 
 LAB_EA2F:
-      .byte $01,$02,$04       ;.
+      !byte $01,$02,$04       ;.
 
 
 ;***********************************************************************************;
@@ -331,7 +331,7 @@ LAB_EA8C:
 ; initialisation routine
 
 LAB_EA9A:
-      CLD         
+      CLD
       LDA   #<LAB_7800        ;.
       STA   LAB_34            ; BASIC top of memory low byte
       STA   LAB_30            ; BASIC end of strings low byte
@@ -420,14 +420,14 @@ LAB_EB0B:
 ; startup message
 
 LAB_EB11:
-      .byte $93
-      .byte "PEDISK II SYSTEM"
-      .byte $0D
-      .byte "CGRS MICROTECH"
-      .byte $0D
-      .byte "LANGHORNE,PA.19047 C1981"
-      .byte $0D
-      .byte $00               ; end marker
+      !byte $93
+      !text "PEDISK II SYSTEM"
+      !byte $0D
+      !text "CGRS MICROTECH"
+      !byte $0D
+      !text "LANGHORNE,PA.19047 C1981"
+      !byte $0D
+      !byte $00               ; end marker
 
 
 ;***********************************************************************************;
@@ -435,9 +435,9 @@ LAB_EB11:
 ; memory error message
 
 LAB_EB4C:
-      .byte $0D
-      .byte "MEM ERROR"
-      .byte $00               ; end marker
+      !byte $0D
+      !text "MEM ERROR"
+      !byte $00               ; end marker
 
 
 ;***********************************************************************************;
@@ -509,8 +509,9 @@ LAB_EB84:
 ; disk error message
 
 LAB_EB94:
-      .byte $0D,"DISK ERROR"
-      .byte $00               ; end marker
+      !byte $0D
+      !text "DISK ERROR"
+      !byte $00               ; end marker
 
 
 ;***********************************************************************************;
@@ -589,25 +590,25 @@ LAB_EBF2:
 ; else do disk error $10
 
       LDA   #$10              ; set error $10
-      .byte $2C               ; makes next line BIT $xxxx
+      !byte $2C               ; makes next line BIT $xxxx
 
 ; do disk error $15
 
 LAB_EBFF
       LDA   #$15              ; set error $15
-      .byte $2C               ; makes next line BIT $xxxx
+      !byte $2C               ; makes next line BIT $xxxx
 
 ; do disk error $17
 
 LAB_EC02
       LDA   #$17              ; set error $17
-      .byte $2C               ; makes next line BIT $xxxx
+      !byte $2C               ; makes next line BIT $xxxx
 
 ; do disk error $13, drive not ready
 
 LAB_EC05
       LDA   #$13              ; set error $13
-      .byte $2C               ; makes next line BIT $xxxx
+      !byte $2C               ; makes next line BIT $xxxx
 
 ; do disk error $14
 
@@ -1034,8 +1035,9 @@ LAB_EDA7:
 ; "PROTECTED!" message
 
 LAB_EDB1:
-      .byte $0D,"PROTECTED!"
-      .byte $00               ; end marker
+      !byte $0D
+      !text "PROTECTED!"
+      !byte $00               ; end marker
 
 
 ;***********************************************************************************;
@@ -1294,8 +1296,9 @@ LAB_EEF0:
 ; monitor prompt
 
 LAB_EEF4:
-      .byte $0D,"ADDR?"
-      .byte $00               ; end marker
+      !byte $0D
+      !text "ADDR?"
+      !byte $00               ; end marker
 
 
 ;***********************************************************************************;
@@ -1556,8 +1559,6 @@ LAB_EFF8:
 ; unused ??
 
 ;LAB_EFF9:
-      .byte $68,$07,$01,$2B,$FF,$09,$5E
-
-      .END
+      !byte $68,$07,$01,$2B,$FF,$09,$5E
 
 ;***********************************************************************************;
