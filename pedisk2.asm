@@ -117,7 +117,7 @@ under_io:
     !byte $bb,$9a,$bf,$fa,$5b,$fb,$7a,$7b,$00,$00,$00,$02,$40,$00,$00,$00
     !byte $da,$aa,$fb,$bf,$fe,$fe,$7e,$3e,$04,$04,$00,$44,$00,$00,$04,$20
 
-l_ea00:
+entry_points:
     jmp init            ;Initialize the system (SYS 55904)
     jmp edit_memory     ;Display/edit memory ("ADDR?")
     jmp read_sectors    ;Read <n> sector(s) to memory
@@ -125,7 +125,7 @@ l_ea00:
     jmp find_file       ;Search for filename in the directory
     jmp perform_load    ;Perform !LOAD
 
-l_ea12:
+cmd_vectors:
     !word $7812-1       ;vector for !SYS
     !word l_ee98-1      ;vector for !LOAD
     !word $7800-1       ;vector for !SAVE
@@ -136,7 +136,7 @@ l_ea12:
     !word $780f-1       ;vector for !RUN
     !word $7815-1       ;vector for !LIST
 
-l_ea24:
+cmd_tokens:
     !byte $9e           ;token for SYS
     !byte $93           ;token for LOAD
     !byte $94           ;token for SAVE
@@ -149,13 +149,13 @@ l_ea24:
 
     !byte $ff,$00       ;unused ??
 
-l_ea2f:
+drive_selects:
 ; drive select byte
     !byte $01           ;drive 0 select bit pattern
     !byte $02           ;drive 1 select bit pattern
     !byte $04           ;drive 2 select bit pattern
 
-l_ea32:
+wedge:
 ;get BASIC byte patch
 ;this is called by a JMP written to the get BASIC byte routine at $79
 ;
@@ -172,6 +172,7 @@ l_ea32:
 
     ldy $7f8a           ;restore Y
     lda #$21            ;restore A
+
 l_ea44:
     CMP #':'            ;compare the character with ":"
     bcs l_ea4b          ;if >= ":" just exit
@@ -208,7 +209,7 @@ l_ea57:
     jsr chrget          ;get the next BASIC byte
     ldx #$08            ;set the test index to the last entry
 l_ea67:
-    cmp l_ea24,x        ;compare the token byte with a table token
+    cmp cmd_tokens,x    ;compare the token byte with a table token
     beq l_ea71          ;if they match go try to execute the command
 
     dex                 ;decrement the index
@@ -259,9 +260,9 @@ l_ea8c:
     txa                 ;copy the index
     asl                 ;* 2 bytes per vector
     tax                 ;back to the index
-    lda l_ea12+1,x      ;get the vector high byte
+    lda cmd_vectors+1,x ;get the vector high byte
     pha                 ;push it on the stack
-    lda l_ea12,x        ;get the vector low byte
+    lda cmd_vectors,x   ;get the vector low byte
     pha                 ;push it on the stack
     jmp l_edbd          ;get a filename from a string or variable then do RTS
                         ;to call the vector
@@ -344,9 +345,9 @@ l_eace:
 
     lda #$4c            ;set JMP opcode
     sta $79             ;save the JMP opcode
-    lda #<l_ea32        ;set the JMP address low byte
+    lda #<wedge         ;set the JMP address low byte
     sta $7a             ;save the JMP address low byte
-    lda #>l_ea32        ;set the JMP address high byte
+    lda #>wedge         ;set the JMP address high byte
     sta $7b             ;save the JMP address high byte
 
 
@@ -637,10 +638,11 @@ l_ec89:
 
 
 l_ec8e:
-;TODO ??
+;do disk error and restore the stack
 ;
-    jsr l_ec96          ;do "DISK ERROR" message and ??
-    jmp l_eb5e
+    jsr l_ec96          ;do "DISK ERROR" message and stop the disk
+    jmp l_eb5e   ;restore the top 32 bytes of the stack page
+                        ;  and return EOT
 
 
 l_ec94:
@@ -999,7 +1001,7 @@ l_ee0f:
     lda ($24),y         ;get the drive character
     and #$03            ;mask the drive
     tax                 ;copy it to the index
-    lda l_ea2f,x        ;get the drive select byte
+    lda drive_selects,x ;get the drive select byte
     sta $7fb1           ;save the drive select byte
 
     plp                 ;restore the open quote compare status
@@ -1106,61 +1108,61 @@ l_ee76:
 
     inc $7f93           ;increment the WD1793 sector number
     lda $7f93           ;get the WD1793 sector number
-    cmp #$09            ; compare it with max + 1
-    bpl l_ee95          ; if > max go do the not found exit
+    cmp #$09            ;compare it with max + 1
+    bpl l_ee95          ;if > max go do the not found exit
 
-    jsr l_ecdf          ; read one sector to memory
-    bne l_ee94          ; if there was an error just exit
+    jsr l_ecdf          ;read one sector to memory
+    bne l_ee94          ;if there was an error just exit
 
-    lda #$00            ; set the index to the next directory entry
-    beq l_ee5d          ; continue the directory search, branch always
+    lda #$00            ;set the index to the next directory entry
+    beq l_ee5d          ;continue the directory search, branch always
 
 ; found the file exit
 
 l_ee92:
-    lda #$00            ; flag found
+    lda #$00            ;flag found
 l_ee94:
     rts
 
 ; not found exit
 
 l_ee95:
-    lda #$7f            ; flag not found
+    lda #$7f            ;flag not found
     rts
 
 
 l_ee98:
 ;!LOAD
 ;
-    jsr perform_load          ; perform !LOAD
-    jmp l_eb5e          ; restore the top 32 bytes of the stack page and return EOT
+    jsr perform_load    ;perform !LOAD
+    jmp l_eb5e          ;restore the top 32 bytes of the stack page and return EOT
 
 
 perform_load:
 ;perform !LOAD
 ;
-    jsr find_file          ; search for filename in the directory
-    tax                 ; copy the returned value
-    bne l_eee6          ; if not found go do "??????" message
+    jsr find_file       ;search for filename in the directory
+    tax                 ;copy the returned value
+    bne l_eee6          ;if not found go do "??????" message
 
-    ldy #$0a            ; set the index to the file type
-    lda ($22),y         ; get the file type
-    cmp #$03            ; compare it with ?? type
-    bmi l_eee6          ; if less than ?? go do "??????" message
+    ldy #$0a            ;set the index to the file type
+    lda ($22),y         ;get the file type
+    cmp #$03            ;compare it with ?? type
+    bmi l_eee6          ;if less than ?? go do "??????" message
 
-    bne l_eebe          ; if not type $03 skip setting the end of program
+    bne l_eebe          ;if not type $03 skip setting the end of program
 
 ; the file is type $03
 
-    ldy #$06            ; set the index to the file length low byte
-    lda ($22),y         ; get the file length low byte
-    clc                 ; clear carry for add
-    adc $28             ; add BASIC start of program low byte
-    sta $2a             ; save BASIC start of variables low byte
-    iny                 ; increment the index to the file length high byte
-    lda ($22),y         ; get the file length high byte
-    adc $29             ; add BASIC start of program high byte
-    sta $2b             ; save BASIC start of variables high byte
+    ldy #$06            ;set the index to the file length low byte
+    lda ($22),y         ;get the file length low byte
+    clc                 ;clear carry for add
+    adc $28             ;add BASIC start of program low byte
+    sta $2a             ;save BASIC start of variables low byte
+    iny                 ;increment the index to the file length high byte
+    lda ($22),y         ;get the file length high byte
+    adc $29             ;add BASIC start of program high byte
+    sta $2b             ;save BASIC start of variables high byte
 l_eebe:
     ldy #$08
     lda ($22),y
