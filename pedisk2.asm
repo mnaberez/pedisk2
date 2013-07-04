@@ -1,5 +1,5 @@
 ;This is a bit correct disassembly of the PEDISK II ROM
-;Lee Davison 2013/07/02
+;Based on work by Lee Davison 2013-07-04
 
 drive_sel    = $e900    ;Drive Select Latch (??)
                         ;  bit function
@@ -81,7 +81,9 @@ getin       = $ffe4     ;KERNAL Read a char from the current input device
 
     *=$e800
 
-unknown:
+under_io:
+;these two pages are under the I/O area ($e800-e9ff) area and can't be
+;read.  the contents should not matter.
     !byte $04,$45,$45,$05,$07,$80,$c5,$44,$7f,$ff,$df,$ff,$f7,$df,$fb,$ff
     !byte $00,$04,$01,$04,$41,$05,$80,$05,$fe,$ff,$ff,$fb,$ff,$fb,$fb,$bf
     !byte $44,$41,$45,$45,$05,$24,$24,$25,$ff,$ff,$d7,$ff,$ff,$ff,$ff,$ff
@@ -117,22 +119,22 @@ unknown:
 
 l_ea00:
     jmp init            ;Initialize the system (SYS 55904)
-    jmp enter_monitor   ;Enter the monitor ("ADDR?")
-    jmp read_sectors    ;?? Read <n> sector(s) to memory ??
-    jmp write_sectors   ;?? Write <n> sector(s) to disk ??
-    jmp e_ee33
-    jmp e_ee9e
+    jmp enter_monitor   ;Display/edit memory ("ADDR?")
+    jmp read_sectors    ;Read <n> sector(s) to memory
+    jmp write_sectors   ;Write <n> sector(s) to disk
+    jmp e_ee33          ;Search for filename in the directory
+    jmp e_ee9e          ;Perform !LOAD
 
 l_ea12:
-    !word $7812-1
-    !word l_ee98-1
-    !word $7800-1
-    !word $7803-1
-    !word $7806-1
-    !word $7809-1
-    !word $780c-1
-    !word $780f-1
-    !word $7815-1
+    !word $7812-1       ;vector for !SYS
+    !word l_ee98-1      ;vector for !LOAD
+    !word $7800-1       ;vector for !SAVE
+    !word $7803-1       ;vector for !OPEN
+    !word $7806-1       ;vector for !CLOSE
+    !word $7809-1       ;vector for !INPUT
+    !word $780c-1       ;vector for !PRINT
+    !word $780f-1       ;vector for !RUN
+    !word $7815-1       ;vector for !LIST
 
 l_ea24:
     !byte $9e           ;token for SYS
@@ -144,14 +146,18 @@ l_ea24:
     !byte $99           ;token for PRINT
     !byte $8a           ;token for RUN
     !byte $9b           ;token for LIST
-    !byte $ff,$00
+
+    !byte $ff,$00       ;unused ??
 
 l_ea2f:
-    !byte $01,$02,$04
-
+; drive select byte
+    !byte $01           ;drive 0 select bit pattern
+    !byte $02           ;drive 1 select bit pattern
+    !byte $04           ;drive 2 select bit pattern
 
 l_ea32:
 ;get BASIC byte patch
+;this is called by a JMP written to the get BASIC byte routine at $79
 ;
     CMP #'!'            ;compare the character with "!"
     bne l_ea44          ;if not "!" go test ":"
@@ -180,103 +186,129 @@ l_ea4c:
 ;test a token following a "!" character
 ;
     cld                 ;clear decimal mode
-    stx $7f89
-    tsx
-    stx $7f8b
-    ldx #$1f
+    stx $7f89           ;save X
+    tsx                 ;copy the stack pointer
+    stx $7f8b           ;save the stack pointer
+
+; save the top 32 bytes of the stack page, done with interrupts disabled
+
+    ldx #$1f            ;set the byte count/index
     sei                 ;disable interrupts
 l_ea57:
-    lda $01e0,x
-    sta $7fe0,x
-    dex
-    bpl l_ea57
+    lda $01e0,x         ;get a stack page byte
+    sta $7fe0,x         ;save it
+    dex                 ;decrement the byte count/index
+    bpl l_ea57          ;loop if more to do
 
-    txs
+    txs                 ;set the stack pointer to $FF
+
+; stack is saved so enable the interrupts again
+
     cli                 ;enable interrupts
     jsr chrget          ;get the next BASIC byte
     ldx #$08            ;set the test index to the last entry
 l_ea67:
     cmp l_ea24,x        ;compare the token byte with a table token
-    beq l_ea71          ;if they match go ??
+    beq l_ea71          ;if they match go try to execute the command
 
-    dex
-    bpl l_ea67
+    dex                 ;decrement the index
+    bpl l_ea67          ;loop if more to do
 
-    bmi l_ea87
+    bmi l_ea87          ;else go do disk error $01, illegal command/mode
+                        ;  branch always
+
+; the token byte matches a table token
 
 l_ea71:
-    cpx #$08
-    beq l_ea84
+    cpx #$08            ;compare the index with the index for !LIST
+    beq l_ea84          ;if it is the index for !LIST go do it
 
-    cpx #$02
-    bcs l_ea8c          ;X <= $02
+    cpx #$02            ;compare the index with the index for !SAVE
+    bcs l_ea8c          ;if >= !SAVE continue
 
-    ldy $37
-    iny
-    bne l_ea87
+; !SYS and !LOAD get some special treatment
+;
+; check we're in immediate mode or go do an error
 
-    txa
-    bne l_ea8c
+    ldy $37             ;get the current BAISC line number high byte
+    iny                 ;increment it
+    bne l_ea87          ;if executing a program go do disk error $01, illegal
+                        ;  command/mode
 
-    jmp $7812
+; else we're in immediate mode
+
+    txa                 ;copy the index
+    bne l_ea8c          ;if it's !LOAD go handle it like any other command
+
+    jmp $7812           ;else go do !SYS
+
+; go do !LIST
 
 l_ea84:
-    jmp $7815
+    jmp $7815           ;do !LIST
+
+; do disk error $01, illegal command/mode
 
 l_ea87:
     lda #$01
     jmp l_ec8e
 
-l_ea8c:
-    txa
-    asl
-    tax
-    lda l_ea12+1,x
-    pha
-    lda l_ea12,x
-    pha
-    jmp l_edbd
+; found a match and the execution mode is ok
 
+l_ea8c:
+    txa                 ;copy the index
+    asl                 ;* 2 bytes per vector
+    tax                 ;back to the index
+    lda l_ea12+1,x      ;get the vector high byte
+    pha                 ;push it on the stack
+    lda l_ea12,x        ;get the vector low byte
+    pha                 ;push it on the stack
+    jmp l_edbd          ;get a filename from a string or variable then do RTS
+                        ;to call the vector
 
 init:
 ;Initialize the system
 ;
-    cld
+    cld                 ; clear decimal mode
     lda #<$7800
-    sta memsiz            ;BASIC top of memory low byte
-    sta fretop            ;BASIC end of strings low byte
+    sta memsiz          ;BASIC top of memory low byte
+    sta fretop          ;BASIC end of strings low byte
     lda #>$7800
-    sta memsiz+1          ;BASIC top of memory high byte
-    sta fretop+1          ;BASIC end of strings high byte
+    sta memsiz+1        ;BASIC top of memory high byte
+    sta fretop+1        ;BASIC end of strings high byte
 
     lda #<$77ff
-    sta frespc            ;utility string pointer low byte
+    sta frespc          ;utility string pointer low byte
     lda #>$77ff
-    sta frespc+1          ;utility string pointer high byte
+    sta frespc+1        ;utility string pointer high byte
 
-    lda #<banner          ;set the message pointer low byte
-    ldy #>banner          ;set the message pointer high byte
-    jsr puts              ;message out
+; display the startup message
 
-    ldx #$f2
+    lda #<banner        ;set the message pointer low byte
+    ldy #>banner        ;set the message pointer high byte
+    jsr puts            ;message out
+
+; test the RAM, well one byte of it at $78F2 anyway
+
+    ldx #$f2            ;set the index/test byte
 l_eab8:
-    txa
-    eor #$ff
-    sta $7800,x
-    dex
-    bpl l_eab8
+    txa                 ;copy X
+    eor #$ff            ;invert it
+    sta $7800,x         ;save it to RAM
+    dex                 ;decrement the index
+    bpl l_eab8          ;loop if more to do, branch never
 
-    ldx #$f2
+    ldx #$f2            ;set the index/test byte
 l_eac3:
-    txa
-    eor #$ff
-    cmp $7800,x
-    beq l_eace
+    txa                 ;copy X
+    eor #$ff            ;invert it
+    cmp $7800,x         ;compare it with the previously saved version
+    beq l_eace          ;if they're the same just continue
 
-    jmp puts_mem_err    ;do "MEM ERROR" message and return
+    jmp puts_mem_err    ;else do "MEM ERROR" message and return
 
 l_eace:
-    dex
+    dex                 ;loop if more to do, branch never
     bpl l_eac3
 
     lda #$ff
@@ -285,7 +317,7 @@ l_eace:
     sta $7ec0
     sta $7ee0
 
-    ; load the boot code into memory @ $7800 ??
+    ; load the boot code into memory @ $7800
 
     lda #<$7800         ;set the memory pointer low byte
     sta l_b7            ;save the memory pointer low byte
@@ -295,8 +327,8 @@ l_eace:
     ldx #$00            ;set track zero
     stx $7f92           ;save the WD1793 track number
 
-    inx                 ;set drive 1
-    stx $7f91           ;save the drive number ??
+    inx                 ;set drive 0
+    stx $7f91           ;save the drive select latch copy
 
     ldx #$0d            ;set the sector count
     stx $7f96           ;save the sector count
@@ -305,7 +337,10 @@ l_eace:
     stx $7f93           ;save the WD1793 sector number
 
     jsr read_sectors    ;read <n> sector(s) to memory ??
-    bne l_eb0b          ;if ?? go deselect the drives and stop the motors ??
+    bne l_eb0b          ;if any error go deselect the drives, stop the motors
+                        ;and exit to BASIC
+
+; the boot code loaded so patch the get BASIC byte routine
 
     lda #$4c            ;set JMP opcode
     sta $79             ;save the JMP opcode
@@ -319,7 +354,7 @@ l_eb0b:
 ; deselect the drives and stop the motors ??
 ;
     lda #$08
-    sta drive_sel
+    sta drive_sel       ;save the drive select latch
     rts
 
 
@@ -340,23 +375,23 @@ puts_mem_err:
 
 
 l_eb5e:
-;TODO ??
+;restore the top 32 bytes of the stack page and return EOT
 ;
-    ldx #$1f            ;set the byte count
+    ldx #$1f            ;set the byte count/index
     sei                 ;disable interrupts
 l_eb61:
-    lda $7fe0,x
-    sta $01e0,x
-    dex                 ;decrement the byte count
+    lda $7fe0,x         ;get a saved stack page byte
+    sta $01e0,x         ;restore it
+    dex                 ;decrement the byte count/index
     bpl l_eb61          ;loop if more to do
 
-    ldx $7f8b
-    txs
+    ldx $7f8b           ;get the saved stack pointer
+    txs                 ;restore it
     cli                 ;enable interrupts
-    ldy $7f8a
-    ldx $7f89
-    lda #$00
-    jmp l_ea44
+    ldy $7f8a           ;restore Y
+    ldx $7f89           ;restore X
+    lda #$00            ;return an End Of Text byte
+    jmp l_ea44          ;return to the get BASIC byte patch
 
 
 l_eb7a:
@@ -396,28 +431,28 @@ l_eba0:
     sta $7f94           ;clear the WD1793 status register copy
     sei                 ;disable interrupts
 
-    lda $7f91           ;get the drive number ??
-    beq l_ec08          ;if zero go do disk error $14
+    lda $7f91           ;get the drive select latch copy
+    beq l_ec08          ;if zero go do disk error $14, no disk selected
 
-    lda drive_sel
-    and #$07
-    cmp $7f91           ;compare it with the drive number ??
-    beq l_ebcd
+    lda drive_sel       ;read the drive select latch
+    and #$07            ;mask the drive select bits
+    cmp $7f91           ;compare it with the drive select latch copy
+    beq l_ebcd          ;if the same just exit
 
-    lda $7f91           ;get the drive number ??
-    cmp #$07
-    bcs l_ec08          ;if ?? go do disk error $14
+    lda $7f91           ;get the drive select latch copy
+    cmp #$07            ;compare it with all drives selected
+    bcs l_ec08          ;if >= $07 go do disk error $14, no disk selected
 
-    ora #$08
-    sta drive_sel
+    ora #$08            ;mask xxxx 1xxx, set ?? bit
+    sta drive_sel       ;save the drive select latch
 
-    lda #$23
-    jsr l_ec55          ;delay for A * $C6 * ?? cycles
+    lda #$23            ;set the delay count, 35ms
+    jsr l_ec55          ;delay for A * 1000 cycles
 
     lda fdc_cmdst       ;get the WD1793 status register
     and #%10000000      ;mask x000 0000, drive not ready
-    bne l_ec05          ;if the drive is not ready go do disk error $13
-
+    bne l_ec05          ;if the drive is not ready go do disk error $13, drive
+                        ;   not ready
 l_ebcd:
     rts
 
@@ -903,69 +938,87 @@ l_eddc:
 ;
     jmp l_ec8e
 
-l_eddf:
-    ldy #$01
-    lda ($44),y
-    sta $24
-    iny
-    lda ($44),y
-    sta $25
+;***********************************************************************************;
+;
+; get a filename from a string
 
+l_eddf:
+    ldy #$01            ;set the index to the string pointer low byte
+    lda ($44),y         ;get the string pointer low byte
+    sta $24             ;save the filename pointer low byte
+    iny                 ;increment the index to the string pointer high byte
+    lda ($44),y         ;get the string pointer high byte
+    sta $25             ;save the filename pointer high byte
+
+; get a filename
+;
+; unless I'm mistaken a filename must include a ":" character and the drive number
+; at the end. no check is done on the drive number character so any charater will
+; be taken as a valid drive number
 
 l_edea:
-;TODO ??
-;
-    ldy #$00
+    ldy #$00            ;clear the index
 l_edec:
-    lda ($24),y
-    cmp #$3a
-    beq l_ee01
+    lda ($24),y         ;get a filename character
+    cmp #$3a            ;compare it with ":"
+    beq l_ee01          ;if it is ":" go get a drive number
 
-    cpy #$06
-    bcc l_edfb
+    cpy #$06            ;compare the index with max + 1
+    bcc l_edfb          ;if not max + 1 continue
+
+; do disk error $04, bad filename
 
 l_edf6:
-    lda #$04
-    jmp l_eddc
+    lda #$04            ;set disk error $04, bad filename
+    jmp l_eddc          ;do disk error and restore the stack
 
 l_edfb:
-    sta $7fa0,y
-    iny
-    bpl l_edec
+    sta $7fa0,y         ;save a filename character
+    iny                 ;increment the index
+    bpl l_edec          ;go get another filename character, branch always
 
 l_ee01:
-    tya
-    tax
-    lda #$20
-l_ee05:
-    cpx #$06
-    bcs l_ee0f
+    tya                 ;copy the index ..
+    tax                 ;.. to X
 
-    sta $7fa0,x
-    inx
-    bpl l_ee05
+; pad the rest of the filename with spaces
+
+    lda #$20            ;set [SPACE]
+l_ee05:
+    cpx #$06            ;compare the filename index with max + 1
+    bcs l_ee0f          ;if done go get the drive number
+
+    sta $7fa0,x         ;save a [SPACE] to the filename
+    inx                 ;increment the index
+    bpl l_ee05          ;go try another space, branch always
+
+; get the drive number. there seems to be no checking for drive 3 which may break things
 
 l_ee0f:
-    iny
-    lda ($24),y
-    and #$03
-    tax
-    lda l_ea2f,x
-    sta $7fb1
-    plp
-    bne l_ee32
+    iny                 ;increment the index to the drive character
+    lda ($24),y         ;get the drive character
+    and #$03            ;mask the drive
+    tax                 ;copy it to the index
+    lda l_ea2f,x        ;get the drive select byte
+    sta $7fb1           ;save the drive select byte
 
-    tya
-    clc
-    adc txtptr
-    sta txtptr
-    bcc l_ee28
+    plp                 ;restore the open quote compare status
+    bne l_ee32          ;if it wasn't an immediate string just exit
 
-    inc txtptr+1
+; else it was an immediate string so move the get BASIC byte pointer past it
+
+    tya                 ;copy the index
+    clc                 ;clear carry for add
+    adc txtptr          ;add the BASIC byte pointer low byte
+    sta txtptr          ;save the BASIC byte pointer low byte
+    bcc l_ee28          ;if no carry skip the high byte increment
+
+    inc txtptr+1        ;else increment the BASIC byte pointer high byte
 l_ee28:
     jsr chrget          ;get the next BASIC byte
-    cmp #$22
-    bne l_edf6
+    cmp #$22            ;compare it with a close quote character
+    bne l_edf6          ;if it's not a close quote go do disk error $04, bad
+                        ;   filename
 
     jsr chrget          ;get the next BASIC byte
 l_ee32:
@@ -973,107 +1026,141 @@ l_ee32:
 
 
 e_ee33:
-;TODO ??
+; search for filename in the directory
 ;
-    lda $7fb1
-    sta $7f91           ;save the drive number ??
-    ldy #$00
+; returns LAB_22/23 pointing to the entry and the returned status in X
+; the directory starts on track 0, sector 1 and runs to track 0, sector 8
+;
+; the first file entry in the directory is at $10 in the first sector
+;
+; a directory entry consists of ..
+;
+; $00-$05   byte  filename
+; $06-$07   word  file length
+; $08-$09   word  load address
+; $0A       byte  file type
+; $0B       byte  ??
+; $0C       byte  file track number
+; $0D       byte  file sector number
+; $0E       byte  file sector count
+; $0F       byte  ??
+;
+    lda $7fb1           ;get the drive select byte
+    sta $7f91           ;save the drive select latch copy
+
+    ldy #$00            ;set track zero
     sty $7f92           ;save the WD1793 track number
-    iny
+
+    iny                 ;set sector one
     sty $7f93           ;save the WD1793 sector number
-    lda #$00
+
+    lda #$00            ;set the memory pointer low byte
     sta l_b7            ;save the memory pointer low byte
-    lda #$7f
+    lda #$7f            ;set the memory pointer high byte
     sta l_b8            ;save the memory pointer high byte
-    sta $23
-    jsr l_ecdf          ;read one sector to memory ??
-    bne l_ee94
+    sta $23             ;set the search pointer high byte
+
+    jsr l_ecdf          ;read one sector to memory
+    bne l_ee94          ;if there was an error just exit
+
+; there was no error
 
     lda $7f09
     sta $56
     lda $7f0a
     sta $57
-    lda #$10
+
+; there was no error
+
+    lda #$10            ; set the index to the first directory entry
 l_ee5d:
-    sta $22
+    sta $22             ; set the directory search pointer low byte
 l_ee5f:
-    ldy #$00
-    lda ($22),y
-    cmp #$ff
-    beq l_ee95
+    ldy #$00            ; clear the index
+    lda ($22),y         ; get a character from the directory
+    cmp #$ff            ; compare it with the end marker
+    beq l_ee95          ; if end of directory go do the not found exit
 
 
 l_ee67:
-;TODO ??
-;
-    cmp $7fa0,y
-    bne l_ee76
+    cmp $7fa0,y         ; compare it with a filename character
+    bne l_ee76          ; if not a match go try the next directory entry
 
-    iny
-    cpy #$06
-    bpl l_ee92
+    iny                 ; increment the filename index
+    cpy #$06            ; compare it with max + 1
+    bpl l_ee92          ; if all compared go do the file found exit
 
-    lda ($22),y
-    jmp l_ee67
+    lda ($22),y         ; else get the next character from the directory
+    jmp l_ee67          ; go compare the characters
+
+; no match so try the next entry
 
 l_ee76:
-    lda $22
-    clc
-    adc #$10
-    sta $22
-    bpl l_ee5f
+    lda $22             ; get the directory search pointer low byte
+    clc                 ; clear carry for add
+    adc #$10            ; add the offset to the next directory entry
+    sta $22             ; save the directory search pointer low byte
+    bpl l_ee5f          ; if not past the end of the sector go test the next entry
+
+; else this sector is all done, get the next directory sector
 
     inc $7f93           ;increment the WD1793 sector number
     lda $7f93           ;get the WD1793 sector number
-    cmp #$09
-    bpl l_ee95
+    cmp #$09            ; compare it with max + 1
+    bpl l_ee95          ; if > max go do the not found exit
 
-    jsr l_ecdf          ;read one sector to memory ??
-    bne l_ee94
+    jsr l_ecdf          ; read one sector to memory
+    bne l_ee94          ; if there was an error just exit
 
-    lda #$00
-    beq l_ee5d
+    lda #$00            ; set the index to the next directory entry
+    beq l_ee5d          ; continue the directory search, branch always
+
+; found the file exit
 
 l_ee92:
-    lda #$00
+    lda #$00            ; flag found
 l_ee94:
     rts
 
+; not found exit
+
 l_ee95:
-    lda #$7f
+    lda #$7f            ; flag not found
     rts
 
 
 l_ee98:
-;LOAD ??
+;!LOAD
 ;
-    jsr e_ee9e
-    jmp l_eb5e
+    jsr e_ee9e          ; perform !LOAD
+    jmp l_eb5e          ; restore the top 32 bytes of the stack page and return EOT
 
 
 e_ee9e:
-;TODO ??
+;perform !LOAD
 ;
-    jsr e_ee33
-    tax
-    bne l_eee6
+    jsr e_ee33          ; search for filename in the directory
+    tax                 ; copy the returned value
+    bne l_eee6          ; if not found go do "??????" message
 
-    ldy #$0a
-    lda ($22),y
-    cmp #$03
-    bmi l_eee6
+    ldy #$0a            ; set the index to the file type
+    lda ($22),y         ; get the file type
+    cmp #$03            ; compare it with ?? type
+    bmi l_eee6          ; if less than ?? go do "??????" message
 
-    bne l_eebe
+    bne l_eebe          ; if not type $03 skip setting the end of program
 
-    ldy #$06
-    lda ($22),y
-    clc
-    adc $28
-    sta $2a
-    iny
-    lda ($22),y
-    adc $29
-    sta $2b
+; the file is type $03
+
+    ldy #$06            ; set the index to the file length low byte
+    lda ($22),y         ; get the file length low byte
+    clc                 ; clear carry for add
+    adc $28             ; add BASIC start of program low byte
+    sta $2a             ; save BASIC start of variables low byte
+    iny                 ; increment the index to the file length high byte
+    lda ($22),y         ; get the file length high byte
+    adc $29             ; add BASIC start of program high byte
+    sta $2b             ; save BASIC start of variables high byte
 l_eebe:
     ldy #$08
     lda ($22),y
@@ -1090,12 +1177,12 @@ l_eebe:
     iny
     lda ($22),y
     sta $7f96           ;save the sector count
-    jsr read_sectors    ;read <n> sector(s) to memory ??
-    bne l_eef0
+    jsr read_sectors    ;read <n> sector(s) to memory
+    bne l_eef0          ;if there was an error go flag it and exit
 
-    ldx #$00
+    ldx #$00            ;flag no error
 l_eee3:
-    jmp l_eb0b          ;deselect the drives and stop the motors ??
+    jmp l_eb0b          ;stop the disk and return
 
 ; output "??????"
 
@@ -1107,9 +1194,11 @@ l_eeea:
     dex                 ;decrement the count
     bne l_eeea          ;loop if more to do
 
+; there was a load error
+
 l_eef0:
-    ldx #$ff
-    bne l_eee3          ;branch always
+    ldx #$ff            ;flag a load error
+    bne l_eee3          ;go deselect the drives and exit, branch always
 
 
 addr_prompt:
@@ -1139,7 +1228,7 @@ l_ef08:
     sta $66             ;save the address low byte
     bcc l_ef2e          ;if no error just exit
 
-    jsr l_ef2f
+    jsr l_ef2f          ;output "??" and shift the cursor left
     bcs l_ef08          ;go get another word
 
 
@@ -1152,15 +1241,15 @@ l_ef1b:
 l_ef1e:
 ; get and evaluate a hex byte second character
 ;
-    bcs l_ef32          ;if not hex go output a "?"
+    bcs l_ef32          ;if not hex output "?" and shift the cursor left
 
     asl                 ;shift the ..
     asl                 ;.. low nibble ..
     asl                 ;.. to the ..
     asl                 ;.. high nibble
-    sta $26
+    sta $26             ;save the high nibble
     jsr l_ef41          ;get and evaluate a hex character
-    bcs l_ef2f
+    bcs l_ef2f          ;if there was an error output "??" and cursor left
 
     ora $26             ;OR it with the high nibble
     clc                 ;flag ok
@@ -1169,17 +1258,17 @@ l_ef2e:
 
 
 l_ef2f:
-; ??
+; output "??" and shift the cursor left
 ;
-    jsr l_ef32
+    jsr l_ef32          ;output "?" and shift the cursor left
 
 
 l_ef32:
-; ??
+;output "?" and shift the cursor left
 ;
     lda #$3f            ;set "?"
     jsr chrout          ;do character out
-    lda #$9d
+    lda #$9d            ;set cursor left
     jsr chrout          ;do character out
     jsr chrout          ;do character out
 l_ef3f:
@@ -1190,7 +1279,7 @@ l_ef3f:
 l_ef41:
 ; get and evaluate a hex character
 ;
-    jsr l_ef59          ;get a character and ??
+    jsr l_ef59          ;get a character and test for {STOP}
 
 
 l_ef44:
@@ -1218,16 +1307,16 @@ l_ef58:
 
 
 l_ef59:
-; get a character and ??
+; get a character and test for {STOP}
 ;
     txa                 ;copy X
     pha                 ;save X
     tya                 ;copy Y
     pha                 ;save Y
 
-    lda #$e6
+    lda #$e6            ;set the cursor character
     jsr chrout          ;do character out
-    lda #$9d
+    lda #$9d            ;set cursor left
     jsr chrout          ;do character out
 
     jsr l_ef7b          ;wait for and echo a character
@@ -1239,10 +1328,10 @@ l_ef59:
     tax                 ;restore X
 
     lda $7f88           ;restore the charater
-    cmp #$03            ;compare it with ??
-    bne l_ef58          ;if ?? just exit
+    cmp #$03            ;compare it with {STOP}
+    bne l_ef58          ;if not {STOP} just exit
 
-    jmp $7a00
+    jmp $7a00           ;else go do {STOP}
 
 
 l_ef7b:
@@ -1255,7 +1344,7 @@ l_ef7b:
 
 
 enter_monitor:
-; ??
+;display/edit memory
 ;
     jsr l_eefb          ;get a hex address into $66   /67
 l_ef86:
@@ -1277,6 +1366,9 @@ l_ef97:
 
     lda #$0d            ;set [CR]
     jsr chrout          ;do character out
+
+; output six spaces
+
     ldx #$06            ;set the [SPACE] count
 l_efa8:
     jsr l_eb7a          ;output a [SPACE] character
@@ -1285,47 +1377,51 @@ l_efa8:
 
 l_efae:
     stx $27             ;save the line index
-    jsr l_ef59          ;get a character and ??
-    cmp #$0d            ;compare it with [CR]
+    jsr l_ef59          ;get a character and test for {STOP}
+    cmp #$0d            ;compare the character with [CR]
     beq enter_monitor   ;if [CR] go get another hex address
 
     cmp #$20            ;compare it with [SPACE]
     bne l_efc0          ;if not [SPACE] go evaluate a hex digit
 
-    jsr l_eb7a          ;output a [SPACE] character
+; the character was [SPACE]
+
+    jsr l_eb7a          ; output another [SPACE] character
     bne l_efd0          ;go increment the address, branch always
+
+; evaluate a hex digit
 
 l_efc0:
     jsr l_ef44          ;test and evaluate a hex digit
     jsr l_ef1e          ;get and evaluate a hex byte second character
-    bcs l_efae          ;if error go ??
+    bcs l_efae          ;if error go retry this byte
 
     ldy #$00            ;clear the index
     sta ($66),y         ;save the byte
     cmp ($66),y         ;compare the byte with the saved copy
-    bne l_efe2          ;if not the same go ??
+    bne l_efe2          ;if not the same go do "??" to show it didn't save
 
 ; the byte saved or [SPACE] was returned
 
 l_efd0:
     jsr l_eb7a          ;output a [SPACE] character
-    inc $66             ;inrement the address low byte
+    inc $66             ;increment the memory address low byte
     bne l_efd9          ;if no rollover skip the high byte increment
 
-    inc $67             ;else increment the high byte
+    inc $67             ;else increment the memory address high byte
 l_efd9:
-    ldx $27             ;get the line index
-    inx                 ;inccrement it
+    ldx $27             ;restore the line index
+    inx                 ;increment it
     cpx #$08            ;compare it with max + 1
-    bmi l_efae          ;if not there yet go ??
+    bmi l_efae          ;if not there yet go do another byte
 
-    bpl l_ef86          ;else ??, branch always
+    bpl l_ef86          ;else go display a new line, branch always
 
 ; the byte didn't save to memory correctly
 
 l_efe2:
-    jsr l_ef2f
-    bcs l_ef86          ;branch always
+    jsr l_ef2f          ;output "??" and shift the cursor left
+    bcs l_ef86          ;go display memory from address, branch always
 
 
 puts:
@@ -1345,5 +1441,5 @@ puts_loop:
 puts_done:
     rts
 
-    ; unused ??
+    ; unused
     !byte $68,$07,$01,$2b,$ff,$09,$5e
