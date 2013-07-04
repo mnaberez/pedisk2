@@ -425,8 +425,8 @@ disk_error:
     !text $0d,"DISK ERROR",$00
 
 
-l_eba0:
-;TODO ?
+select_drive:
+;select a drive
 ;
     lda #$00            ;clear A
     sta $7f94           ;clear the WD1793 status register copy
@@ -458,8 +458,8 @@ l_ebcd:
     rts
 
 
-l_ebce:
-;seek to track with retries ??
+seek_track:
+;seek to track with retries
 ;
     lda #$03            ;set the retry count
     sta $7f8c           ;save the retry count
@@ -608,8 +608,8 @@ l_ec5d:
     rts
 
 
-l_ec69:
-; increment pointers to the next sector ??
+next_sector:
+;increment pointers to the next sector
 ;
     lda l_b7            ;get the memory pointer low byte
     clc                 ;clear carry for add
@@ -727,11 +727,11 @@ l_ecdf:
 read_sectors:
 ; read <n> sector(s) to memory ??
 ;
-    jsr l_eba0
+    jsr select_drive
     bne l_ed38          ;if there was any error just exit
 
 l_ece9:
-    jsr l_ebce          ;seek to track with retries ??
+    jsr seek_track          ;seek to track with retries ??
     bne l_ed38
 
 l_ecee:
@@ -774,7 +774,7 @@ l_ed05:
     dec $7f96           ;deccrement the sector count
     beq l_ed38          ;if all done just exit
 
-    jsr l_ec69          ;increment pointers to the next sector ??
+    jsr next_sector          ;increment pointers to the next sector ??
     bcs l_ed38          ;if error just exit
 
     lda $7f92           ;get the WD1793 track number
@@ -810,12 +810,12 @@ l_ed3a:
 write_sectors:
 ; write <n> sector(s) to disk ??
 ;
-    jsr l_eba0
+    jsr select_drive
     bne l_ed38
 
 l_ed44:
-    jsr l_ebce          ;seek to track with retries ??
-    bne l_ed38
+    jsr seek_track      ;seek to track with retries ??
+    bne l_ed38          ;if there was any error just enable interrupts and exit
 
     lda fdc_cmdst       ;get the WD1793 status register
     and #%01000000      ;mask 0x00 0000, write protected
@@ -878,7 +878,7 @@ l_ed84:
     dec $7f96           ;deccrement the sector count
     beq l_ed38          ;if all done just exit
 
-    jsr l_ec69          ;increment pointers to the next sector ??
+    jsr next_sector          ;increment pointers to the next sector ??
     bcs l_ed38          ;if error just exit
 
     lda $7f92           ;get the WD1793 track number
