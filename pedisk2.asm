@@ -913,38 +913,46 @@ protected:
 
 
 l_edbd:
-;TODO ??
+;get a filename from a string or variable
 ;
-    jsr chrget          ;get the next BASIC byte
-    cmp #$22
-    php
-    bne l_edd3
+;however the filename is presented it seems it must consist of a name of
+;zero to six charaters, a ":" character and a drive charater so as a
+;literal string it would be "<name>:<drive>"
+;
+;when a string variable is used for the filename no check is made to see
+;if the string boundary has been passed, as long as there's a ":" character
+;six or fewer characters beyond the string start a filename will be returned
+;without any error
+;
+    jsr chrget          ; get the next BASIC byte
+    cmp #$22            ; compare it with an open quote character
+    php                 ; save the open quote compare status
+    bne l_edd3          ; if not an open quote go get a variable
 
     jsr chrget          ;get the next BASIC byte
-    lda txtptr
-    sta $24
-    lda txtptr+1
-    sta $25
-    jmp l_edea
+    lda txtptr          ; get the BASIC byte pointer low byte
+    sta $24             ; save the filename pointer low byte
+    lda txtptr+1        ; get the BASIC byte pointer high byte
+    sta $25             ; save the filename pointer high byte
+    jmp l_edea          ; get a filename
 
 l_edd3:
     jsr ptrget          ;find variable
-    bit $07
-    bmi l_eddf
+    bit $07             ;test the datatype
+    bmi l_eddf          ;if string type go get a filename from a string
 
-    lda #$03
+    lda #$03            ;else set disk error $03, no filename
 
 
 l_eddc:
-;TODO ??
+;do disk error and restore the stack
 ;
     jmp l_ec8e
 
-;***********************************************************************************;
-;
-; get a filename from a string
 
 l_eddf:
+; get a filename from a string
+;
     ldy #$01            ;set the index to the string pointer low byte
     lda ($44),y         ;get the string pointer low byte
     sta $24             ;save the filename pointer low byte
@@ -952,13 +960,13 @@ l_eddf:
     lda ($44),y         ;get the string pointer high byte
     sta $25             ;save the filename pointer high byte
 
+l_edea:
 ; get a filename
 ;
 ; unless I'm mistaken a filename must include a ":" character and the drive number
 ; at the end. no check is done on the drive number character so any charater will
 ; be taken as a valid drive number
-
-l_edea:
+;
     ldy #$00            ;clear the index
 l_edec:
     lda ($24),y         ;get a filename character
