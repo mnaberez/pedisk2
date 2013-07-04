@@ -119,11 +119,11 @@ under_io:
 
 l_ea00:
     jmp init            ;Initialize the system (SYS 55904)
-    jmp enter_monitor   ;Display/edit memory ("ADDR?")
+    jmp edit_memory     ;Display/edit memory ("ADDR?")
     jmp read_sectors    ;Read <n> sector(s) to memory
     jmp write_sectors   ;Write <n> sector(s) to disk
-    jmp e_ee33          ;Search for filename in the directory
-    jmp e_ee9e          ;Perform !LOAD
+    jmp find_file       ;Search for filename in the directory
+    jmp perform_load    ;Perform !LOAD
 
 l_ea12:
     !word $7812-1       ;vector for !SYS
@@ -1025,10 +1025,10 @@ l_ee32:
     rts
 
 
-e_ee33:
+find_file:
 ; search for filename in the directory
 ;
-; returns LAB_22/23 pointing to the entry and the returned status in X
+; returns $22/23 pointing to the entry and the returned status in X
 ; the directory starts on track 0, sector 1 and runs to track 0, sector 8
 ;
 ; the first file entry in the directory is at $10 in the first sector
@@ -1132,14 +1132,14 @@ l_ee95:
 l_ee98:
 ;!LOAD
 ;
-    jsr e_ee9e          ; perform !LOAD
+    jsr perform_load          ; perform !LOAD
     jmp l_eb5e          ; restore the top 32 bytes of the stack page and return EOT
 
 
-e_ee9e:
+perform_load:
 ;perform !LOAD
 ;
-    jsr e_ee33          ; search for filename in the directory
+    jsr find_file          ; search for filename in the directory
     tax                 ; copy the returned value
     bne l_eee6          ; if not found go do "??????" message
 
@@ -1343,7 +1343,7 @@ l_ef7b:
     jmp chrout          ;do character out
 
 
-enter_monitor:
+edit_memory:
 ;display/edit memory
 ;
     jsr l_eefb          ;get a hex address into $66   /67
@@ -1379,7 +1379,7 @@ l_efae:
     stx $27             ;save the line index
     jsr l_ef59          ;get a character and test for {STOP}
     cmp #$0d            ;compare the character with [CR]
-    beq enter_monitor   ;if [CR] go get another hex address
+    beq edit_memory   ;if [CR] go get another hex address
 
     cmp #$20            ;compare it with [SPACE]
     bne l_efc0          ;if not [SPACE] go evaluate a hex digit
