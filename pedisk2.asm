@@ -63,19 +63,21 @@ fdc_data     = fdc+3    ;  Data register
 ;                     0  busy
 ;
 
+valtyp      = $07       ;Data type of value: 0=numeric, $ff=string
+txttab      = $28       ;Pointer: Start of BASIC text
+vartab      = $2a       ;Pointer: Start of BASIC variables
 fretop      = $30       ;Pointer: Bottom of string storage
 frespc      = $32       ;Pointer: Utility string
 memsiz      = $34       ;Pointer: Highest address used by BASIC
+curlin      = $36       ;Current BASIC line number (2 bytes)
+varpnt      = $44       ;Pointer: Current BASIC variable
+oldlin      = $56       ;Previous BASIC line number (2 bytes)
 chrget      = $70       ;Subroutine: Get Next Byte of BASIC Text
 txtptr      = $77       ;Pointer: Current Byte of BASIC Text
-
-l_b7        = $b7       ;memory pointer low byte
-l_b8        = $b8       ;memory pointer high byte
-
-ptrget      = $c12b     ;find a variable
-l_d722      = $d722     ;output A as a two digit hex Byte
-l_d78d      = $d78d     ;evaluate a hex digit
-
+target      = $b7       ;Pointer: target address for memory operations
+ptrget      = $c12b     ;BASIC Find a variable
+wrob        = $d722     ;Monitor Write byte in A out as a two digit hex
+hexit       = $d78d     ;Monitor Evaluate char in A to a hex nibble
 chrout      = $ffd2     ;KERNAL Send a char to the current output device
 getin       = $ffe4     ;KERNAL Read a char from the current input device
 
@@ -231,7 +233,7 @@ l_ea71:
 ;
 ; check we're in immediate mode or go do an error
 
-    ldy $37             ;get the current BAISC line number high byte
+    ldy curlin+1        ;get the current BAISC line number high byte
     iny                 ;increment it
     bne l_ea87          ;if executing a program go do disk error $01, illegal
                         ;  command/mode
@@ -321,9 +323,9 @@ l_eace:
     ; load the boot code into memory @ $7800
 
     lda #<$7800         ;set the memory pointer low byte
-    sta l_b7            ;save the memory pointer low byte
+    sta target          ;save the memory pointer low byte
     lda #>$7800         ;set the memory pointer high byte
-    sta l_b8            ;save the memory pointer high byte
+    sta target+1        ;save the memory pointer high byte
 
     ldx #$00            ;set track zero
     stx $7f92           ;save the WD1793 track number
@@ -415,7 +417,7 @@ l_eb84:
 ;
     sta $7f8d           ;save X
     stx $7f8e           ;save A
-    jsr l_d722          ;output A as a two digit hex Byte
+    jsr wrob            ;Print A as a two digit hex number
     ldx $7f8e           ;restore X
     lda $7f8d           ;restore A
     rts
@@ -611,13 +613,13 @@ l_ec5d:
 next_sector:
 ;increment pointers to the next sector
 ;
-    lda l_b7            ;get the memory pointer low byte
+    lda target          ;get the memory pointer low byte
     clc                 ;clear carry for add
     adc #$80            ;add the sector byte count
-    sta l_b7            ;save the memory pointer low byte
+    sta target          ;save the memory pointer low byte
     bcc l_ec74          ;if no carry skip the highbyte increment
 
-    inc l_b8            ;else increment the memory pointer high byte
+    inc target+1        ;else increment the memory pointer high byte
 l_ec74:
     ldx $7f93           ;get the WD1793 sector number
     inx                 ;increment the sector number
@@ -763,7 +765,7 @@ l_ed05:
     beq l_ed05          ;if no data request or error go try again
 
     lda fdc_data        ;read the WD1793 data register
-    sta (l_b7),y        ;save the byte to memory
+    sta (target),y      ;save the byte to memory
     iny                 ;increment the index
     dex                 ;decrement the count
     bne l_ed05          ;loop if more to do
@@ -865,7 +867,7 @@ l_ed74:
     beq l_ed74          ;if no flags set go wait some more
 
 l_ed7b:
-    lda (l_b7),y        ;get a byte from memory
+    lda (target),y      ;get a byte from memory
     sta fdc_data        ;write the WD1793 data register
     iny                 ;inccrement the index
     dex                 ;decrement the byte count
@@ -938,7 +940,7 @@ l_edbd:
 
 l_edd3:
     jsr ptrget          ;find variable
-    bit $07             ;test the datatype
+    bit valtyp           ;test the datatype
     bmi l_eddf          ;if string type go get a filename from a string
 
     lda #$03            ;else set disk error $03, no filename
@@ -954,10 +956,10 @@ l_eddf:
 ; get a filename from a string
 ;
     ldy #$01            ;set the index to the string pointer low byte
-    lda ($44),y         ;get the string pointer low byte
+    lda (varpnt),y      ;get the string pointer low byte
     sta $24             ;save the filename pointer low byte
     iny                 ;increment the index to the string pointer high byte
-    lda ($44),y         ;get the string pointer high byte
+    lda (varpnt),y      ;get the string pointer high byte
     sta $25             ;save the filename pointer high byte
 
 l_edea:
@@ -1065,9 +1067,9 @@ find_file:
     sty $7f93           ;save the WD1793 sector number
 
     lda #$00            ;set the memory pointer low byte
-    sta l_b7            ;save the memory pointer low byte
+    sta target          ;save the memory pointer low byte
     lda #$7f            ;set the memory pointer high byte
-    sta l_b8            ;save the memory pointer high byte
+    sta target+1        ;save the memory pointer high byte
     sta $23             ;set the search pointer high byte
 
     jsr l_ecdf          ;read one sector to memory
@@ -1076,9 +1078,9 @@ find_file:
 ; there was no error
 
     lda $7f09
-    sta $56
+    sta oldlin
     lda $7f0a
-    sta $57
+    sta oldlin+1
 
 ; there was no error
 
@@ -1165,19 +1167,19 @@ perform_load:
     ldy #$06            ;set the index to the file length low byte
     lda ($22),y         ;get the file length low byte
     clc                 ;clear carry for add
-    adc $28             ;add BASIC start of program low byte
-    sta $2a             ;save BASIC start of variables low byte
+    adc txttab          ;add BASIC start of program low byte
+    sta vartab          ;save BASIC start of variables low byte
     iny                 ;increment the index to the file length high byte
     lda ($22),y         ;get the file length high byte
-    adc $29             ;add BASIC start of program high byte
-    sta $2b             ;save BASIC start of variables high byte
+    adc txttab+1        ;add BASIC start of program high byte
+    sta vartab+1        ;save BASIC start of variables high byte
 l_eebe:
     ldy #$08
     lda ($22),y
-    sta l_b7            ;save the memory pointer low byte
+    sta target          ;save the memory pointer low byte
     iny
     lda ($22),y
-    sta l_b8            ;save the memory pointer high byte
+    sta target+1        ;save the memory pointer high byte
     ldy #$0c
     lda ($22),y
     sta $7f92           ;save the WD1793 track number
@@ -1310,7 +1312,7 @@ l_ef44:
     ; evaluate the hex digit
 
 l_ef54:
-    jsr l_d78d          ;evaluate a hex digit
+    jsr hexit           ;evaluate A to a hex nibble
     clc                 ;flag a hex digit
 l_ef58:
     rts
