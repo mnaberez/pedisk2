@@ -75,6 +75,15 @@ oldlin      = $56       ;Previous BASIC line number (2 bytes)
 chrget      = $70       ;Subroutine: Get Next Byte of BASIC Text
 txtptr      = $77       ;Pointer: Current Byte of BASIC Text
 target      = $b7       ;Pointer: target address for memory operations
+dos         = $7800     ;Base address for the RAM-resident portion
+dos_save    = dos+$00   ;Entry point for !SAVE in RAM
+dos_open    = dos+$03   ;Entry point for !OPEN in RAM
+dos_close   = dos+$06   ;Entry point for !CLOSE in RAM
+dos_input   = dos+$09   ;Entry point for !INPUT in RAM
+dos_print   = dos+$0c   ;Entry point for !PRINT in RAM
+dos_run     = dos+$0f   ;Entry point for !RUN (load and run) in RAM
+dos_sys     = dos+$12   ;Entry point for !SYS (disk monitor) in RAM
+dos_list    = dos+$15   ;Entry point for !LIST (directory) in RAM
 ptrget      = $c12b     ;BASIC Find a variable
 wrob        = $d722     ;Monitor Write byte in A out as a two digit hex
 hexit       = $d78d     ;Monitor Evaluate char in A to a hex nibble
@@ -122,23 +131,31 @@ under_io:
 entry_points:
     jmp init            ;Initialize the system (SYS 55904)
     jmp edit_memory     ;Display/edit memory ("ADDR?")
-    jmp read_sectors    ;Read <n> sector(s) to memory
-    jmp write_sectors   ;Write <n> sector(s) to disk
+    jmp read_sectors    ;Read sectors into memory
+    jmp write_sectors   ;Write sectors to disk
     jmp find_file       ;Search for filename in the directory
     jmp perform_load    ;Perform !LOAD
 
 cmd_vectors:
-    !word $7812-1       ;vector for !SYS
-    !word l_ee98-1      ;vector for !LOAD
-    !word $7800-1       ;vector for !SAVE
-    !word $7803-1       ;vector for !OPEN
-    !word $7806-1       ;vector for !CLOSE
-    !word $7809-1       ;vector for !INPUT
-    !word $780c-1       ;vector for !PRINT
-    !word $780f-1       ;vector for !RUN
-    !word $7815-1       ;vector for !LIST
+;The vectors are in the same order as the tokens below.  Each vector
+;points to the RAM-resident portion, with the sole exception of the
+;one for !LOAD which is in this ROM.  The vectors are all -1 because
+;RTS is used to jump to them (push vector onto stack, then RTS).
+;
+    !word dos_sys-1     ;vector for !SYS
+    !word romdos_load-1 ;vector for !LOAD (in this ROM)
+    !word dos_save-1    ;vector for !SAVE
+    !word dos_open-1    ;vector for !OPEN
+    !word dos_close-1   ;vector for !CLOSE
+    !word dos_input-1   ;vector for !INPUT
+    !word dos_print-1   ;vector for !PRINT
+    !word dos_run-1     ;vector for !RUN
+    !word dos_list-1    ;vector for !LIST
 
 cmd_tokens:
+;PEDISK II commands share the same names as existing Commodore BASIC
+;commands but are prefixed with an exclamation point for the wedge.
+;
     !byte $9e           ;token for SYS
     !byte $93           ;token for LOAD
     !byte $94           ;token for SAVE
@@ -277,16 +294,16 @@ init:
 ;Initialize the system
 ;
     cld                 ; clear decimal mode
-    lda #<$7800
+    lda #<dos
     sta memsiz          ;BASIC top of memory low byte
     sta fretop          ;BASIC end of strings low byte
-    lda #>$7800
+    lda #>dos
     sta memsiz+1        ;BASIC top of memory high byte
     sta fretop+1        ;BASIC end of strings high byte
 
-    lda #<$77ff
+    lda #<dos-1
     sta frespc          ;utility string pointer low byte
-    lda #>$77ff
+    lda #>dos-1
     sta frespc+1        ;utility string pointer high byte
 
 ; display the startup message
@@ -301,7 +318,7 @@ init:
 l_eab8:
     txa                 ;copy X
     eor #$ff            ;invert it
-    sta $7800,x         ;save it to RAM
+    sta dos,x           ;save it to RAM
     dex                 ;decrement the index
     bpl l_eab8          ;loop if more to do, branch never
 
@@ -309,7 +326,7 @@ l_eab8:
 l_eac3:
     txa                 ;copy X
     eor #$ff            ;invert it
-    cmp $7800,x         ;compare it with the previously saved version
+    cmp dos,x           ;compare it with the previously saved version
     beq l_eace          ;if they're the same just continue
 
     jmp puts_mem_err    ;else do "MEM ERROR" message and return
@@ -325,11 +342,11 @@ l_eace:
     sta $7ee0
 
 load_boot_code:
-;Load the boot code into memory @ $7800
+;Load the RAM-resident portion from disk into memory
 ;
-    lda #<$7800         ;set the memory pointer low byte
+    lda #<dos           ;set the memory pointer low byte
     sta target          ;save the memory pointer low byte
-    lda #>$7800         ;set the memory pointer high byte
+    lda #>dos           ;set the memory pointer high byte
     sta target+1        ;save the memory pointer high byte
 
     ldx #$00            ;set track zero
@@ -348,8 +365,8 @@ load_boot_code:
     bne l_eb0b          ;if any error go deselect the drives, stop the motors
                         ;and exit to BASIC
 
-;After the boot code is loaded successfully from disk, the CHRGET
-;routine in zero page is patched to jump to the wedge.
+;After the RAM resident portion has been loaded successfully, the
+;CHRGET routine in zero page is patched to jump to the wedge.
 ;
 ;Before:                            After:
 ;
@@ -1160,8 +1177,9 @@ l_ee95:
     rts
 
 
-l_ee98:
-;!LOAD
+romdos_load:
+;Entry point for !LOAD, the only PEDISK II command that is resident
+;in the ROM instead of the RAM portion.
 ;
     jsr perform_load    ;perform !LOAD
     jmp l_eb5e          ;restore the top 32 bytes of the stack page and return EOT
