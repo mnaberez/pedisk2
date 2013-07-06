@@ -433,23 +433,23 @@ l_eb61:
     jmp check_colon     ;Jump out to the wedge
 
 
-l_eb7a:
-; output a [SPACE] character
+put_spc:
+;Output a space character
 ;
-    lda #$20            ;set [SPACE]
+    lda #' '            ;set [SPACE]
     jmp chrout          ;do character out and return
 
 
-l_eb7f:
-;output [SPACE] <A> as a two digit hex Byte
+put_spc_hex:
+;Output a space char followed by the byte in A as a two digit hex number
 ;
     pha                 ;save A
-    jsr l_eb7a          ;output a [SPACE] character
+    jsr put_spc         ;output a [SPACE] character
     pla                 ;restore A
+                        ;Fall through into put_hex_byte
 
-
-l_eb84:
-;output A as a two digit hex Byte
+put_hex_byte:
+;Output the byte in A as a two digit hex number
 ;
     sta $7f8d           ;save X
     stx $7f8e           ;save A
@@ -706,12 +706,12 @@ l_ec96:
     tay                 ;restore Y
     pla                 ;restore A
 
-    jsr l_eb7f          ;output [SPACE] <A> as a two digit hex Byte
+    jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex Byte
 
     ldx #$00            ;clear the index
 l_eca8:
     lda $7f90,x
-    jsr l_eb7f          ;output [SPACE] <A> as a two digit hex Byte
+    jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex Byte
     inx                 ;increment the index
     cpx #$07            ;compare it with max + 1
     bmi l_eca8          ;loop if more to do
@@ -1031,7 +1031,7 @@ l_ee01:
 
 ; pad the rest of the filename with spaces
 
-    lda #$20            ;set [SPACE]
+    lda #' '            ;set [SPACE]
 l_ee05:
     cpx #$06            ;compare the filename index with max + 1
     bcs l_ee0f          ;if done go get the drive number
@@ -1401,14 +1401,14 @@ l_ef86:
     jsr chrout          ;do character out
 
     lda $67             ;get the address high byte
-    jsr l_eb7f          ;output [SPACE] <A> as a two digit hex Byte
+    jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex Byte
     lda $66             ;get the address low byte
-    jsr l_eb84          ;output A as a two digit hex Byte
+    jsr put_hex_byte    ;output A as a two digit hex Byte
 
     ldy #$00            ;clear the index
 l_ef97:
     lda ($66),y         ;get a byte from memory
-    jsr l_eb7f          ;output [SPACE] <A> as a two digit hex Byte
+    jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex Byte
     iny                 ;increment the index
     cpy #$08            ;compare it with max + 1
     bmi l_ef97          ;loop if more to do
@@ -1420,7 +1420,7 @@ l_ef97:
 
     ldx #$06            ;set the [SPACE] count
 l_efa8:
-    jsr l_eb7a          ;output a [SPACE] character
+    jsr put_spc         ;output a [SPACE] character
     dex                 ;decrement the [SPACE] count
     bne l_efa8          ;loop if more to do
 
@@ -1430,12 +1430,12 @@ l_efae:
     cmp #$0d            ;compare the character with [CR]
     beq edit_memory   ;if [CR] go get another hex address
 
-    cmp #$20            ;compare it with [SPACE]
+    cmp #' '            ;compare it with [SPACE]
     bne l_efc0          ;if not [SPACE] go evaluate a hex digit
 
 ; the character was [SPACE]
 
-    jsr l_eb7a          ; output another [SPACE] character
+    jsr put_spc         ; output another [SPACE] character
     bne l_efd0          ;go increment the address, branch always
 
 ; evaluate a hex digit
@@ -1453,7 +1453,7 @@ l_efc0:
 ; the byte saved or [SPACE] was returned
 
 l_efd0:
-    jsr l_eb7a          ;output a [SPACE] character
+    jsr put_spc         ;output a [SPACE] character
     inc $66             ;increment the memory address low byte
     bne l_efd9          ;if no rollover skip the high byte increment
 
