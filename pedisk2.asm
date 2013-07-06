@@ -149,7 +149,7 @@ cmd_tokens:
     !byte $8a           ;token for RUN
     !byte $9b           ;token for LIST
 
-    !byte $ff,$00       ;unused ??
+    !byte $ff,$00       ;unused
 
 drive_selects:
 ; drive select byte
@@ -157,108 +157,112 @@ drive_selects:
     !byte $02           ;drive 1 select bit pattern
     !byte $04           ;drive 2 select bit pattern
 
+
 wedge:
-;get BASIC byte patch
-;this is called by a JMP written to the get BASIC byte routine at $79
+;A patch is installed in CHRGET to jump to this wedge.  The next byte in
+;the current BASIC line will be in A when the patch jumps here.
 ;
-    CMP #'!'            ;compare the character with "!"
-    bne l_ea44          ;if not "!" go test ":"
+    cmp #'!'            ;Is it the lead-in char for PEDISK commands?
+    bne check_colon     ;  No: skip over the token check
 
-; found a "!" character
+    sty $7f8a           ;Save original Y
+    ldy #$01            ;Set Y to look ahead at the next byte
+    lda (txtptr),y      ;Get the next byte after the "!"
+    bmi handle_token    ;Does it have bit 7 set, indicating a BASIC token?
 
-    sty $7f8a           ;save Y
+    ldy $7f8a           ;Restore orginal Y
+    lda #'!'            ;Restore A to its original value ("!")
 
-    ldy #$01            ;set the index to the following byte
-    lda (txtptr),y      ;get the following byte
-    bmi l_ea4c          ;if it's a token go test it
+check_colon:
+    cmp #':'            ;Compare the character with ":"
+    bcs bypass_chrget   ;If >= ":" then bail out
+    jmp chrget+$0d      ;  else jump back into CHRGET
 
-    ldy $7f8a           ;restore Y
-    lda #$21            ;restore A
+bypass_chrget:
+    rts                 ;Return to the caller directly instead of
+                        ;  jumping back to CHRGET
 
-l_ea44:
-    CMP #':'            ;compare the character with ":"
-    bcs l_ea4b          ;if >= ":" just exit
-
-    jmp $007d           ;else return to get BASIC byte routine
-
-l_ea4b:
-    rts
-
-
-l_ea4c:
-;test a token following a "!" character
+handle_token:
+;CHRGET has been called with the PEDISK command lead-in "!" and the
+;next byte after the "!" is a BASIC token.  Check if the TOKEN is
+;a valid PEDISK command, and either dispatch it or show an error.
 ;
-    cld                 ;clear decimal mode
-    stx $7f89           ;save X
-    tsx                 ;copy the stack pointer
-    stx $7f8b           ;save the stack pointer
+    cld                 ;Clear decimal mode
+    stx $7f89           ;Save X
+    tsx
+    stx $7f8b           ;Save the stack pointer
 
-; save the top 32 bytes of the stack page, done with interrupts disabled
+                        ;Save the top of the stack, must have no IRQs:
+    ldx #$1f            ;  Set the byte count/index
+    sei                 ;  Disable interrupts
+save_stack_loop:        ;
+    lda $01e0,x         ;  Get the byte from the stack
+    sta $7fe0,x         ;  Save it off to temporary storage
+    dex                 ;  Decrement bytes remaining
+    bpl save_stack_loop ;  Loop until 32 bytes are saved
+                        ;  X has been decremented past 0 and is now $ff
 
-    ldx #$1f            ;set the byte count/index
-    sei                 ;disable interrupts
-l_ea57:
-    lda $01e0,x         ;get a stack page byte
-    sta $7fe0,x         ;save it
-    dex                 ;decrement the byte count/index
-    bpl l_ea57          ;loop if more to do
+                        ;Set stack pointer to top of stack, re-enable IRQs:
+    txs                 ;  Set the stack pointer to $ff
+    cli                 ;  Enable interrupts again
 
-    txs                 ;set the stack pointer to $FF
+    jsr chrget          ;Get the next byte from the BASIC line
+                        ;  (this will be the byte after the "!", which
+                        ;     we already know is a valid BASIC token)
 
-; stack is saved so enable the interrupts again
+                        ;Find the token in the PEDISK tokens table:
+    ldx #$08            ;  Index of the last token
+find_token_loop:
+    cmp cmd_tokens,x    ;Is the token in A the same as this token?
+    beq dispatch_token  ;  Yes: dispatch it
+    dex                 ;   No: decrement X
+    bpl find_token_loop ;         and loop until all have been checked
 
-    cli                 ;enable interrupts
-    jsr chrget          ;get the next BASIC byte
-    ldx #$08            ;set the test index to the last entry
-l_ea67:
-    cmp cmd_tokens,x    ;compare the token byte with a table token
-    beq l_ea71          ;if they match go try to execute the command
+                        ;Not a PEDISK token:
+    bmi illegal_cmd     ;  Branch always to disk error for illegal cmd/mode
 
-    dex                 ;decrement the index
-    bpl l_ea67          ;loop if more to do
-
-    bmi l_ea87          ;else go do disk error $01, illegal command/mode
-                        ;  branch always
-
-; the token byte matches a table token
-
-l_ea71:
-    cpx #$08            ;compare the index with the index for !LIST
-    beq l_ea84          ;if it is the index for !LIST go do it
-
-    cpx #$02            ;compare the index with the index for !SAVE
-    bcs l_ea8c          ;if >= !SAVE continue
-
-; !SYS and !LOAD get some special treatment
+dispatch_token:
+;A valid PEDISK command token has been found.  Its index to the cmd_tokens
+;and cmd_vectors tables is in A.  Dispatch it to perform the command.
 ;
-; check we're in immediate mode or go do an error
+                        ;Dispatch !LIST:
+    cpx #$08            ;  Is it the token index for !LIST?
+    beq l_ea84          ;    Yes: dispatch it
+
+                        ;Dispatch !SAVE:
+    cpx #$02            ;  Is it the token index for !SAVE?
+    bcs l_ea8c          ;    Yes: dispatch it
+
+;!SYS and !LOAD get some special treatment
+;
+;check we're in immediate mode or go do an error
 
     ldy curlin+1        ;get the current BAISC line number high byte
     iny                 ;increment it
-    bne l_ea87          ;if executing a program go do disk error $01, illegal
+    bne illegal_cmd          ;if executing a program go do disk error $01, illegal
                         ;  command/mode
 
-; else we're in immediate mode
+;else we're in immediate mode
 
     txa                 ;copy the index
     bne l_ea8c          ;if it's !LOAD go handle it like any other command
 
     jmp $7812           ;else go do !SYS
 
-; go do !LIST
 
 l_ea84:
+; go do !LIST
     jmp $7815           ;do !LIST
 
-; do disk error $01, illegal command/mode
 
-l_ea87:
+illegal_cmd:
+; do disk error $01, illegal command/mode
     lda #$01
     jmp l_ec8e
 
-; found a match and the execution mode is ok
 
 l_ea8c:
+; found a match and the execution mode is ok
     txa                 ;copy the index
     asl                 ;* 2 bytes per vector
     tax                 ;back to the index
@@ -320,8 +324,9 @@ l_eace:
     sta $7ec0
     sta $7ee0
 
-    ; load the boot code into memory @ $7800
-
+load_boot_code:
+;Load the boot code into memory @ $7800
+;
     lda #<$7800         ;set the memory pointer low byte
     sta target          ;save the memory pointer low byte
     lda #>$7800         ;set the memory pointer high byte
@@ -343,14 +348,28 @@ l_eace:
     bne l_eb0b          ;if any error go deselect the drives, stop the motors
                         ;and exit to BASIC
 
-; the boot code loaded so patch the get BASIC byte routine
+;After the boot code is loaded successfully from disk, the CHRGET
+;routine in zero page is patched to jump to the wedge.
+;
+;Before:                            After:
+;
+;chrget $0070 e6 77    inc $77      chrget $0070 e6 77    inc $77
+;       $0072 d0 02    bne $76             $0072 d0 02    bne $76
+;       $0074 ad xx xx lda $xxxx           $0074 ad xx xx lda $xxxx
+;       $0077 c9 ea    cmp #$3a            $0077 c9 ea    cmp #$3a
+;       $0079 b0 0c    bcs $0087           $0079 4c 32 ea jmp $ea32  <--
+;       $007b c9 20    cmp #$20
+;       $007d f0 f1    beq $70             $007d f0 f1    beq $70
+;
+;When the wedge is done, it will either return to the caller directly with
+;RTS, or it will JMP $007D to continue CHRGET processing.
 
-    lda #$4c            ;set JMP opcode
-    sta $79             ;save the JMP opcode
-    lda #<wedge         ;set the JMP address low byte
-    sta $7a             ;save the JMP address low byte
-    lda #>wedge         ;set the JMP address high byte
-    sta $7b             ;save the JMP address high byte
+    lda #$4c
+    sta chrget+$09      ;Patch opcode for JMP
+    lda #<wedge
+    sta chrget+$0a      ;Patch low byte of wedge address
+    lda #>wedge
+    sta chrget+$0b      ;Patch high byte of wedge address
 
 
 l_eb0b:
@@ -1297,16 +1316,16 @@ l_ef41:
 l_ef44:
 ; test and evaluate a hex digit
 ;
-    CMP #'0'            ;compare the character with "0"
+    cmp #'0'            ;compare the character with "0"
     bcc l_ef3f          ;if < "0" go return non hex
 
-    CMP #'9'+1          ;compare the character with "9"+1
+    cmp #'9'+1          ;compare the character with "9"+1
     bcc l_ef54          ;if < "9"+1 go evaluate the hex digit
 
-    CMP #'A'            ;compare the character with "A"
+    cmp #'A'            ;compare the character with "A"
     bcc l_ef3f          ;if < "A" go return non hex
 
-    CMP #'F'+1          ;compare the character with "F"+1
+    cmp #'F'+1          ;compare the character with "F"+1
     bcs l_ef3f          ;if >= "F"+1 go return non hex
 
     ; evaluate the hex digit
