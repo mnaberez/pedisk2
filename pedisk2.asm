@@ -168,7 +168,7 @@ wedge:
     sty $7f8a           ;Save original Y
     ldy #$01            ;Set Y to look ahead at the next byte
     lda (txtptr),y      ;Get the next byte after the "!"
-    bmi handle_token    ;Does it have bit 7 set, indicating a BASIC token?
+    bmi handle_token    ;Branch if it has bit 7 set (indicates BASIC token)
 
     ldy $7f8a           ;Restore orginal Y
     lda #'!'            ;Restore A to its original value ("!")
@@ -237,9 +237,9 @@ dispatch_token:
 ;
 ;check we're in immediate mode or go do an error
 
-    ldy curlin+1        ;get the current BAISC line number high byte
+    ldy curlin+1        ;get the current BASIC line number high byte
     iny                 ;increment it
-    bne illegal_cmd          ;if executing a program go do disk error $01, illegal
+    bne illegal_cmd     ;if executing a program go do disk error $01, illegal
                         ;  command/mode
 
 ;else we're in immediate mode
@@ -363,7 +363,7 @@ load_boot_code:
 ;
 ;When the wedge is done, it will either return to the caller directly with
 ;RTS, or it will JMP $007D to continue CHRGET processing.
-
+;
     lda #$4c
     sta chrget+$09      ;Patch opcode for JMP
     lda #<wedge
@@ -991,7 +991,7 @@ l_edea:
     ldy #$00            ;clear the index
 l_edec:
     lda ($24),y         ;get a filename character
-    cmp #$3a            ;compare it with ":"
+    cmp #':'            ;compare it with ":"
     beq l_ee01          ;if it is ":" go get a drive number
 
     cpy #$06            ;compare the index with max + 1
