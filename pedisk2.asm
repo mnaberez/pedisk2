@@ -413,7 +413,7 @@ l_eb61:
     ldy $7f8a           ;restore Y
     ldx $7f89           ;restore X
     lda #$00            ;return an End Of Text byte
-    jmp l_ea44          ;return to the get BASIC byte patch
+    jmp check_colon     ;Jump out to the wedge
 
 
 l_eb7a:
