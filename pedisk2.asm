@@ -268,18 +268,18 @@ dispatch_token:
 
 
 l_ea84:
-; go do !LIST
+;go do !LIST
     jmp $7815           ;do !LIST
 
 
 illegal_cmd:
-; do disk error $01, illegal command/mode
+;do disk error $01, illegal command/mode
     lda #$01
     jmp l_ec8e
 
 
 l_ea8c:
-; found a match and the execution mode is ok
+;found a match and the execution mode is ok
     txa                 ;copy the index
     asl                 ;* 2 bytes per vector
     tax                 ;back to the index
@@ -293,7 +293,7 @@ l_ea8c:
 init:
 ;Initialize the system
 ;
-    cld                 ; clear decimal mode
+    cld                 ;clear decimal mode
     lda #<dos
     sta memsiz          ;BASIC top of memory low byte
     sta fretop          ;BASIC end of strings low byte
@@ -306,13 +306,13 @@ init:
     lda #>dos-1
     sta frespc+1        ;utility string pointer high byte
 
-; display the startup message
+;display the startup message
 
     lda #<banner        ;set the message pointer low byte
     ldy #>banner        ;set the message pointer high byte
     jsr puts            ;message out
 
-; test the RAM, well one byte of it at $78F2 anyway
+;test the RAM, well one byte of it at $78F2 anyway
 
     ldx #$f2            ;set the index/test byte
 l_eab8:
@@ -365,6 +365,7 @@ load_boot_code:
     bne l_eb0b          ;if any error go deselect the drives, stop the motors
                         ;and exit to BASIC
 
+install_wedge:
 ;After the RAM resident portion has been loaded successfully, the
 ;CHRGET routine in zero page is patched to jump to the wedge.
 ;
@@ -390,7 +391,7 @@ load_boot_code:
 
 
 l_eb0b:
-; deselect the drives and stop the motors ??
+;deselect the drives and stop the motors ??
 ;
     lda #$08
     sta drive_sel       ;save the drive select latch
@@ -490,8 +491,8 @@ select_drive:
 
     lda fdc_cmdst       ;get the WD1793 status register
     and #%10000000      ;mask x000 0000, drive not ready
-    bne l_ec05          ;if the drive is not ready go do disk error $13, drive
-                        ;   not ready
+    bne l_ec05          ;if the drive is not ready go do disk error $13,
+                        ;  drive not ready
 l_ebcd:
     rts
 
@@ -523,7 +524,7 @@ l_ebd3:
 
     rts
 
-    ; there was an error or the track numbers differ
+    ;there was an error or the track numbers differ
 
 l_ebf2:
     lda #$02            ;set restore command, 20ms step rate
@@ -532,30 +533,30 @@ l_ebf2:
     dec $7f8c           ;decrement the retry count
     bne l_ebd3          ;if not all done go try again
 
-    ; else do disk error $10
+    ;else do disk error $10
 
     lda #$10            ;set error $10
     !byte $2c           ;makes next line BIT $xxxx
 
-    ; do disk error $15
+    ;do disk error $15
 
 l_ebff:
     lda #$15            ;set error $15
     !byte $2c           ;makes next line BIT $xxxx
 
-    ; do disk error $17
+    ;do disk error $17
 
 l_ec02:
     lda #$17            ;set error $17
     !byte $2c           ;makes next line BIT $xxxx
 
-    ; do disk error $13, drive not ready
+    ;do disk error $13, drive not ready
 
 l_ec05:
     lda #$13            ;set error $13
     !byte $2c           ;makes next line BIT $xxxx
 
-    ; do disk error $14
+    ;do disk error $14
 
 l_ec08:
     lda #$14            ;set error $14
@@ -563,7 +564,7 @@ l_ec08:
 
 
 l_ec0d:
-; wait for WD1793 not busy and do command A
+;wait for WD1793 not busy and do command A
 ;
     jsr l_ec1e          ;wait for WD1793 not busy
     bcs l_ec02          ;if counted out go do disk error $17
@@ -576,7 +577,7 @@ l_ec0d:
 
 
 l_ec1e:
-; wait for WD1793 not busy
+;wait for WD1793 not busy
 ;
     pha                 ;save A
     txa                 ;copy X
@@ -623,13 +624,13 @@ l_ec4d:
 
 
 l_ec53:
-; delay for $C6 * ?? cycles
+;delay for $C6 * ?? cycles
 ;
     lda #$01            ;set the outer loop count
 
 
 l_ec55:
-; delay for A * $C6 * ?? cycles
+;delay for A * $C6 * ?? cycles
 ;
     sta $7f8d           ;save the outer loop count
     stx $7f8e           ;save X
@@ -679,7 +680,7 @@ l_ec8e:
 ;do disk error and restore the stack
 ;
     jsr l_ec96          ;do "DISK ERROR" message and stop the disk
-    jmp l_eb5e   ;restore the top 32 bytes of the stack page
+    jmp l_eb5e          ;restore the top 32 bytes of the stack page
                         ;  and return EOT
 
 
@@ -690,13 +691,13 @@ l_ec94:
 
 
 l_ec96:
-; do "DISK ERROR" message and ??
+;do "DISK ERROR" message and ??
 ;
     pha                 ;save A
     tya                 ;copy Y
     pha                 ;save Y
 
-    ; do "DISK ERROR" message
+    ;do "DISK ERROR" message
 
     lda #<disk_error    ;set the message pointer low byte
     ldy #>disk_error    ;set the message pointer high byte
@@ -728,7 +729,7 @@ l_ecbd:
 
 
 l_ecc0:
-; write a WD1793 command and wait a bit
+;write a WD1793 command and wait a bit
 ;
     sta $7f95           ;save the WD1793 command register copy
     sta fdc_cmdst       ;save the WD1793 command
@@ -744,7 +745,7 @@ l_ecca:
 
 
 l_ecd0:
-; wait for WD1793 not busy and mask the status
+;wait for WD1793 not busy and mask the status
 ;
     jsr l_ec1e          ;wait for WD1793 not busy
     bcs l_ecbd          ;if counted out go return $FF
@@ -756,20 +757,20 @@ l_ecd0:
 
 
 l_ecdf:
-; read one sector to memory ??
+;read one sector to memory ??
 ;
     lda #$01            ;set the sector count
     sta $7f96           ;save the sector count
 
 
 read_sectors:
-; read <n> sector(s) to memory ??
+;read <n> sector(s) to memory ??
 ;
     jsr select_drive
     bne l_ed38          ;if there was any error just exit
 
 l_ece9:
-    jsr seek_track          ;seek to track with retries ??
+    jsr seek_track      ;seek to track with retries
     bne l_ed38
 
 l_ecee:
@@ -812,7 +813,7 @@ l_ed05:
     dec $7f96           ;deccrement the sector count
     beq l_ed38          ;if all done just exit
 
-    jsr next_sector          ;increment pointers to the next sector ??
+    jsr next_sector     ;increment pointers to the next sector
     bcs l_ed38          ;if error just exit
 
     lda $7f92           ;get the WD1793 track number
@@ -825,13 +826,13 @@ l_ed2e:
     dec $7f8c
     bne l_ecf3
 
-    ; do disk error $40
+    ;do disk error $40
 
 l_ed33:
     lda #$40
     jmp l_ec96          ;do "DISK ERROR" message and ??
 
-    ; no error exit
+    ;no error exit
 
 l_ed38:
     cli                 ;enable interrupts
@@ -839,14 +840,14 @@ l_ed38:
 
 
 l_ed3a:
-; write one sector to disk ??
+;write one sector to disk ??
 ;
     lda #$01            ;set a single sector
     sta $7f96           ;save the sector count
 
 
 write_sectors:
-; write <n> sector(s) to disk ??
+;write <n> sector(s) to disk ??
 ;
     jsr select_drive
     bne l_ed38
@@ -916,7 +917,7 @@ l_ed84:
     dec $7f96           ;deccrement the sector count
     beq l_ed38          ;if all done just exit
 
-    jsr next_sector          ;increment pointers to the next sector ??
+    jsr next_sector     ;increment pointers to the next sector
     bcs l_ed38          ;if error just exit
 
     lda $7f92           ;get the WD1793 track number
@@ -929,7 +930,7 @@ l_ed9d:
     dec $7f8c
     bne l_ed55
 
-    ; do disk error $50
+    ;do disk error $50
 
 l_eda2:
     lda #$50            ;set disk error $50
@@ -937,7 +938,7 @@ l_eda2:
 
 
 do_protected:
-; do "PROTECTED!" message
+;do "PROTECTED!" message
 ;
     lda #<protected     ;set the message pointer low byte
     ldy #>protected     ;set the message pointer high byte
@@ -962,21 +963,21 @@ l_edbd:
 ;six or fewer characters beyond the string start a filename will be returned
 ;without any error
 ;
-    jsr chrget          ; get the next BASIC byte
-    cmp #$22            ; compare it with an open quote character
-    php                 ; save the open quote compare status
-    bne l_edd3          ; if not an open quote go get a variable
+    jsr chrget          ;get the next BASIC byte
+    cmp #$22            ;compare it with an open quote character
+    php                 ;save the open quote compare status
+    bne l_edd3          ;if not an open quote go get a variable
 
     jsr chrget          ;get the next BASIC byte
-    lda txtptr          ; get the BASIC byte pointer low byte
-    sta $24             ; save the filename pointer low byte
-    lda txtptr+1        ; get the BASIC byte pointer high byte
-    sta $25             ; save the filename pointer high byte
-    jmp l_edea          ; get a filename
+    lda txtptr          ;get the BASIC byte pointer low byte
+    sta $24             ;save the filename pointer low byte
+    lda txtptr+1        ;get the BASIC byte pointer high byte
+    sta $25             ;save the filename pointer high byte
+    jmp l_edea          ;get a filename
 
 l_edd3:
     jsr ptrget          ;find variable
-    bit valtyp           ;test the datatype
+    bit valtyp          ;test the datatype
     bmi l_eddf          ;if string type go get a filename from a string
 
     lda #$03            ;else set disk error $03, no filename
@@ -989,7 +990,7 @@ l_eddc:
 
 
 l_eddf:
-; get a filename from a string
+;get a filename from a string
 ;
     ldy #$01            ;set the index to the string pointer low byte
     lda (varpnt),y      ;get the string pointer low byte
@@ -999,11 +1000,11 @@ l_eddf:
     sta $25             ;save the filename pointer high byte
 
 l_edea:
-; get a filename
+;get a filename
 ;
-; unless I'm mistaken a filename must include a ":" character and the drive number
-; at the end. no check is done on the drive number character so any charater will
-; be taken as a valid drive number
+;unless I'm mistaken a filename must include a ":" character and the drive number
+;at the end. no check is done on the drive number character so any charater will
+;be taken as a valid drive number
 ;
     ldy #$00            ;clear the index
 l_edec:
@@ -1014,7 +1015,7 @@ l_edec:
     cpy #$06            ;compare the index with max + 1
     bcc l_edfb          ;if not max + 1 continue
 
-; do disk error $04, bad filename
+;do disk error $04, bad filename
 
 l_edf6:
     lda #$04            ;set disk error $04, bad filename
@@ -1029,7 +1030,7 @@ l_ee01:
     tya                 ;copy the index ..
     tax                 ;.. to X
 
-; pad the rest of the filename with spaces
+;pad the rest of the filename with spaces
 
     lda #' '            ;set [SPACE]
 l_ee05:
@@ -1040,7 +1041,7 @@ l_ee05:
     inx                 ;increment the index
     bpl l_ee05          ;go try another space, branch always
 
-; get the drive number. there seems to be no checking for drive 3 which may break things
+;get the drive number. there seems to be no checking for drive 3 which may break things
 
 l_ee0f:
     iny                 ;increment the index to the drive character
@@ -1053,7 +1054,7 @@ l_ee0f:
     plp                 ;restore the open quote compare status
     bne l_ee32          ;if it wasn't an immediate string just exit
 
-; else it was an immediate string so move the get BASIC byte pointer past it
+;else it was an immediate string so move the get BASIC byte pointer past it
 
     tya                 ;copy the index
     clc                 ;clear carry for add
@@ -1065,8 +1066,8 @@ l_ee0f:
 l_ee28:
     jsr chrget          ;get the next BASIC byte
     cmp #$22            ;compare it with a close quote character
-    bne l_edf6          ;if it's not a close quote go do disk error $04, bad
-                        ;   filename
+    bne l_edf6          ;if it's not a close quote go do disk error $04,
+                        ;  bad filename
 
     jsr chrget          ;get the next BASIC byte
 l_ee32:
@@ -1074,24 +1075,24 @@ l_ee32:
 
 
 find_file:
-; search for filename in the directory
+;search for filename in the directory
 ;
-; returns $22/23 pointing to the entry and the returned status in X
-; the directory starts on track 0, sector 1 and runs to track 0, sector 8
+;returns $22/23 pointing to the entry and the returned status in X
+;the directory starts on track 0, sector 1 and runs to track 0, sector 8
 ;
-; the first file entry in the directory is at $10 in the first sector
+;the first file entry in the directory is at $10 in the first sector
 ;
-; a directory entry consists of ..
+;a directory entry consists of:
 ;
-; $00-$05   byte  filename
-; $06-$07   word  file length
-; $08-$09   word  load address
-; $0A       byte  file type
-; $0B       byte  ??
-; $0C       byte  file track number
-; $0D       byte  file sector number
-; $0E       byte  file sector count
-; $0F       byte  ??
+;  $00-$05   byte  filename
+;  $06-$07   word  file length
+;  $08-$09   word  load address
+;  $0A       byte  file type
+;  $0B       byte  ??
+;  $0C       byte  file track number
+;  $0D       byte  file sector number
+;  $0E       byte  file sector count
+;  $0F       byte  ??
 ;
     lda $7fb1           ;get the drive select byte
     sta $7f91           ;save the drive select latch copy
@@ -1111,46 +1112,44 @@ find_file:
     jsr l_ecdf          ;read one sector to memory
     bne l_ee94          ;if there was an error just exit
 
-; there was no error
+;there was no error
 
     lda $7f09
     sta oldlin
     lda $7f0a
     sta oldlin+1
 
-; there was no error
-
-    lda #$10            ; set the index to the first directory entry
+    lda #$10            ;set the index to the first directory entry
 l_ee5d:
-    sta $22             ; set the directory search pointer low byte
+    sta $22             ;set the directory search pointer low byte
 l_ee5f:
-    ldy #$00            ; clear the index
-    lda ($22),y         ; get a character from the directory
-    cmp #$ff            ; compare it with the end marker
-    beq l_ee95          ; if end of directory go do the not found exit
+    ldy #$00            ;clear the index
+    lda ($22),y         ;get a character from the directory
+    cmp #$ff            ;compare it with the end marker
+    beq l_ee95          ;if end of directory go do the not found exit
 
 
 l_ee67:
-    cmp $7fa0,y         ; compare it with a filename character
-    bne l_ee76          ; if not a match go try the next directory entry
+    cmp $7fa0,y         ;compare it with a filename character
+    bne l_ee76          ;if not a match go try the next directory entry
 
-    iny                 ; increment the filename index
-    cpy #$06            ; compare it with max + 1
-    bpl l_ee92          ; if all compared go do the file found exit
+    iny                 ;increment the filename index
+    cpy #$06            ;compare it with max + 1
+    bpl l_ee92          ;if all compared go do the file found exit
 
-    lda ($22),y         ; else get the next character from the directory
-    jmp l_ee67          ; go compare the characters
+    lda ($22),y         ;else get the next character from the directory
+    jmp l_ee67          ;go compare the characters
 
-; no match so try the next entry
+;no match so try the next entry
 
 l_ee76:
-    lda $22             ; get the directory search pointer low byte
-    clc                 ; clear carry for add
-    adc #$10            ; add the offset to the next directory entry
-    sta $22             ; save the directory search pointer low byte
-    bpl l_ee5f          ; if not past the end of the sector go test the next entry
+    lda $22             ;get the directory search pointer low byte
+    clc                 ;clear carry for add
+    adc #$10            ;add the offset to the next directory entry
+    sta $22             ;save the directory search pointer low byte
+    bpl l_ee5f          ;if not past the end of the sector go test the next entry
 
-; else this sector is all done, get the next directory sector
+;else this sector is all done, get the next directory sector
 
     inc $7f93           ;increment the WD1793 sector number
     lda $7f93           ;get the WD1793 sector number
@@ -1163,14 +1162,14 @@ l_ee76:
     lda #$00            ;set the index to the next directory entry
     beq l_ee5d          ;continue the directory search, branch always
 
-; found the file exit
+;found the file exit
 
 l_ee92:
     lda #$00            ;flag found
 l_ee94:
     rts
 
-; not found exit
+;not found exit
 
 l_ee95:
     lda #$7f            ;flag not found
@@ -1199,7 +1198,7 @@ perform_load:
 
     bne l_eebe          ;if not type $03 skip setting the end of program
 
-; the file is type $03
+;the file is type $03
 
     ldy #$06            ;set the index to the file length low byte
     lda ($22),y         ;get the file length low byte
@@ -1233,7 +1232,7 @@ l_eebe:
 l_eee3:
     jmp l_eb0b          ;stop the disk and return
 
-; output "??????"
+;output "??????"
 
 l_eee6:
     ldx #$06            ;set the "?" count
@@ -1243,7 +1242,7 @@ l_eeea:
     dex                 ;decrement the count
     bne l_eeea          ;loop if more to do
 
-; there was a load error
+;there was a load error
 
 l_eef0:
     ldx #$ff            ;flag a load error
@@ -1255,7 +1254,7 @@ addr_prompt:
 
 
 l_eefb:
-; get a hex address into $66/67
+;get a hex address into $66/67
 ;
     pha                 ;save A
     tya                 ;copy Y
@@ -1282,13 +1281,13 @@ l_ef08:
 
 
 l_ef1b:
-; get and evaluate a hex byte
+;get and evaluate a hex byte
 ;
     jsr l_ef41          ;get and evaluate a hex character
 
 
 l_ef1e:
-; get and evaluate a hex byte second character
+;get and evaluate a hex byte second character
 ;
     bcs l_ef32          ;if not hex output "?" and shift the cursor left
 
@@ -1307,7 +1306,7 @@ l_ef2e:
 
 
 l_ef2f:
-; output "??" and shift the cursor left
+;output "??" and shift the cursor left
 ;
     jsr l_ef32          ;output "?" and shift the cursor left
 
@@ -1326,13 +1325,13 @@ l_ef3f:
 
 
 l_ef41:
-; get and evaluate a hex character
+;get and evaluate a hex character
 ;
     jsr l_ef59          ;get a character and test for {STOP}
 
 
 l_ef44:
-; test and evaluate a hex digit
+;test and evaluate a hex digit
 ;
     cmp #'0'            ;compare the character with "0"
     bcc l_ef3f          ;if < "0" go return non hex
@@ -1346,7 +1345,7 @@ l_ef44:
     cmp #'F'+1          ;compare the character with "F"+1
     bcs l_ef3f          ;if >= "F"+1 go return non hex
 
-    ; evaluate the hex digit
+    ;evaluate the hex digit
 
 l_ef54:
     jsr hexit           ;evaluate A to a hex nibble
@@ -1356,7 +1355,7 @@ l_ef58:
 
 
 l_ef59:
-; get a character and test for {STOP}
+;get a character and test for {STOP}
 ;
     txa                 ;copy X
     pha                 ;save X
@@ -1384,9 +1383,9 @@ l_ef59:
 
 
 l_ef7b:
-; wait for and echo a character
+;wait for and echo a character
 ;
-    jsr getin          ;do character in
+    jsr getin           ;do character in
     beq l_ef7b          ;if no character just wait
 
     jmp chrout          ;do character out
@@ -1416,7 +1415,7 @@ l_ef97:
     lda #$0d            ;set [CR]
     jsr chrout          ;do character out
 
-; output six spaces
+;output six spaces
 
     ldx #$06            ;set the [SPACE] count
 l_efa8:
@@ -1428,17 +1427,17 @@ l_efae:
     stx $27             ;save the line index
     jsr l_ef59          ;get a character and test for {STOP}
     cmp #$0d            ;compare the character with [CR]
-    beq edit_memory   ;if [CR] go get another hex address
+    beq edit_memory     ;if [CR] go get another hex address
 
     cmp #' '            ;compare it with [SPACE]
     bne l_efc0          ;if not [SPACE] go evaluate a hex digit
 
-; the character was [SPACE]
+;the character was [SPACE]
 
-    jsr put_spc         ; output another [SPACE] character
+    jsr put_spc         ;output another [SPACE] character
     bne l_efd0          ;go increment the address, branch always
 
-; evaluate a hex digit
+;evaluate a hex digit
 
 l_efc0:
     jsr l_ef44          ;test and evaluate a hex digit
@@ -1450,7 +1449,7 @@ l_efc0:
     cmp ($66),y         ;compare the byte with the saved copy
     bne l_efe2          ;if not the same go do "??" to show it didn't save
 
-; the byte saved or [SPACE] was returned
+;the byte saved or [SPACE] was returned
 
 l_efd0:
     jsr put_spc         ;output a [SPACE] character
@@ -1466,7 +1465,7 @@ l_efd9:
 
     bpl l_ef86          ;else go display a new line, branch always
 
-; the byte didn't save to memory correctly
+;the byte didn't save to memory correctly
 
 l_efe2:
     jsr l_ef2f          ;output "??" and shift the cursor left
@@ -1474,7 +1473,7 @@ l_efe2:
 
 
 puts:
-; message out
+;message out
 ;
     sta $6c             ;save the message pointer low byte
     sty $6d             ;save the message pointer high byte
@@ -1490,5 +1489,5 @@ puts_loop:
 puts_done:
     rts
 
-    ; unused
+    ;unused
     !byte $68,$07,$01,$2b,$ff,$09,$5e
