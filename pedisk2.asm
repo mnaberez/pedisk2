@@ -84,6 +84,12 @@ dos_print   = dos+$0c   ;Entry point for !PRINT in RAM
 dos_run     = dos+$0f   ;Entry point for !RUN (load and run) in RAM
 dos_sys     = dos+$12   ;Entry point for !SYS (disk monitor) in RAM
 dos_list    = dos+$15   ;Entry point for !LIST (directory) in RAM
+status_mask = $7f90     ;Mask to apply when checking WD1793 status register
+track       = $7f92     ;Track number to write to WD1793 (0-77 or $00-4c)
+sector      = $7f93     ;Sector number to write to WD1793 (1-26 or $01-1a)
+status      = $7f94     ;Last status byte read from WD1793 (no masking)
+command     = $7f95     ;Last command byte written to WD1793
+num_sectors = $7f96     ;Number of sectors to read or write
 ptrget      = $c12b     ;BASIC Find a variable
 wrob        = $d722     ;Monitor Write byte in A out as a two digit hex
 hexit       = $d78d     ;Monitor Evaluate char in A to a hex nibble
@@ -350,16 +356,16 @@ load_boot_code:
     sta target+1        ;save the memory pointer high byte
 
     ldx #$00            ;set track zero
-    stx $7f92           ;save the WD1793 track number
+    stx track           ;save the WD1793 track number
 
     inx                 ;set drive 0
     stx $7f91           ;save the drive select latch copy
 
     ldx #$0d            ;set the sector count
-    stx $7f96           ;save the sector count
+    stx num_sectors     ;save the sector count
 
     ldx #$09            ;set the sector number
-    stx $7f93           ;save the WD1793 sector number
+    stx sector          ;save the WD1793 sector number
 
     jsr read_sectors    ;read <n> sector(s) to memory ??
     bne l_eb0b          ;if any error go deselect the drives, stop the motors
@@ -468,7 +474,7 @@ select_drive:
 ;select a drive
 ;
     lda #$00            ;clear A
-    sta $7f94           ;clear the WD1793 status register copy
+    sta status          ;clear the WD1793 status register copy
     sei                 ;disable interrupts
 
     lda $7f91           ;get the drive select latch copy
@@ -503,7 +509,7 @@ seek_track:
     lda #$03            ;set the retry count
     sta $7f8c           ;save the retry count
 l_ebd3:
-    lda $7f92           ;get the WD1793 track number
+    lda track           ;get the WD1793 track number
     cmp #$4d            ;compare it with max + 1
     bpl l_ebff          ;if > max go do disk error $15
 
@@ -512,13 +518,13 @@ l_ebd3:
                         ;     x          drive not ready
                         ;        x       record not found
                         ;          x     CRC error
-    sta $7f90           ;save the WD1793 status byte mask
+    sta status_mask     ;save the WD1793 status byte mask
 
     lda #$16            ;set seek command, verify track, 20ms step rate
     jsr l_ec0d          ;wait for WD1793 not busy and do command A
     bne l_ebf2          ;go handle any returned error
 
-    lda $7f92           ;get the WD1793 track number
+    lda track           ;get the WD1793 track number
     cmp fdc_track       ;compare it with the WD1793 track register
     bne l_ebf2          ;go handle any difference
 
@@ -569,8 +575,8 @@ l_ec0d:
     jsr l_ec1e          ;wait for WD1793 not busy
     bcs l_ec02          ;if counted out go do disk error $17
 
-    sta $7f95           ;save the WD1793 command register copy
-    sta fdc_cmdst       ;save the WD1793 command
+    sta command         ;Remember this command as the last one written
+    sta fdc_cmdst       ;Write command to WD1793
 
     jsr l_ec53          ;delay for $C6 * ?? cycles
     jmp l_ecd0          ;wait for WD1793 not busy mask the status and return
@@ -606,8 +612,9 @@ l_ec33:
     bne l_ec25          ;loop if more to do
 
     lda #$d8            ;set force interrupt command, immediate interrupt
-    sta $7f95           ;save the WD1793 command register copy
-    sta fdc_cmdst       ;save the WD1793 command
+    sta command         ;Remember this command as the last one written
+    sta fdc_cmdst       ;Write command to WD1793
+
     jsr l_ec53          ;delay for $C6 * ?? cycles
     sec                 ;flag counted out
     bcs l_ec4d          ;return the flag, branch always
@@ -658,20 +665,20 @@ next_sector:
 
     inc target+1        ;else increment the memory pointer high byte
 l_ec74:
-    ldx $7f93           ;get the WD1793 sector number
+    ldx sector          ;get the WD1793 sector number
     inx                 ;increment the sector number
     cpx #$1b            ;compare it with max + 1
     bmi l_ec89          ;if < max + 1 just exit
 
-    ldx $7f92           ;get the WD1793 track number
+    ldx track           ;get the WD1793 track number
     inx                 ;increment the track number
-    stx $7f92           ;save the WD1793 track number
+    stx track           ;save the WD1793 track number
     cpx #$4d            ;compare it with max + 1
     bpl l_ec94          ;if > max go do disk error $11
 
     ldx #$01
 l_ec89:
-    stx $7f93           ;save the WD1793 sector number
+    stx sector          ;save the WD1793 sector number
     clc                 ;flag ok
     rts
 
@@ -711,7 +718,7 @@ l_ec96:
 
     ldx #$00            ;clear the index
 l_eca8:
-    lda $7f90,x
+    lda status_mask,x
     jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex Byte
     inx                 ;increment the index
     cpx #$07            ;compare it with max + 1
@@ -731,8 +738,8 @@ l_ecbd:
 l_ecc0:
 ;write a WD1793 command and wait a bit
 ;
-    sta $7f95           ;save the WD1793 command register copy
-    sta fdc_cmdst       ;save the WD1793 command
+    sta command         ;Remember this command as the last one written
+    sta fdc_cmdst       ;Write command to WD1793
 
     ldy #$00            ;clear Y
     ldx #$12            ;set the delay count
@@ -751,8 +758,8 @@ l_ecd0:
     bcs l_ecbd          ;if counted out go return $FF
 
     lda fdc_cmdst       ;get the WD1793 status register
-    sta $7f94           ;save the WD1793 status register copy
-    and $7f90           ;AND it with the WD1793 status byte mask
+    sta status          ;save the WD1793 status register copy
+    and status_mask     ;AND it with the WD1793 status byte mask
     rts
 
 
@@ -760,7 +767,7 @@ l_ecdf:
 ;read one sector to memory ??
 ;
     lda #$01            ;set the sector count
-    sta $7f96           ;save the sector count
+    sta num_sectors     ;save the sector count
 
 
 read_sectors:
@@ -784,9 +791,9 @@ l_ecf3:
                         ;          x     CRC error
                         ;           x    lost data
                         ;            x   data request
-    sta $7f90           ;save the WD1793 status byte mask
+    sta status_mask     ;save the WD1793 status byte mask
 
-    lda $7f93           ;get the WD1793 sector number
+    lda sector          ;get the WD1793 sector number
     beq l_ed33          ;if zero go do disk error $40
 
     sta fdc_sector      ;save the WD1793 sector register
@@ -810,13 +817,13 @@ l_ed05:
     jsr l_ecd0          ;wait for WD1793 not busy and mask the status
     bne l_ed2e          ;if any bits set go ??
 
-    dec $7f96           ;deccrement the sector count
+    dec num_sectors     ;deccrement the sector count
     beq l_ed38          ;if all done just exit
 
     jsr next_sector     ;increment pointers to the next sector
     bcs l_ed38          ;if error just exit
 
-    lda $7f92           ;get the WD1793 track number
+    lda track           ;get the WD1793 track number
     cmp fdc_track       ;WD1793 track register
     beq l_ecee
 
@@ -843,7 +850,7 @@ l_ed3a:
 ;write one sector to disk ??
 ;
     lda #$01            ;set a single sector
-    sta $7f96           ;save the sector count
+    sta num_sectors     ;save the sector count
 
 
 write_sectors:
@@ -871,9 +878,9 @@ l_ed55:
                         ;        x       record not found
                         ;          x     CRC error
                         ;           x    lost data
-    sta $7f90           ;save the WD1793 status byte mask
+    sta status_mask     ;save the WD1793 status byte mask
 
-    lda $7f93           ;get the WD1793 sector number
+    lda sector          ;get the WD1793 sector number
     beq l_eda2          ;if zero go do disk error $50
 
     sta fdc_sector      ;save the WD1793 sector register
@@ -914,13 +921,13 @@ l_ed84:
     jsr l_ecd0          ;wait for WD1793 not busy and mask the status
     bne l_ed9d          ;if any bits set go ??
 
-    dec $7f96           ;deccrement the sector count
+    dec num_sectors     ;deccrement the sector count
     beq l_ed38          ;if all done just exit
 
     jsr next_sector     ;increment pointers to the next sector
     bcs l_ed38          ;if error just exit
 
-    lda $7f92           ;get the WD1793 track number
+    lda track           ;get the WD1793 track number
     cmp fdc_track       ;WD1793 track register
     beq l_ed50
 
@@ -1098,10 +1105,10 @@ find_file:
     sta $7f91           ;save the drive select latch copy
 
     ldy #$00            ;set track zero
-    sty $7f92           ;save the WD1793 track number
+    sty track           ;save the WD1793 track number
 
     iny                 ;set sector one
-    sty $7f93           ;save the WD1793 sector number
+    sty sector          ;save the WD1793 sector number
 
     lda #$00            ;set the memory pointer low byte
     sta target          ;save the memory pointer low byte
@@ -1151,8 +1158,8 @@ l_ee76:
 
 ;else this sector is all done, get the next directory sector
 
-    inc $7f93           ;increment the WD1793 sector number
-    lda $7f93           ;get the WD1793 sector number
+    inc sector          ;increment the WD1793 sector number
+    lda sector          ;get the WD1793 sector number
     cmp #$09            ;compare it with max + 1
     bpl l_ee95          ;if > max go do the not found exit
 
@@ -1218,13 +1225,13 @@ l_eebe:
     sta target+1        ;save the memory pointer high byte
     ldy #$0c
     lda ($22),y
-    sta $7f92           ;save the WD1793 track number
+    sta track           ;save the WD1793 track number
     iny
     lda ($22),y
-    sta $7f93           ;save the WD1793 sector number
+    sta sector          ;save the WD1793 sector number
     iny
     lda ($22),y
-    sta $7f96           ;save the sector count
+    sta num_sectors     ;save the sector count
     jsr read_sectors    ;read <n> sector(s) to memory
     bne l_eef0          ;if there was an error go flag it and exit
 
