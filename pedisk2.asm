@@ -763,12 +763,12 @@ l_ecd0:
     rts
 
 
-l_ecdf:
+read_a_sector:
 ;read one sector to memory ??
 ;
     lda #$01            ;set the sector count
     sta num_sectors     ;save the sector count
-
+                        ;Fall through into read_sectors
 
 read_sectors:
 ;read <n> sector(s) to memory ??
@@ -846,12 +846,12 @@ l_ed38:
     rts
 
 
-l_ed3a:
+write_a_sector:
 ;write one sector to disk ??
 ;
     lda #$01            ;set a single sector
     sta num_sectors     ;save the sector count
-
+                        ;Fall through into write_sectors
 
 write_sectors:
 ;write <n> sector(s) to disk ??
@@ -1116,7 +1116,7 @@ find_file:
     sta target+1        ;save the memory pointer high byte
     sta $23             ;set the search pointer high byte
 
-    jsr l_ecdf          ;read one sector to memory
+    jsr read_a_sector   ;read one sector to memory
     bne l_ee94          ;if there was an error just exit
 
 ;there was no error
@@ -1163,7 +1163,7 @@ l_ee76:
     cmp #$09            ;compare it with max + 1
     bpl l_ee95          ;if > max go do the not found exit
 
-    jsr l_ecdf          ;read one sector to memory
+    jsr read_a_sector   ;read one sector to memory
     bne l_ee94          ;if there was an error just exit
 
     lda #$00            ;set the index to the next directory entry
