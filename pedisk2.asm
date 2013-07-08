@@ -270,12 +270,12 @@ dispatch_token:
     txa                 ;copy the index
     bne l_ea8c          ;if it's !LOAD go handle it like any other command
 
-    jmp $7812           ;else go do !SYS
+    jmp dos_sys         ;else go do !SYS
 
 
 l_ea84:
 ;go do !LIST
-    jmp $7815           ;do !LIST
+    jmp dos_list        ;do !LIST
 
 
 illegal_cmd:
