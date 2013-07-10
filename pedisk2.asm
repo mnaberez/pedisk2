@@ -459,8 +459,8 @@ put_spc_hex:
 put_hex_byte:
 ;Output the byte in A as a two digit hex number
 ;
-    sta $7f8d           ;save X
-    stx $7f8e           ;save A
+    sta $7f8d           ;save A
+    stx $7f8e           ;save X
     jsr wrob            ;Print A as a two digit hex number
     ldx $7f8e           ;restore X
     lda $7f8d           ;restore A
