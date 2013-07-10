@@ -84,6 +84,7 @@ dos_print   = dos+$0c   ;Entry point for !PRINT in RAM
 dos_run     = dos+$0f   ;Entry point for !RUN (load and run) in RAM
 dos_sys     = dos+$12   ;Entry point for !SYS (disk monitor) in RAM
 dos_list    = dos+$15   ;Entry point for !LIST (directory) in RAM
+retries     = $7f8c     ;Counts down retries remaining for disk operations
 status_mask = $7f90     ;Mask to apply when checking WD1793 status register
 track       = $7f92     ;Track number to write to WD1793 (0-77 or $00-4c)
 sector      = $7f93     ;Sector number to write to WD1793 (1-26 or $01-1a)
@@ -507,7 +508,7 @@ seek_track:
 ;seek to track with retries
 ;
     lda #$03            ;set the retry count
-    sta $7f8c           ;save the retry count
+    sta retries         ;save the retry count
 l_ebd3:
     lda track           ;get the WD1793 track number
     cmp #$4d            ;compare it with max + 1
@@ -536,7 +537,7 @@ l_ebf2:
     lda #$02            ;set restore command, 20ms step rate
     jsr l_ec0d          ;wait for WD1793 not busy and do command A
 
-    dec $7f8c           ;decrement the retry count
+    dec retries         ;decrement the retry count
     bne l_ebd3          ;if not all done go try again
 
     ;else do disk error $10
@@ -782,7 +783,7 @@ l_ece9:
 
 l_ecee:
     lda #$0a
-    sta $7f8c
+    sta retries
 l_ecf3:
     lda #%11011110      ;mask xx0x xxx0,
                         ;     x          drive not ready
@@ -830,7 +831,7 @@ l_ed05:
     bne l_ece9
 
 l_ed2e:
-    dec $7f8c
+    dec retries
     bne l_ecf3
 
     ;do disk error $40
@@ -869,7 +870,7 @@ l_ed44:
 
 l_ed50:
     lda #$0a
-    sta $7f8c
+    sta retries
 l_ed55:
     lda #%11111100      ;mask xxxx xx00,
                         ;     x          drive not ready
@@ -934,7 +935,7 @@ l_ed84:
     bne l_ed44
 
 l_ed9d:
-    dec $7f8c
+    dec retries
     bne l_ed55
 
     ;do disk error $50
