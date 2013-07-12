@@ -540,32 +540,32 @@ l_ebf2:
     dec retries         ;decrement the retry count
     bne l_ebd3          ;if not all done go try again
 
-    ;else do disk error $10
-
+;else do disk error $10, seek error
+;
     lda #$10            ;set error $10
     !byte $2c           ;makes next line BIT $xxxx
 
-    ;do disk error $15
-
 l_ebff:
+;do disk error $15, track error
+;
     lda #$15            ;set error $15
     !byte $2c           ;makes next line BIT $xxxx
 
-    ;do disk error $17
-
 l_ec02:
+;do disk error $17, disk not responding
+;
     lda #$17            ;set error $17
     !byte $2c           ;makes next line BIT $xxxx
 
-    ;do disk error $13, drive not ready
-
 l_ec05:
+;do disk error $13, drive not ready
+;
     lda #$13            ;set error $13
     !byte $2c           ;makes next line BIT $xxxx
 
-    ;do disk error $14
-
 l_ec08:
+;do disk error $14, no disk selected
+;
     lda #$14            ;set error $14
     jmp l_ec96          ;do "DISK ERROR" message and ??
 
