@@ -153,13 +153,24 @@ BASIC Wedge
 Initializing the PEDISK II with ``sys 59904`` will attempt to load the DOS
 from disk.  The wedge will only be installed if the DOS loads successfully.
 
-Force the wedge to install:
-
-    sys 60159
-
 Detect if the wedge is installed:
 
     print peek(121)
 
 Prints ``76`` if installed or ``201`` if not installed.
+
+All of the PEDISK II commands are loaded into RAM from the boot disk, with the
+sole exception of ``!load``.  The ``!load`` command can be used even if the boot
+disk can't be loaded.  However, the wedge must be force installed.
+
+Force the wedge to install:
+
+    sys 60159
+
+Load a program:
+
+    !load"foobar:0"
+
+The filename (``foobar``) may be up to six characters.  The drive number
+(``:0``) must be included or else a ``?syntax error`` will result.
 
