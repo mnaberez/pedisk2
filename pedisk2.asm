@@ -381,7 +381,7 @@ install_wedge:
 ;chrget $0070 e6 77    inc $77      chrget $0070 e6 77    inc $77
 ;       $0072 d0 02    bne $76             $0072 d0 02    bne $76
 ;       $0074 e6 78    inc $78             $0074 e6 78    inc $78
-;       $0076 ad 02 02 lda $0202           $0076 ad 02 02 lda $0202
+;       $0076 ad xx xx lda $xxxx           $0076 ad xx xx lda $xxxx
 ;       $0079 c9 ea    cmp #$ea            $0079 4c 32 ea jmp $ea32  <--
 ;       $007b b0 0a    bcs $0087
 ;       $007d c9 20    cmp #$20            $007d c9 20    cmp #$20
