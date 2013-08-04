@@ -380,11 +380,12 @@ install_wedge:
 ;
 ;chrget $0070 e6 77    inc $77      chrget $0070 e6 77    inc $77
 ;       $0072 d0 02    bne $76             $0072 d0 02    bne $76
-;       $0074 ad xx xx lda $xxxx           $0074 ad xx xx lda $xxxx
-;       $0077 c9 ea    cmp #$3a            $0077 c9 ea    cmp #$3a
-;       $0079 b0 0c    bcs $0087           $0079 4c 32 ea jmp $ea32  <--
-;       $007b c9 20    cmp #$20
-;       $007d f0 f1    beq $70             $007d f0 f1    beq $70
+;       $0074 e6 78    inc $78             $0074 e6 78    inc $78
+;       $0076 ad 02 02 lda $0202           $0076 ad 02 02 lda $0202
+;       $0079 c9 ea    cmp #$ea            $0079 4c 32 ea jmp $ea32  <--
+;       $007b b0 0a    bcs $0087
+;       $007d c9 20    cmp #$20            $007d c9 20    cmp #$20
+;       $007f f0 ef    beq $0070           $007f f0 ef    beq $0070
 ;
 ;When the wedge is done, it will either return to the caller directly with
 ;RTS, or it will JMP $007D to continue CHRGET processing.
