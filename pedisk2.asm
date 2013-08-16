@@ -517,9 +517,9 @@ l_ebd3:
 
     sta fdc_data        ;write the target track to the WD1793 data register
     lda #%10011000      ;mask x00x x000,
-                        ;     x          drive not ready
-                        ;        x       record not found
-                        ;          x     CRC error
+                        ;     x--- ----  drive not ready
+                        ;     ---x ----  record not found
+                        ;     ---- x---  CRC error
     sta status_mask     ;save the WD1793 status byte mask
 
     lda #$16            ;set seek command, verify track, 20ms step rate
@@ -787,12 +787,12 @@ l_ecee:
     sta retries
 l_ecf3:
     lda #%11011110      ;mask xx0x xxx0,
-                        ;     x          drive not ready
-                        ;      x         write protected
-                        ;        x       record not found
-                        ;          x     CRC error
-                        ;           x    lost data
-                        ;            x   data request
+                        ;     x--- ----  drive not ready
+                        ;     -x-- ----  write protected
+                        ;     ---x ----  record not found
+                        ;     ---- x---  CRC error
+                        ;     ---- -x--  lost data
+                        ;     ---- --x-  data request
     sta status_mask     ;save the WD1793 status byte mask
 
     lda sector          ;get the WD1793 sector number
@@ -805,9 +805,9 @@ l_ecf3:
 l_ed05:
     lda fdc_cmdst       ;get the WD1793 status register
     and #%00010110      ;mask 000x 0xx0,
-                        ;        x       record not found
-                        ;           x    lost data
-                        ;            x   data request
+                        ;     ---x ----  record not found
+                        ;     ---- -x--  lost data
+                        ;     ---- --x-  data request
     beq l_ed05          ;if no data request or error go try again
 
     lda fdc_data        ;read the WD1793 data register
@@ -874,12 +874,12 @@ l_ed50:
     sta retries
 l_ed55:
     lda #%11111100      ;mask xxxx xx00,
-                        ;     x          drive not ready
-                        ;      x         write protected
-                        ;       x        write fault
-                        ;        x       record not found
-                        ;          x     CRC error
-                        ;           x    lost data
+                        ;     x--- ----  drive not ready
+                        ;     -x-- ----  write protected
+                        ;     --x- ----  write fault
+                        ;     ---x ----  record not found
+                        ;     ---- x---  CRC error
+                        ;     ---- -x--  lost data
     sta status_mask     ;save the WD1793 status byte mask
 
     lda sector          ;get the WD1793 sector number
@@ -891,11 +891,11 @@ l_ed55:
 l_ed67:
     lda fdc_cmdst       ;get the WD1793 status register
     and #%11010110      ;mask xx0x 0xx0,
-                        ;     x          drive not ready
-                        ;      x         write protected
-                        ;        x       record not found
-                        ;           x    lost data
-                        ;            x   data request
+                        ;     x--- ----  drive not ready
+                        ;     -x-- ----  write protected
+                        ;     ---x ----  record not found
+                        ;     ---- -x--  lost data
+                        ;     ---- --x-  data request
     beq l_ed67          ;if no flags set go wait some more
 
     cmp #$02            ;compare it with data request
@@ -906,10 +906,10 @@ l_ed67:
 l_ed74:
     lda fdc_cmdst       ;get the WD1793 status register
     and #%10010110      ;mask x00x 0xx0,
-                        ;     x          drive not ready
-                        ;        x       record not found
-                        ;           x    lost data
-                        ;            x   data request
+                        ;     x--- ----  drive not ready
+                        ;     ---x ----  record not found
+                        ;     ---- -x--  lost data
+                        ;     ---- --x-  data request
     beq l_ed74          ;if no flags set go wait some more
 
 l_ed7b:
