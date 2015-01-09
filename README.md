@@ -22,4 +22,4 @@ It should assemble a binary that is identical to the original.
 
 ## Credits
 
-The initial disassembly was done by [Lee Davison](http://mycorner.no-ip.org/6502/).
+The initial disassembly was done by Lee Davison.
