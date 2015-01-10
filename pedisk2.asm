@@ -819,7 +819,7 @@ l_ed05:
     jsr l_ecd0          ;wait for WD1793 not busy and mask the status
     bne l_ed2e          ;if any bits set go ??
 
-    dec num_sectors     ;deccrement the sector count
+    dec num_sectors     ;decrement the sector count
     beq l_ed38          ;if all done just exit
 
     jsr next_sector     ;increment pointers to the next sector
@@ -923,7 +923,7 @@ l_ed84:
     jsr l_ecd0          ;wait for WD1793 not busy and mask the status
     bne l_ed9d          ;if any bits set go ??
 
-    dec num_sectors     ;deccrement the sector count
+    dec num_sectors     ;decrement the sector count
     beq l_ed38          ;if all done just exit
 
     jsr next_sector     ;increment pointers to the next sector
