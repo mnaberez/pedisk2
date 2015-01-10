@@ -97,6 +97,10 @@ hexit       = $d78d     ;Monitor Evaluate char in A to a hex nibble
 chrout      = $ffd2     ;KERNAL Send a char to the current output device
 getin       = $ffe4     ;KERNAL Read a char from the current input device
 
+tracks      = 77        ;8" disk has 77 tracks numbered 0-76
+sectors     = 26        ;8" disk has 26 sectors per track numbered 1-26
+sector_size = 128       ;Always 128 bytes per sector for all disk types
+
     *=$e800
 
 under_io:
@@ -512,7 +516,7 @@ seek_track:
     sta retries         ;save the retry count
 l_ebd3:
     lda track           ;get the WD1793 track number
-    cmp #$4d            ;compare it with max + 1
+    cmp #tracks         ;compare it with max + 1
     bpl l_ebff          ;if > max go do disk error $15
 
     sta fdc_data        ;write the target track to the WD1793 data register
@@ -661,7 +665,7 @@ next_sector:
 ;
     lda target          ;get the memory pointer low byte
     clc                 ;clear carry for add
-    adc #$80            ;add the sector byte count
+    adc #sector_size    ;add the sector byte count
     sta target          ;save the memory pointer low byte
     bcc l_ec74          ;if no carry skip the highbyte increment
 
@@ -669,13 +673,13 @@ next_sector:
 l_ec74:
     ldx sector          ;get the WD1793 sector number
     inx                 ;increment the sector number
-    cpx #$1b            ;compare it with max + 1
+    cpx #sectors+1      ;compare it with max + 1
     bmi l_ec89          ;if < max + 1 just exit
 
     ldx track           ;get the WD1793 track number
     inx                 ;increment the track number
     stx track           ;save the WD1793 track number
-    cpx #$4d            ;compare it with max + 1
+    cpx #tracks         ;compare it with max + 1
     bpl l_ec94          ;if > max go do disk error $11
 
     ldx #$01
@@ -749,7 +753,7 @@ l_ecca:
     dex                 ;decrement the delay count
     bne l_ecca          ;loop if more to do
 
-    ldx #$80            ;set the byte count ??
+    ldx #sector_size    ;set the byte count ??
     rts
 
 
