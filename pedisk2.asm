@@ -480,7 +480,7 @@ put_hex_byte:
     rts
 
 
-disk_error:
+disk_err_msg:
     !text cr,"DISK ERROR",$00
 
 
@@ -492,7 +492,7 @@ select_drive:
     sei                 ;disable interrupts
 
     lda $7f91           ;get the drive select latch copy
-    beq l_ec08          ;if zero go do disk error $14, no disk selected
+    beq disk_error_14   ;if zero go do disk error $14, no disk selected
 
     lda drive_sel       ;read the drive select latch
     and #$07            ;mask the drive select bits
@@ -501,7 +501,7 @@ select_drive:
 
     lda $7f91           ;get the drive select latch copy
     cmp #$07            ;compare it with all drives selected
-    bcs l_ec08          ;if >= $07 go do disk error $14, no disk selected
+    bcs disk_error_14   ;if >= $07 go do disk error $14, no disk selected
 
     ora #$08            ;mask xxxx 1xxx, set ?? bit
     sta drive_sel       ;save the drive select latch
@@ -511,7 +511,7 @@ select_drive:
 
     lda fdc_cmdst       ;get the WD1793 status register
     and #%10000000      ;mask x000 0000, drive not ready
-    bne l_ec05          ;if the drive is not ready go do disk error $13,
+    bne disk_error_13   ;if the drive is not ready go do disk error $13,
                         ;  drive not ready
 l_ebcd:
     rts
@@ -525,7 +525,7 @@ seek_track:
 l_ebd3:
     lda track           ;get the WD1793 track number
     cmp #tracks         ;compare it with max + 1
-    bpl l_ebff          ;if > max go do disk error $15
+    bpl disk_error_15   ;if > max go do disk error $15
 
     sta fdc_data        ;write the target track to the WD1793 data register
     lda #%10011000      ;mask x00x x000,
@@ -558,36 +558,36 @@ l_ebf2:
     lda #$10            ;set error $10
     !byte $2c           ;makes next line BIT $xxxx
 
-l_ebff:
+disk_error_15:
 ;do disk error $15, track error
 ;
     lda #$15            ;set error $15
     !byte $2c           ;makes next line BIT $xxxx
 
-l_ec02:
+disk_error_17:
 ;do disk error $17, disk not responding
 ;
     lda #$17            ;set error $17
     !byte $2c           ;makes next line BIT $xxxx
 
-l_ec05:
+disk_error_13:
 ;do disk error $13, drive not ready
 ;
     lda #$13            ;set error $13
     !byte $2c           ;makes next line BIT $xxxx
 
-l_ec08:
+disk_error_14:
 ;do disk error $14, no disk selected
 ;
     lda #$14            ;set error $14
-    jmp l_ec96          ;do "DISK ERROR" message and ??
+    jmp disk_error      ;do "DISK ERROR" message and ??
 
 
 l_ec0d:
 ;wait for WD1793 not busy and do command A
 ;
     jsr l_ec1e          ;wait for WD1793 not busy
-    bcs l_ec02          ;if counted out go do disk error $17
+    bcs disk_error_17   ;if counted out go do disk error $17
 
     sta command         ;Remember this command as the last one written
     sta fdc_cmdst       ;Write command to WD1793
@@ -700,7 +700,7 @@ l_ec89:
 l_ec8e:
 ;do disk error and restore the stack
 ;
-    jsr l_ec96          ;do "DISK ERROR" message and stop the disk
+    jsr disk_error      ;do "DISK ERROR" message and stop the disk
     jmp l_eb5e          ;restore the top 32 bytes of the stack page
                         ;  and return EOT
 
@@ -711,8 +711,8 @@ l_ec94:
     lda #$11
 
 
-l_ec96:
-;do "DISK ERROR" message and ??
+disk_error:
+;do "DISK ERROR" message and and stop the disk (??)
 ;
     pha                 ;save A
     tya                 ;copy Y
@@ -720,8 +720,8 @@ l_ec96:
 
     ;do "DISK ERROR" message
 
-    lda #<disk_error    ;set the message pointer low byte
-    ldy #>disk_error    ;set the message pointer high byte
+    lda #<disk_err_msg  ;set the message pointer low byte
+    ldy #>disk_err_msg  ;set the message pointer high byte
     jsr puts            ;message out
 
     pla                 ;pull Y
@@ -808,7 +808,7 @@ l_ecf3:
     sta status_mask     ;save the WD1793 status byte mask
 
     lda sector          ;get the WD1793 sector number
-    beq l_ed33          ;if zero go do disk error $40
+    beq disk_error_40   ;if zero go do disk error $40
 
     sta fdc_sector      ;save the WD1793 sector register
 
@@ -849,9 +849,9 @@ l_ed2e:
 
     ;do disk error $40
 
-l_ed33:
+disk_error_40:
     lda #$40
-    jmp l_ec96          ;do "DISK ERROR" message and ??
+    jmp disk_error      ;do "DISK ERROR" message and ??
 
     ;no error exit
 
@@ -895,7 +895,7 @@ l_ed55:
     sta status_mask     ;save the WD1793 status byte mask
 
     lda sector          ;get the WD1793 sector number
-    beq l_eda2          ;if zero go do disk error $50
+    beq disk_error_50   ;if zero go do disk error $50
 
     sta fdc_sector      ;save the WD1793 sector register
     lda #$a8            ;set write single sector command, side 1
@@ -953,9 +953,9 @@ l_ed9d:
 
     ;do disk error $50
 
-l_eda2:
+disk_error_50:
     lda #$50            ;set disk error $50
-    jmp l_ec96          ;do "DISK ERROR" message and ??
+    jmp disk_error      ;do "DISK ERROR" message and ??
 
 
 do_protected:
@@ -965,7 +965,7 @@ do_protected:
     ldy #>protected     ;set the message pointer high byte
     jsr puts            ;message out
     clc
-    bcc l_eda2          ;do disk error $50, branch always
+    bcc disk_error_50   ;do disk error $50, branch always
 
 
 protected:
