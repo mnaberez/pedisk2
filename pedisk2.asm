@@ -1256,7 +1256,7 @@ l_eee3:
 
 l_eee6:
     ldx #$06            ;set the "?" count
-    lda #$3f            ;set "?"
+    lda #'?'            ;set "?"
 l_eeea:
     jsr chrout          ;do character out
     dex                 ;decrement the count
