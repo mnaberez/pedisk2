@@ -91,6 +91,7 @@ sector      = $7f93     ;Sector number to write to WD1793 (1-26 or $01-1a)
 status      = $7f94     ;Last status byte read from WD1793 (no masking)
 command     = $7f95     ;Last command byte written to WD1793
 num_sectors = $7f96     ;Number of sectors to read or write
+filename    = $7fa0     ;Buffer used to store filename (6 bytes)
 ptrget      = $c12b     ;BASIC Find a variable
 wrob        = $d722     ;Monitor Write byte in A out as a two digit hex
 hexit       = $d78d     ;Monitor Evaluate char in A to a hex nibble
@@ -1042,7 +1043,7 @@ l_edf6:
     jmp l_eddc          ;do disk error and restore the stack
 
 l_edfb:
-    sta $7fa0,y         ;save a filename character
+    sta filename,y      ;save a filename character
     iny                 ;increment the index
     bpl l_edec          ;go get another filename character, branch always
 
@@ -1057,7 +1058,7 @@ l_ee05:
     cpx #$06            ;compare the filename index with max + 1
     bcs l_ee0f          ;if done go get the drive number
 
-    sta $7fa0,x         ;save a [SPACE] to the filename
+    sta filename,x      ;save a [SPACE] to the filename
     inx                 ;increment the index
     bpl l_ee05          ;go try another space, branch always
 
@@ -1117,10 +1118,10 @@ find_file:
     lda $7fb1           ;get the drive select byte
     sta $7f91           ;save the drive select latch copy
 
-    ldy #$00            ;set track zero
+    ldy #$00            ;set track 0 (first track)
     sty track           ;save the WD1793 track number
 
-    iny                 ;set sector one
+    iny                 ;set sector 1 (first sector, sectors start at 1)
     sty sector          ;save the WD1793 sector number
 
     lda #$00            ;set the memory pointer low byte
@@ -1150,7 +1151,7 @@ l_ee5f:
 
 
 l_ee67:
-    cmp $7fa0,y         ;compare it with a filename character
+    cmp filename,y      ;compare it with a filename character
     bne l_ee76          ;if not a match go try the next directory entry
 
     iny                 ;increment the filename index
