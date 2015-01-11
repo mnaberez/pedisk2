@@ -492,7 +492,7 @@ select_drive:
     sei                 ;disable interrupts
 
     lda $7f91           ;get the drive select latch copy
-    beq disk_error_14   ;if zero go do disk error $14, no disk selected
+    beq disk_error_14   ;if zero go do disk error $14, no drive selected
 
     lda drive_sel       ;read the drive select latch
     and #$07            ;mask the drive select bits
@@ -501,7 +501,7 @@ select_drive:
 
     lda $7f91           ;get the drive select latch copy
     cmp #$07            ;compare it with all drives selected
-    bcs disk_error_14   ;if >= $07 go do disk error $14, no disk selected
+    bcs disk_error_14   ;if >= $07 go do disk error $14, no drive selected
 
     ora #$08            ;mask xxxx 1xxx, set ?? bit
     sta drive_sel       ;save the drive select latch
@@ -565,7 +565,7 @@ disk_error_15:
     !byte $2c           ;makes next line BIT $xxxx
 
 disk_error_17:
-;do disk error $17, disk not responding
+;do disk error $17, drive not responding
 ;
     lda #$17            ;set error $17
     !byte $2c           ;makes next line BIT $xxxx
@@ -577,7 +577,7 @@ disk_error_13:
     !byte $2c           ;makes next line BIT $xxxx
 
 disk_error_14:
-;do disk error $14, no disk selected
+;do disk error $14, no drive selected
 ;
     lda #$14            ;set error $14
     jmp disk_error      ;do "DISK ERROR" message and ??
@@ -714,6 +714,17 @@ l_ec94:
 disk_error:
 ;do "DISK ERROR" message and and stop the disk (??)
 ;
+;Call with the error code in A.
+;
+;Error codes:
+;  $10 Seek Error
+;  $13 Drive Not Ready
+;  $14 No Drive Selected
+;  $15 Track Error
+;  $17 Drive Not Responding
+;  $40 Read Error
+;  $50 Write Error
+;
     pha                 ;save A
     tya                 ;copy Y
     pha                 ;save Y
@@ -847,9 +858,9 @@ l_ed2e:
     dec retries
     bne l_ecf3
 
-    ;do disk error $40
-
 disk_error_40:
+;Read Error
+;
     lda #$40
     jmp disk_error      ;do "DISK ERROR" message and ??
 
@@ -951,9 +962,9 @@ l_ed9d:
     dec retries
     bne l_ed55
 
-    ;do disk error $50
-
 disk_error_50:
+;Write Error
+;
     lda #$50            ;set disk error $50
     jmp disk_error      ;do "DISK ERROR" message and ??
 
