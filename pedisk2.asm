@@ -702,7 +702,7 @@ l_ec74:
     inx                 ;increment the track number
     stx track           ;save the WD1793 track number
     cpx #tracks         ;compare it with max + 1
-    bpl l_ec94          ;if > max go do disk error $11
+    bpl disk_error_11   ;if > max go do disk error $11
 
     ldx #$01
 l_ec89:
@@ -719,10 +719,11 @@ l_ec8e:
                         ;  and return EOT
 
 
-l_ec94:
-;TODO do disk error $11
+disk_error_11:
+;do disk error $14, end of disk
 ;
-    lda #$11
+    lda #$11            ;set error $11
+                        ;Fall through into disk_error
 
 
 disk_error:
@@ -732,9 +733,10 @@ disk_error:
 ;
 ;Error codes:
 ;  $10 Seek Error
+;  $11 Track Out of Range (read_sectors)
 ;  $13 Drive Not Ready
 ;  $14 No Drive Selected
-;  $15 Track Error
+;  $15 Track Out of Range (seek_track)
 ;  $17 Drive Not Responding
 ;  $40 Read Error
 ;  $50 Write Error
