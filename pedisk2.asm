@@ -101,6 +101,13 @@ tracks      = 77        ;8" disk has 77 tracks numbered 0-76
 sectors     = 26        ;8" disk has 26 sectors per track numbered 1-26
 sector_size = 128       ;Always 128 bytes per sector for all disk types
 
+stop        = $03       ;PETSCII STOP
+cr          = $0d       ;PETSCII Carriage return
+space       = $20       ;PETSCII Space
+quote       = $22       ;PETSCII Quotation mark
+clear       = $93       ;PETSCII Clear screen
+checker     = $e6       ;PETSCII Checkerboard
+
     *=$e800
 
 under_io:
@@ -411,13 +418,13 @@ l_eb0b:
 
 
 banner:
-    !text $93,"PEDISK II SYSTEM",$0d
-    !text "CGRS MICROTECH",$0d
-    !text "LANGHORNE,PA.19047 C1981",$0d,$00
+    !text clear,"PEDISK II SYSTEM",cr
+    !text "CGRS MICROTECH",cr
+    !text "LANGHORNE,PA.19047 C1981",cr,$00
 
 
 mem_error:
-    !text $0d,"MEM ERROR",$00
+    !text cr,"MEM ERROR",$00
 
 
 puts_mem_err:
@@ -449,7 +456,7 @@ l_eb61:
 put_spc:
 ;Output a space character
 ;
-    lda #' '            ;set [SPACE]
+    lda #space          ;set [SPACE]
     jmp chrout          ;do character out and return
 
 
@@ -473,7 +480,7 @@ put_hex_byte:
 
 
 disk_error:
-    !text $0d,"DISK ERROR",$00
+    !text cr,"DISK ERROR",$00
 
 
 select_drive:
@@ -961,7 +968,7 @@ do_protected:
 
 
 protected:
-    !text $0d,"PROTECTED!",$00
+    !text cr,"PROTECTED!",$00
 
 
 l_edbd:
@@ -977,7 +984,7 @@ l_edbd:
 ;without any error
 ;
     jsr chrget          ;get the next BASIC byte
-    cmp #$22            ;compare it with an open quote character
+    cmp #quote          ;compare it with an open quote character
     php                 ;save the open quote compare status
     bne l_edd3          ;if not an open quote go get a variable
 
@@ -1045,7 +1052,7 @@ l_ee01:
 
 ;pad the rest of the filename with spaces
 
-    lda #' '            ;set [SPACE]
+    lda #space          ;set [SPACE]
 l_ee05:
     cpx #$06            ;compare the filename index with max + 1
     bcs l_ee0f          ;if done go get the drive number
@@ -1078,7 +1085,7 @@ l_ee0f:
     inc txtptr+1        ;else increment the BASIC byte pointer high byte
 l_ee28:
     jsr chrget          ;get the next BASIC byte
-    cmp #$22            ;compare it with a close quote character
+    cmp #quote          ;compare it with a close quote character
     bne l_edf6          ;if it's not a close quote go do disk error $04,
                         ;  bad filename
 
@@ -1263,7 +1270,7 @@ l_eef0:
 
 
 addr_prompt:
-    !text $0d,"ADDR?",$00
+    !text cr,"ADDR?",$00
 
 
 l_eefb:
@@ -1375,7 +1382,7 @@ l_ef59:
     tya                 ;copy Y
     pha                 ;save Y
 
-    lda #$e6            ;set the cursor character
+    lda #checker        ;set the cursor character
     jsr chrout          ;do character out
     lda #$9d            ;set cursor left
     jsr chrout          ;do character out
@@ -1389,7 +1396,7 @@ l_ef59:
     tax                 ;restore X
 
     lda $7f88           ;restore the character
-    cmp #$03            ;compare it with {STOP}
+    cmp #stop           ;compare it with {STOP}
     bne l_ef58          ;if not {STOP} just exit
 
     jmp $7a00           ;else go do {STOP}
@@ -1409,7 +1416,7 @@ edit_memory:
 ;
     jsr l_eefb          ;get a hex address into $66   /67
 l_ef86:
-    lda #$0d            ;set [CR]
+    lda #cr             ;set [CR]
     jsr chrout          ;do character out
 
     lda $67             ;get the address high byte
@@ -1425,7 +1432,7 @@ l_ef97:
     cpy #$08            ;compare it with max + 1
     bmi l_ef97          ;loop if more to do
 
-    lda #$0d            ;set [CR]
+    lda #cr             ;set [CR]
     jsr chrout          ;do character out
 
 ;output six spaces
@@ -1439,10 +1446,10 @@ l_efa8:
 l_efae:
     stx $27             ;save the line index
     jsr l_ef59          ;get a character and test for {STOP}
-    cmp #$0d            ;compare the character with [CR]
+    cmp #cr             ;compare the character with [CR]
     beq edit_memory     ;if [CR] go get another hex address
 
-    cmp #' '            ;compare it with [SPACE]
+    cmp #space          ;compare it with [SPACE]
     bne l_efc0          ;if not [SPACE] go evaluate a hex digit
 
 ;the character was [SPACE]
