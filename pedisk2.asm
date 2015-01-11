@@ -102,6 +102,14 @@ tracks      = 77        ;8" disk has 77 tracks numbered 0-76
 sectors     = 26        ;8" disk has 26 sectors per track numbered 1-26
 sector_size = 128       ;Always 128 bytes per sector for all disk types
 
+dos_track   = 0         ;Track where DOS is stored (always one track)
+dos_sector  = 9         ;First sector of the DOS
+dos_num_sec = 13        ;Number of DOS sectors
+
+dir_track   = 0         ;Track where directory is stored (always one track)
+                        ;First sector of dir is hardcoded (see find_file)
+dir_num_sec = 8         ;Number of directory sectors
+
 stop        = $03       ;PETSCII STOP
 cr          = $0d       ;PETSCII Carriage return
 space       = $20       ;PETSCII Space
@@ -153,7 +161,7 @@ entry_points:
     jmp read_sectors    ;Read sectors into memory
     jmp write_sectors   ;Write sectors to disk
     jmp find_file       ;Search for filename in the directory
-    jmp perform_load    ;Perform !LOAD
+    jmp load_file       ;Perform !LOAD
 
 cmd_vectors:
 ;The vectors are in the same order as the tokens below.  Each vector
@@ -360,28 +368,33 @@ l_eace:
     sta $7ec0
     sta $7ee0
 
-load_boot_code:
+load_dos:
 ;Load the RAM-resident portion from disk into memory
+;
+;The DOS is 13 sectors on track 0: sectors 9 through 21.
+;Each sector is 128 bytes, so the DOS code is 1664 bytes.
+;It is loaded into RAM at $7800-$7e7f.  See find_file for
+;more on the DOS code.
 ;
     lda #<dos           ;set the memory pointer low byte
     sta target          ;save the memory pointer low byte
     lda #>dos           ;set the memory pointer high byte
     sta target+1        ;save the memory pointer high byte
 
-    ldx #$00            ;set track zero
+    ldx #dos_track      ;set track zero
     stx track           ;save the WD1793 track number
 
     inx                 ;set drive 0
     stx $7f91           ;save the drive select latch copy
 
-    ldx #$0d            ;set the sector count
+    ldx #dos_num_sec    ;set the sector count
     stx num_sectors     ;save the sector count
 
-    ldx #$09            ;set the sector number
+    ldx #dos_sector     ;set the sector number
     stx sector          ;save the WD1793 sector number
 
     jsr read_sectors    ;read <n> sector(s) to memory ??
-    bne l_eb0b          ;if any error go deselect the drives, stop the motors
+    bne deselect        ;if any error go deselect the drives, stop the motors
                         ;and exit to BASIC
 
 install_wedge:
@@ -410,7 +423,7 @@ install_wedge:
     sta chrget+$0b      ;Patch high byte of wedge address
 
 
-l_eb0b:
+deselect:
 ;deselect the drives and stop the motors ??
 ;
     lda #$08
@@ -753,7 +766,7 @@ l_eca8:
     sta fdc_cmdst       ;save the WD1793 command
 
     cli                 ;enable interrupts
-    jsr l_eb0b          ;deselect the drives and stop the motors ??
+    jsr deselect        ;deselect the drives and stop the motors ??
     sec
 l_ecbd:
     lda #$ff
@@ -1107,14 +1120,14 @@ l_ee32:
 
 
 find_file:
-;search for filename in the directory
+;Search for filename in the directory
 ;
-;returns $22/23 pointing to the entry and the returned status in X
-;the directory starts on track 0, sector 1 and runs to track 0, sector 8
+;Returns $22/23 pointing to the entry and A with status.
+;A=0 means found, A=nonzero means not found.
 ;
-;the first file entry in the directory is at $10 in the first sector
-;
-;a directory entry consists of:
+;The directory is 8 sectors on track 0: sectors 1 through 8.  This area
+;is 1024 bytes total (8 sectors * 128 bytes).  Each directory entry is
+;16 bytes, so there are 64 entries possible.  A directory entry consists of:
 ;
 ;  $00-$05   byte  filename
 ;  $06-$07   word  file length
@@ -1126,10 +1139,34 @@ find_file:
 ;  $0E       byte  file sector count
 ;  $0F       byte  ??
 ;
+;The first directory entry is special.  This routine will always skip over
+;it.  That leaves 63 entries for user files.
+;
+;We know from load_file that a file consists of N contiguous sectors, where N
+;is specified by the byte at offset $0E.  A file can be at most 255 sectors
+;(32640 bytes).  A file can span tracks (if the last sector of a track is
+;read but the file has has more sectors, it will continue on the first sector
+;of the next track).  The first track and sector of the file is specified by
+;$0C/$0D.  The file length word at offset $06 seems to be informational only.
+;
+;Speculation:
+;  The first entry (entry 0) may be a special one for the DOS code.  The
+;  PEDISK review from the Feb 1981 issue of Compute! magazine! states:
+;  "Provision is made when initializing a diskette for omitting the boot,
+;  thereby saving more room when only files are stored."
+;
+;  We know from load_dos that the DOS is always 13 sectors stored right after
+;  the directory (track 0, sectors 9 through 21).  If the DOS was written to
+;  the disk, then entry 0 would show 13 sectors allocated starting from
+;  track 0, sector 9.  If no DOS code was written to disk, then entry 0 would
+;  just show 0 sectors allocated.  The sectors that would have been used for
+;  the DOS would then be available for user files.  The filename in entry 0
+;  may be used to store the disk name.
+;
     lda $7fb1           ;get the drive select byte
     sta $7f91           ;save the drive select latch copy
 
-    ldy #$00            ;set track 0 (first track)
+    ldy #dir_track      ;set track 0 (first track)
     sty track           ;save the WD1793 track number
 
     iny                 ;set sector 1 (first sector, sectors start at 1)
@@ -1185,7 +1222,7 @@ l_ee76:
 
     inc sector          ;increment the WD1793 sector number
     lda sector          ;get the WD1793 sector number
-    cmp #$09            ;compare it with max + 1
+    cmp #dir_num_sec+1  ;compare it with max + 1
     bpl l_ee95          ;if > max go do the not found exit
 
     jsr read_a_sector   ;read one sector to memory
@@ -1212,21 +1249,23 @@ romdos_load:
 ;Entry point for !LOAD, the only PEDISK II command that is resident
 ;in the ROM instead of the RAM portion.
 ;
-    jsr perform_load    ;perform !LOAD
+    jsr load_file       ;perform !LOAD
     jmp l_eb5e          ;restore the top 32 bytes of the stack page and return EOT
 
 
-perform_load:
-;perform !LOAD
+load_file:
+;Perform !LOAD.  Load a file from disk.
+;
+;See an explanation of directory entries and files in find_file.
 ;
     jsr find_file       ;search for filename in the directory
     tax                 ;copy the returned value
-    bne l_eee6          ;if not found go do "??????" message
+    bne not_found       ;if not found go do "??????" message
 
     ldy #$0a            ;set the index to the file type
     lda ($22),y         ;get the file type
     cmp #$03            ;compare it with ?? type
-    bmi l_eee6          ;if less than ?? go do "??????" message
+    bmi not_found       ;if less than ?? go do "??????" message
 
     bne l_eebe          ;if not type $03 skip setting the end of program
 
@@ -1258,27 +1297,29 @@ l_eebe:
     lda ($22),y
     sta num_sectors     ;save the sector count
     jsr read_sectors    ;read <n> sector(s) to memory
-    bne l_eef0          ;if there was an error go flag it and exit
+    bne load_failed     ;if there was an error go flag it and exit
 
     ldx #$00            ;flag no error
-l_eee3:
-    jmp l_eb0b          ;stop the disk and return
+                        ;Fall through into load_done
+load_done:
+    jmp deselect        ;stop the disk and return
 
 ;output "??????"
 
-l_eee6:
+not_found:
     ldx #$06            ;set the "?" count
     lda #'?'            ;set "?"
-l_eeea:
+nf1:
     jsr chrout          ;do character out
     dex                 ;decrement the count
-    bne l_eeea          ;loop if more to do
+    bne nf1             ;loop if more to do
+                        ;Fall through into load_failed
 
+load_failed:
 ;there was a load error
-
-l_eef0:
+;
     ldx #$ff            ;flag a load error
-    bne l_eee3          ;go deselect the drives and exit, branch always
+    bne load_done       ;go deselect the drives and exit, branch always
 
 
 addr_prompt:
