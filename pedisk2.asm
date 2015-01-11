@@ -505,8 +505,8 @@ select_drive:
     ora #$08            ;mask xxxx 1xxx, set ?? bit
     sta drive_sel       ;save the drive select latch
 
-    lda #$23            ;set the delay count, 35ms
-    jsr l_ec55          ;delay for A * 1000 cycles
+    lda #35             ;set the delay count, 35ms
+    jsr delay           ;delay for A * 1000 cycles
 
     lda fdc_cmdst       ;get the WD1793 status register
     and #%10000000      ;mask x000 0000, drive not ready
@@ -591,7 +591,7 @@ l_ec0d:
     sta command         ;Remember this command as the last one written
     sta fdc_cmdst       ;Write command to WD1793
 
-    jsr l_ec53          ;delay for $C6 * ?? cycles
+    jsr delay_1ms       ;Delay 1ms
     jmp l_ecd0          ;wait for WD1793 not busy mask the status and return
 
 
@@ -628,7 +628,7 @@ l_ec33:
     sta command         ;Remember this command as the last one written
     sta fdc_cmdst       ;Write command to WD1793
 
-    jsr l_ec53          ;delay for $C6 * ?? cycles
+    jsr delay_1ms       ;Delay 1ms
     sec                 ;flag counted out
     bcs l_ec4d          ;return the flag, branch always
 
@@ -643,25 +643,25 @@ l_ec4d:
     rts
 
 
-l_ec53:
-;delay for $C6 * ?? cycles
+delay_1ms:
+;Delay for 1 millisecond.
 ;
     lda #$01            ;set the outer loop count
+                        ;Fall through into delay
 
-
-l_ec55:
-;delay for A * $C6 * ?? cycles
+delay:
+;Delay for number of millseconds in A.
 ;
     sta $7f8d           ;save the outer loop count
     stx $7f8e           ;save X
-l_ec5b:
+delay_outer:
     ldx #$c6            ;set the inner loop count
-l_ec5d:
+delay_inner:
     dex                 ;decrement the inner loop count
-    bne l_ec5d          ;loop if more to do
+    bne delay_inner     ;loop if more to do
 
     dec $7f8d           ;decrement the outer loop count
-    bne l_ec5b          ;loop if more to do
+    bne delay_outer     ;loop if more to do
 
     ldx $7f8e           ;restore X
     rts
