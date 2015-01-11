@@ -206,7 +206,7 @@ wedge:
     lda (txtptr),y      ;Get the next byte after the "!"
     bmi handle_token    ;Branch if it has bit 7 set (indicates BASIC token)
 
-    ldy $7f8a           ;Restore orginal Y
+    ldy $7f8a           ;Restore original Y
     lda #'!'            ;Restore A to its original value ("!")
 
 check_colon:
