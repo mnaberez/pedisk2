@@ -115,6 +115,7 @@ cr          = $0d       ;PETSCII Carriage return
 space       = $20       ;PETSCII Space
 quote       = $22       ;PETSCII Quotation mark
 clear       = $93       ;PETSCII Clear screen
+crsr_left   = $9d       ;PETSCII Cursor left
 checker     = $e6       ;PETSCII Checkerboard
 
     *=$e800
@@ -1387,9 +1388,9 @@ l_ef2f:
 l_ef32:
 ;output "?" and shift the cursor left
 ;
-    lda #$3f            ;set "?"
+    lda #'?'            ;set "?"
     jsr chrout          ;do character out
-    lda #$9d            ;set cursor left
+    lda #crsr_left      ;set cursor left
     jsr chrout          ;do character out
     jsr chrout          ;do character out
 l_ef3f:
@@ -1437,7 +1438,7 @@ l_ef59:
 
     lda #checker        ;set the cursor character
     jsr chrout          ;do character out
-    lda #$9d            ;set cursor left
+    lda #crsr_left      ;set cursor left
     jsr chrout          ;do character out
 
     jsr l_ef7b          ;wait for and echo a character
