@@ -968,7 +968,7 @@ l_edbd:
 ;get a filename from a string or variable
 ;
 ;however the filename is presented it seems it must consist of a name of
-;zero to six charaters, a ":" character and a drive charater so as a
+;zero to six characters, a ":" character and a drive character so as a
 ;literal string it would be "<name>:<drive>"
 ;
 ;when a string variable is used for the filename no check is made to see
@@ -1016,7 +1016,7 @@ l_edea:
 ;get a filename
 ;
 ;unless I'm mistaken a filename must include a ":" character and the drive number
-;at the end. no check is done on the drive number character so any charater will
+;at the end. no check is done on the drive number character so any character will
 ;be taken as a valid drive number
 ;
     ldy #$00            ;clear the index
@@ -1381,14 +1381,14 @@ l_ef59:
     jsr chrout          ;do character out
 
     jsr l_ef7b          ;wait for and echo a character
-    sta $7f88           ;save the charater
+    sta $7f88           ;save the character
 
     pla                 ;pull Y
     tay                 ;restore Y
     pla                 ;pull X
     tax                 ;restore X
 
-    lda $7f88           ;restore the charater
+    lda $7f88           ;restore the character
     cmp #$03            ;compare it with {STOP}
     bne l_ef58          ;if not {STOP} just exit
 
