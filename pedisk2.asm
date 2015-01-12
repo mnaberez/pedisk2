@@ -448,7 +448,7 @@ puts_mem_err:
     jmp puts            ;message out and return
 
 
-l_eb5e:
+restore:
 ;restore the top 32 bytes of the stack page and return EOT
 ;
     ldx #$1f            ;set the byte count/index
@@ -715,8 +715,7 @@ l_ec8e:
 ;do disk error and restore the stack
 ;
     jsr disk_error      ;do "DISK ERROR" message and stop the disk
-    jmp l_eb5e          ;restore the top 32 bytes of the stack page
-                        ;  and return EOT
+    jmp restore         ;restore top 32 bytes of stack page and return EOT
 
 
 disk_error_11:
@@ -1256,7 +1255,7 @@ romdos_load:
 ;in the ROM instead of the RAM portion.
 ;
     jsr load_file       ;perform !LOAD
-    jmp l_eb5e          ;restore the top 32 bytes of the stack page and return EOT
+    jmp restore         ;restore top 32 bytes of stack page and return EOT
 
 
 load_file:
