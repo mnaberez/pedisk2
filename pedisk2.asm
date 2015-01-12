@@ -211,10 +211,9 @@ cmd_tokens:
 
 drive_selects:
 ;drive select byte
-    !byte $01           ;drive 0 select bit pattern
-    !byte $02           ;drive 1 select bit pattern
-    !byte $04           ;drive 2 select bit pattern
-
+    !byte %00000001     ;drive 0 select bit pattern
+    !byte %00000010     ;drive 1 select bit pattern
+    !byte %00000100     ;drive 2 select bit pattern
 
 wedge:
 ;A patch is installed in CHRGET to jump to this wedge.  The next byte in
@@ -446,7 +445,7 @@ install_wedge:
 deselect:
 ;deselect the drives and stop the motors ??
 ;
-    lda #$08
+    lda #%00001000
     sta drive_sel       ;save the drive select latch
     rts
 
@@ -528,15 +527,15 @@ select_drive:
     beq no_drive_sel    ;if zero go do disk error $14, no drive selected
 
     lda drive_sel       ;read the drive select latch
-    and #$07            ;mask the drive select bits
+    and #%00000111      ;mask the drive select bits
     cmp $7f91           ;compare it with the drive select latch copy
     beq l_ebcd          ;if the same just exit
 
     lda $7f91           ;get the drive select latch copy
-    cmp #$07            ;compare it with all drives selected
+    cmp #%00000111      ;compare it with all drives selected
     bcs no_drive_sel    ;if >= $07 go do disk error $14, no drive selected
 
-    ora #$08            ;mask xxxx 1xxx, set ?? bit
+    ora #%00001000      ;mask xxxx 1xxx, set ?? bit
     sta drive_sel       ;save the drive select latch
 
     lda #35             ;set the delay count, 35ms
