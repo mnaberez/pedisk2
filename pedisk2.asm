@@ -86,12 +86,14 @@ dos_sys     = dos+$12   ;Entry point for !SYS (disk monitor) in RAM
 dos_list    = dos+$15   ;Entry point for !LIST (directory) in RAM
 retries     = $7f8c     ;Counts down retries remaining for disk operations
 status_mask = $7f90     ;Mask to apply when checking WD1793 status register
+drive_sel   = $7f91     ;Drive select bit pattern to write to the latch
 track       = $7f92     ;Track number to write to WD1793 (0-76 or $00-4c)
 sector      = $7f93     ;Sector number to write to WD1793 (1-26 or $01-1a)
 status      = $7f94     ;Last status byte read from WD1793 (no masking)
 command     = $7f95     ;Last command byte written to WD1793
 num_sectors = $7f96     ;Number of sectors to read or write
 filename    = $7fa0     ;Buffer used to store filename (6 bytes)
+drive_sel_f = $7fb1     ;Drive select bit pattern parsed from a filename
 ptrget      = $c12b     ;BASIC Find a variable
 wrob        = $d722     ;Monitor Write byte in A out as a two digit hex
 hexit       = $d78d     ;Monitor Evaluate char in A to a hex nibble
@@ -402,8 +404,8 @@ load_dos:
     ldx #dos_track      ;set track zero
     stx track           ;save the WD1793 track number
 
-    inx                 ;set drive 0
-    stx $7f91           ;save the drive select latch copy
+    inx                 ;set x=1, which is the pattern for selecting drive 0
+    stx drive_sel       ;save pattern to write to drive select latch
 
     ldx #dos_num_sec    ;set the sector count
     stx num_sectors     ;save the sector count
@@ -523,15 +525,15 @@ select_drive:
     sta status          ;clear the WD1793 status register copy
     sei                 ;disable interrupts
 
-    lda $7f91           ;get the drive select latch copy
+    lda drive_sel       ;get pattern to write to drive select latch
     beq no_drive_sel    ;if zero go do disk error $14, no drive selected
 
     lda latch           ;read the drive select latch
     and #%00000111      ;mask the drive select bits
-    cmp $7f91           ;compare it with the drive select latch copy
+    cmp drive_sel       ;compare it with select pattern we want to write
     beq l_ebcd          ;if the same just exit
 
-    lda $7f91           ;get the drive select latch copy
+    lda drive_sel       ;get pattern to write to drive select latch
     cmp #%00000111      ;compare it with all drives selected
     bcs no_drive_sel    ;if >= $07 go do disk error $14, no drive selected
 
@@ -1104,10 +1106,10 @@ l_ee05:
 l_ee0f:
     iny                 ;increment the index to the drive character
     lda ($24),y         ;get the drive character
-    and #$03            ;mask the drive
+    and #%00000011      ;mask to get the the drive number from the character
     tax                 ;copy it to the index
-    lda drive_selects,x ;get the drive select byte
-    sta $7fb1           ;save the drive select byte
+    lda drive_selects,x ;convert drive number to a drive select bit pattern
+    sta drive_sel_f     ;save the drive select bit pattern
 
     plp                 ;restore the open quote compare status
     bne l_ee32          ;if it wasn't an immediate string just exit
@@ -1191,8 +1193,8 @@ find_file:
 ;
 ;  The filename in entry 0 may be used to store the disk name.
 ;
-    lda $7fb1           ;get the drive select byte
-    sta $7f91           ;save the drive select latch copy
+    lda drive_sel_f     ;get drive select bit pattern parsed from filename
+    sta drive_sel       ;save pattern to write to drive select latch
 
     ldy #dir_track      ;set track 0 (first track)
     sty track           ;save the WD1793 track number
