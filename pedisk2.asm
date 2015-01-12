@@ -384,10 +384,15 @@ l_eace:
 load_dos:
 ;Load the RAM-resident portion from disk into memory
 ;
-;The DOS is 13 sectors on track 0: sectors 9 through 21.
-;Each sector is 128 bytes, so the DOS code is 1664 bytes.
-;It is loaded into RAM at $7800-$7e7f.  See find_file for
-;more on the DOS code.
+;The DOS is stored in 13 sectors on track 0: sectors 9 through 21.  Each
+;sector is 128 bytes, so the DOS code is 1664 bytes.  It is loaded into
+;RAM at $7800-7e7f.  The first 24 bytes are a jump table (see cmd_vectors).
+;See find_file for more on the DOS code.
+;
+;The DOS sectors can contain anything.  There's no check on the contents,
+;and no jump to any sort of init routine in the DOS.  If the sectors read
+;without error from the WD1793, the DOS is considered loaded.  The first
+;jump into the DOS will be when the user enters a wedge command (e.g. !LIST).
 ;
     lda #<dos           ;set the memory pointer low byte
     sta target          ;save the memory pointer low byte
@@ -407,12 +412,12 @@ load_dos:
     stx sector          ;save the WD1793 sector number
 
     jsr read_sectors    ;read <n> sector(s) to memory ??
-    bne deselect        ;if any error go deselect the drives, stop the motors
-                        ;and exit to BASIC
+    bne deselect        ;if any error go deselect the drives,
+                        ;  stop the motors and exit to BASIC
 
 install_wedge:
-;After the RAM resident portion has been loaded successfully, the
-;CHRGET routine in zero page is patched to jump to the wedge.
+;After the DOS sectors have been loaded into RAM, the CHRGET routine in
+;zero page is patched to jump to the wedge.
 ;
 ;Before:                            After:
 ;
@@ -435,6 +440,7 @@ install_wedge:
     lda #>wedge
     sta chrget+$0b      ;Patch high byte of wedge address
 
+                        ;Fall through into deselect
 
 deselect:
 ;deselect the drives and stop the motors ??
@@ -1165,10 +1171,25 @@ find_file:
 ;  We know from load_dos that the DOS is always 13 sectors stored right after
 ;  the directory (track 0, sectors 9 through 21).  If the DOS was written to
 ;  the disk, then entry 0 would show 13 sectors allocated starting from
-;  track 0, sector 9.  If no DOS code was written to disk, then entry 0 would
-;  just show 0 sectors allocated.  The sectors that would have been used for
-;  the DOS would then be available for user files.  The filename in entry 0
-;  may be used to store the disk name.
+;  track 0, sector 9.
+;
+;  If no DOS code was written to disk, then entry 0 could show 0 sectors
+;  allocated.  All 13 sectors normally used for the DOS could then be
+;  available for user files, giving an extra 1664 bytes for user files.
+;  However, load_dos just blindly loads 13 sectors into RAM and installs the
+;  wedge if there's no read error.  Those sectors could contain anything, and
+;  if the user tries one of the wedge commands provided by the DOS, the
+;  computer will probably crash.
+;
+;  Another possibility for no DOS code is that entry 0 could show 1 sector
+;  allocated (always track 0, sector 9).  The load_dos routine would load
+;  this sector at $7800.  The first 24 bytes of the sector would become the
+;  DOS jump table (see cmd_vectors), leaving 104 bytes for 6502 code.  It
+;  could make the DOS commands a no-op so the computer wouldn't crash if the
+;  user tried them.  This approach would leave 12 of the 13 DOS sectors free,
+;  giving an extra 1536 bytes for user files.
+;
+;  The filename in entry 0 may be used to store the disk name.
 ;
     lda $7fb1           ;get the drive select byte
     sta $7f91           ;save the drive select latch copy
