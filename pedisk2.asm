@@ -976,7 +976,7 @@ l_ed74:
 l_ed7b:
     lda (target),y      ;get a byte from memory
     sta fdc_data        ;write the WD1793 data register
-    iny                 ;inccrement the index
+    iny                 ;increment the index
     dex                 ;decrement the byte count
     bne l_ed74          ;loop if more to do
 
