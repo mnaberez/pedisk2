@@ -177,9 +177,9 @@ entry_points:
     jmp load_file       ;Perform !LOAD
 
 cmd_vectors:
-;The vectors are in the same order as the tokens below.  Each vector
-;points to the RAM-resident portion, with the sole exception of the
-;one for !LOAD which is in this ROM.  The vectors are all -1 because
+;These vectors are in the same order as the cmd_tokens table below.  Each
+;vector points to the RAM-resident portion, with the sole exception of
+;the one for !LOAD which is in this ROM.  The vectors are all -1 because
 ;RTS is used to jump to them (push vector onto stack, then RTS).
 ;
     !word dos_sys-1     ;vector for !SYS
@@ -206,10 +206,11 @@ cmd_tokens:
     !byte $8a           ;CBM BASIC token for RUN
     !byte $9b           ;CBM BASIC token for LIST
 
-    !byte $ff,$00       ;unused
+    !byte $ff,$00       ;Unused bytes -- this is not an end marker.  The
+                        ;  number of tokens is hardcoded in the wedge.
 
 drive_selects:
-; drive select byte
+;drive select byte
     !byte $01           ;drive 0 select bit pattern
     !byte $02           ;drive 1 select bit pattern
     !byte $04           ;drive 2 select bit pattern
