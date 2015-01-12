@@ -76,31 +76,37 @@ chrget      = $70       ;Subroutine: Get Next Byte of BASIC Text
 txtptr      = $77       ;Pointer: Current Byte of BASIC Text
 target      = $b7       ;Pointer: target address for memory operations
 dos         = $7800     ;Base address for the RAM-resident portion
-dos_save    = dos+$00   ;Entry point for !SAVE in RAM
-dos_open    = dos+$03   ;Entry point for !OPEN in RAM
-dos_close   = dos+$06   ;Entry point for !CLOSE in RAM
-dos_input   = dos+$09   ;Entry point for !INPUT in RAM
-dos_print   = dos+$0c   ;Entry point for !PRINT in RAM
-dos_run     = dos+$0f   ;Entry point for !RUN (load and run) in RAM
-dos_sys     = dos+$12   ;Entry point for !SYS (disk monitor) in RAM
-dos_list    = dos+$15   ;Entry point for !LIST (directory) in RAM
-save_char   = $7f88     ;Temp storage for char read at PEDISK monitor prompt
-wedge_x     = $7f89     ;Temp storage for X register used by the wedge
-wedge_y     = $7f8a     ;Temp storage for Y register used by the wedge
-wedge_sp    = $7f8b     ;Temp storage for stack pointer used by the wedge
-retries     = $7f8c     ;Counts down retries remaining for disk operations
-save_a      = $7f8d     ;Temp storage for A reg used by several routines
-save_x      = $7f8e     ;Temp storage for X reg used by several routines
-status_mask = $7f90     ;Mask to apply when checking WD1793 status register
-drive_sel   = $7f91     ;Drive select bit pattern to write to the latch
-track       = $7f92     ;Track number to write to WD1793 (0-76 or $00-4c)
-sector      = $7f93     ;Sector number to write to WD1793 (1-26 or $01-1a)
-status      = $7f94     ;Last status byte read from WD1793 (no masking)
-command     = $7f95     ;Last command byte written to WD1793
-num_sectors = $7f96     ;Number of sectors to read or write
-filename    = $7fa0     ;Buffer used to store filename (6 bytes)
-drive_sel_f = $7fb1     ;Drive select bit pattern parsed from a filename
-wedge_stack = $7fe0     ;32 bytes for preserving the stack used by the wedge
+dos_save    = dos+$0000 ;Entry point for !SAVE
+dos_open    = dos+$0003 ;Entry point for !OPEN
+dos_close   = dos+$0006 ;Entry point for !CLOSE
+dos_input   = dos+$0009 ;Entry point for !INPUT
+dos_print   = dos+$000c ;Entry point for !PRINT
+dos_run     = dos+$000f ;Entry point for !RUN (load and run)
+dos_sys     = dos+$0012 ;Entry point for !SYS (disk monitor)
+dos_list    = dos+$0015 ;Entry point for !LIST (directory)
+dos_stop    = dos+$0200 ;Unknown, PEDISK monitor jumps here if STOP pressed
+buf_1       = dos+$0680 ;Unknown, possible buffer area #1
+buf_2       = dos+$06a0 ;Unknown, possible buffer area #2
+buf_3       = dos+$06c0 ;Unknown, possible buffer area #3
+buf_4       = dos+$06e0 ;Unknown, possible buffer area #4
+save_oldlin = dos+$0709 ;2 bytes, Unknown, written to oldln in find_file
+save_char   = dos+$0788 ;Temp storage for char read at PEDISK monitor prompt
+wedge_x     = dos+$0789 ;Temp storage for X register used by the wedge
+wedge_y     = dos+$078a ;Temp storage for Y register used by the wedge
+wedge_sp    = dos+$078b ;Temp storage for stack pointer used by the wedge
+retries     = dos+$078c ;Counts down retries remaining for disk operations
+save_a      = dos+$078d ;Temp storage for A reg used by several routines
+save_x      = dos+$078e ;Temp storage for X reg used by several routines
+status_mask = dos+$0790 ;Mask to apply when checking WD1793 status register
+drive_sel   = dos+$0791 ;Drive select bit pattern to write to the latch
+track       = dos+$0792 ;Track number to write to WD1793 (0-76 or $00-4c)
+sector      = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
+status      = dos+$0794 ;Last status byte read from WD1793 (no masking)
+command     = dos+$0795 ;Last command byte written to WD1793
+num_sectors = dos+$0796 ;Number of sectors to read or write
+filename    = dos+$07a0 ;Buffer used to store filename (6 bytes)
+drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename
+wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
 ptrget      = $c12b     ;BASIC Find a variable
 wrob        = $d722     ;Monitor Write byte in A out as a two digit hex
 hexit       = $d78d     ;Monitor Evaluate char in A to a hex nibble
@@ -385,18 +391,18 @@ l_eace:
     bpl l_eac3
 
     lda #$ff
-    sta $7e80
-    sta $7ea0
-    sta $7ec0
-    sta $7ee0
+    sta buf_1
+    sta buf_2
+    sta buf_3
+    sta buf_4
 
 load_dos:
 ;Load the RAM-resident portion from disk into memory
 ;
 ;The DOS is stored in 13 sectors on track 0: sectors 9 through 21.  Each
 ;sector is 128 bytes, so the DOS code is 1664 bytes.  It is loaded into
-;RAM at $7800-7e7f.  The first 24 bytes are a jump table (see cmd_vectors).
-;See find_file for more on the DOS code.
+;RAM from dos+$0000 to dos+$067f.  The first 24 bytes are a jump table
+;(see cmd_vectors).  See find_file for more on the DOS code.
 ;
 ;The DOS sectors can contain anything.  There's no check on the contents,
 ;and no jump to any sort of init routine in the DOS.  If the sectors read
@@ -1192,8 +1198,8 @@ find_file:
 ;
 ;  Another possibility for no DOS code is that entry 0 could show 1 sector
 ;  allocated (always track 0, sector 9).  The load_dos routine would load
-;  this sector at $7800.  The first 24 bytes of the sector would become the
-;  DOS jump table (see cmd_vectors), leaving 104 bytes for 6502 code.  It
+;  this sector at dos+$0000.  The first 24 bytes of the sector would become
+;  the DOS jump table (see cmd_vectors), leaving 104 bytes for 6502 code.  It
 ;  could make the DOS commands a no-op so the computer wouldn't crash if the
 ;  user tried them.  This approach would leave 12 of the 13 DOS sectors free,
 ;  giving an extra 1536 bytes for user files.
@@ -1220,9 +1226,9 @@ find_file:
 
 ;there was no error
 
-    lda $7f09
+    lda save_oldlin
     sta oldlin
-    lda $7f0a
+    lda save_oldlin+1
     sta oldlin+1
 
     lda #$10            ;set index to first user-visible directory entry
@@ -1489,7 +1495,7 @@ l_ef59:
     cmp #stop           ;compare it with {STOP}
     bne l_ef58          ;if not {STOP} just exit
 
-    jmp $7a00           ;else go do {STOP}
+    jmp dos_stop        ;else go do {STOP}
 
 
 l_ef7b:
