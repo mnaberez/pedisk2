@@ -468,11 +468,11 @@ deselect:
 banner:
     !text clear,"PEDISK II SYSTEM",cr
     !text "CGRS MICROTECH",cr
-    !text "LANGHORNE,PA.19047 C1981",cr,$00
+    !text "LANGHORNE,PA.19047 C1981",cr,0
 
 
 mem_error:
-    !text cr,"MEM ERROR",$00
+    !text cr,"MEM ERROR",0
 
 
 puts_mem_err:
@@ -497,7 +497,7 @@ l_eb61:
     cli                 ;enable interrupts
     ldy wedge_y         ;restore Y
     ldx wedge_x         ;restore X
-    lda #$00            ;return an End Of Text byte
+    lda #0              ;return an End Of Text byte
     jmp check_colon     ;Jump out to the wedge
 
 
@@ -528,13 +528,13 @@ put_hex_byte:
 
 
 disk_err_msg:
-    !text cr,"DISK ERROR",$00
+    !text cr,"DISK ERROR",0
 
 
 select_drive:
 ;select a drive
 ;
-    lda #$00            ;clear A
+    lda #0              ;clear A
     sta status          ;clear the WD1793 status register copy
     sei                 ;disable interrupts
 
@@ -779,7 +779,7 @@ disk_error:
 
     jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex Byte
 
-    ldx #$00            ;clear the index
+    ldx #0              ;clear the index
 l_eca8:
     lda status_mask,x
     jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex Byte
@@ -804,7 +804,7 @@ l_ecc0:
     sta command         ;Remember this command as the last one written
     sta fdc_cmdst       ;Write command to WD1793
 
-    ldy #$00            ;clear Y
+    ldy #0              ;clear Y
     ldx #$12            ;set the delay count
 l_ecca:
     dex                 ;decrement the delay count
@@ -1018,7 +1018,7 @@ do_protected:
 
 
 protected:
-    !text cr,"PROTECTED!",$00
+    !text cr,"PROTECTED!",0
 
 
 l_edbd:
@@ -1079,7 +1079,7 @@ l_edea:
 ;No check is done on the drive number character so any character will be taken
 ;as a valid drive number.
 ;
-    ldy #$00            ;clear the index
+    ldy #0              ;clear the index
 l_edec:
     lda ($24),y         ;get a filename character
     cmp #':'            ;compare it with ":"
@@ -1235,7 +1235,7 @@ find_file:
 l_ee5d:
     sta $22             ;set the directory search pointer low byte
 l_ee5f:
-    ldy #$00            ;clear the index
+    ldy #0              ;clear the index
     lda ($22),y         ;get a character from the directory
     cmp #$ff            ;compare it with the end marker
     beq l_ee95          ;if end of directory go do the not found exit
@@ -1271,13 +1271,13 @@ l_ee76:
     jsr read_a_sector   ;read one sector to memory
     bne l_ee94          ;if there was an error just exit
 
-    lda #$00            ;set the index to the next directory entry
+    lda #0              ;set the index to the next directory entry
     beq l_ee5d          ;continue the directory search, branch always
 
 ;found the file exit
 
 l_ee92:
-    lda #$00            ;flag found
+    lda #0              ;flag found
 l_ee94:
     rts
 
@@ -1349,7 +1349,7 @@ l_eebe:
     jsr read_sectors    ;read <n> sector(s) to memory
     bne load_failed     ;if there was an error go flag it and exit
 
-    ldx #$00            ;flag no error
+    ldx #0              ;flag no error
                         ;Fall through into load_done
 load_done:
     jmp deselect        ;stop the disk and return
@@ -1373,7 +1373,7 @@ load_failed:
 
 
 addr_prompt:
-    !text cr,"ADDR?",$00
+    !text cr,"ADDR?",0
 
 
 l_eefb:
@@ -1527,7 +1527,7 @@ l_ef86:
     lda $66             ;get the address low byte
     jsr put_hex_byte    ;output A as a two digit hex Byte
 
-    ldy #$00            ;clear the index
+    ldy #0              ;clear the index
 l_ef97:
     lda ($66),y         ;get a byte from memory
     jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex Byte
@@ -1567,7 +1567,7 @@ l_efc0:
     jsr l_ef1e          ;get and evaluate a hex byte second character
     bcs l_efae          ;if error go retry this byte
 
-    ldy #$00            ;clear the index
+    ldy #0              ;clear the index
     sta ($66),y         ;save the byte
     cmp ($66),y         ;compare the byte with the saved copy
     bne l_efe2          ;if not the same go do "??" to show it didn't save
