@@ -98,18 +98,6 @@ hexit       = $d78d     ;Monitor Evaluate char in A to a hex nibble
 chrout      = $ffd2     ;KERNAL Send a char to the current output device
 getin       = $ffe4     ;KERNAL Read a char from the current input device
 
-tracks      = 77        ;8" disk has 77 tracks numbered 0-76
-sectors     = 26        ;8" disk has 26 sectors per track numbered 1-26
-sector_size = 128       ;Always 128 bytes per sector for all disk types
-
-dos_track   = 0         ;Track where DOS is stored (always one track)
-dos_sector  = 9         ;First sector of the DOS
-dos_num_sec = 13        ;Number of DOS sectors
-
-dir_track   = 0         ;Track where directory is stored (always one track)
-                        ;First sector of dir is hardcoded (see find_file)
-dir_num_sec = 8         ;Number of directory sectors
-
 stop        = $03       ;PETSCII STOP
 cr          = $0d       ;PETSCII Carriage return
 space       = $20       ;PETSCII Space
@@ -117,6 +105,30 @@ quote       = $22       ;PETSCII Quotation mark
 clear       = $93       ;PETSCII Clear screen
 crsr_left   = $9d       ;PETSCII Cursor left
 checker     = $e6       ;PETSCII Checkerboard
+
+tracks      = 77        ;8" disk has 77 tracks numbered 0-76
+sectors     = 26        ;8" disk has 26 sectors per track numbered 1-26
+sector_size = 128       ;Always 128 bytes per sector for all disk types
+
+dos_num_sec = 13        ;Number of DOS sectors
+dos_track   = 0         ;Track where DOS is stored (always one track)
+dos_sector  = 9         ;First sector of the DOS
+
+dir_num_sec = 8         ;Number of directory sectors
+dir_track   = 0         ;Track where directory is stored (always one track)
+                        ;First sector of dir is hardcoded (see find_file)
+
+e_illegal   = $01       ;Illegal Command or Mode
+e_no_fname  = $03       ;No Filename
+e_bad_fname = $04       ;Bad Filename
+e_seek_err  = $10       ;Seek Error
+e_end_disk  = $11       ;End of Disk
+e_not_ready = $13       ;Drive Not Ready
+e_no_drive  = $14       ;No Drive Selected
+e_bad_track = $15       ;Bad Track Number
+e_not_resp  = $17       ;Drive Not Responding
+e_read_err  = $40       ;Read Error
+e_writ_err  = $50       ;Write Error
 
     *=$e800
 
@@ -184,15 +196,15 @@ cmd_tokens:
 ;PEDISK II commands share the same names as existing Commodore BASIC
 ;commands but are prefixed with an exclamation point for the wedge.
 ;
-    !byte $9e           ;token for SYS
-    !byte $93           ;token for LOAD
-    !byte $94           ;token for SAVE
-    !byte $9f           ;token for OPEN
-    !byte $a0           ;token for CLOSE
-    !byte $85           ;token for INPUT
-    !byte $99           ;token for PRINT
-    !byte $8a           ;token for RUN
-    !byte $9b           ;token for LIST
+    !byte $9e           ;CBM BASIC token for SYS
+    !byte $93           ;CBM BASIC token for LOAD
+    !byte $94           ;CBM BASIC token for SAVE
+    !byte $9f           ;CBM BASIC token for OPEN
+    !byte $a0           ;CBM BASIC token for CLOSE
+    !byte $85           ;CBM BASIC token for INPUT
+    !byte $99           ;CBM BASIC token for PRINT
+    !byte $8a           ;CBM BASIC token for RUN
+    !byte $9b           ;CBM BASIC token for LIST
 
     !byte $ff,$00       ;unused
 
@@ -302,8 +314,8 @@ l_ea84:
 
 illegal_cmd:
 ;do disk error $01, illegal command/mode
-    lda #$01
-    jmp l_ec8e
+    lda #e_illegal
+    jmp dsk_err_restore
 
 
 l_ea8c:
@@ -506,7 +518,7 @@ select_drive:
     sei                 ;disable interrupts
 
     lda $7f91           ;get the drive select latch copy
-    beq disk_error_14   ;if zero go do disk error $14, no drive selected
+    beq no_drive_sel    ;if zero go do disk error $14, no drive selected
 
     lda drive_sel       ;read the drive select latch
     and #$07            ;mask the drive select bits
@@ -515,7 +527,7 @@ select_drive:
 
     lda $7f91           ;get the drive select latch copy
     cmp #$07            ;compare it with all drives selected
-    bcs disk_error_14   ;if >= $07 go do disk error $14, no drive selected
+    bcs no_drive_sel    ;if >= $07 go do disk error $14, no drive selected
 
     ora #$08            ;mask xxxx 1xxx, set ?? bit
     sta drive_sel       ;save the drive select latch
@@ -525,7 +537,7 @@ select_drive:
 
     lda fdc_cmdst       ;get the WD1793 status register
     and #%10000000      ;mask x000 0000, drive not ready
-    bne disk_error_13   ;if the drive is not ready go do disk error $13,
+    bne drv_not_rdy     ;if the drive is not ready go do disk error $13,
                         ;  drive not ready
 l_ebcd:
     rts
@@ -539,7 +551,7 @@ seek_track:
 l_ebd3:
     lda track           ;get the WD1793 track number
     cmp #tracks         ;compare it with max + 1
-    bpl disk_error_15   ;if > max go do disk error $15
+    bpl bad_track       ;if > max go do disk error $15
 
     sta fdc_data        ;write the target track to the WD1793 data register
     lda #%10011000      ;mask x00x x000,
@@ -569,31 +581,31 @@ l_ebf2:
 
 ;else do disk error $10, seek error
 ;
-    lda #$10            ;set error $10
+    lda #e_seek_err     ;set error $10
     !byte $2c           ;makes next line BIT $xxxx
 
-disk_error_15:
-;do disk error $15, track error
+bad_track:
+;do disk error $15, track error during seek
 ;
-    lda #$15            ;set error $15
+    lda #e_bad_track    ;set error $15
     !byte $2c           ;makes next line BIT $xxxx
 
-disk_error_17:
+drv_not_resp:
 ;do disk error $17, drive not responding
 ;
-    lda #$17            ;set error $17
+    lda #e_not_resp     ;set error $17
     !byte $2c           ;makes next line BIT $xxxx
 
-disk_error_13:
+drv_not_rdy:
 ;do disk error $13, drive not ready
 ;
-    lda #$13            ;set error $13
+    lda #e_not_ready    ;set error $13
     !byte $2c           ;makes next line BIT $xxxx
 
-disk_error_14:
+no_drive_sel:
 ;do disk error $14, no drive selected
 ;
-    lda #$14            ;set error $14
+    lda #e_no_drive     ;set error $14
     jmp disk_error      ;do "DISK ERROR" message and ??
 
 
@@ -601,7 +613,7 @@ l_ec0d:
 ;wait for WD1793 not busy and do command A
 ;
     jsr l_ec1e          ;wait for WD1793 not busy
-    bcs disk_error_17   ;if counted out go do disk error $17
+    bcs drv_not_resp    ;if counted out go do disk error $17
 
     sta command         ;Remember this command as the last one written
     sta fdc_cmdst       ;Write command to WD1793
@@ -702,7 +714,7 @@ l_ec74:
     inx                 ;increment the track number
     stx track           ;save the WD1793 track number
     cpx #tracks         ;compare it with max + 1
-    bpl disk_error_11   ;if > max go do disk error $11
+    bpl end_of_disk     ;if > max go do disk error $11
 
     ldx #$01
 l_ec89:
@@ -711,34 +723,24 @@ l_ec89:
     rts
 
 
-l_ec8e:
+dsk_err_restore:
 ;do disk error and restore the stack
 ;
     jsr disk_error      ;do "DISK ERROR" message and stop the disk
     jmp restore         ;restore top 32 bytes of stack page and return EOT
 
 
-disk_error_11:
+end_of_disk:
 ;do disk error $14, end of disk
 ;
-    lda #$11            ;set error $11
+    lda #e_end_disk     ;set error $11
                         ;Fall through into disk_error
-
 
 disk_error:
 ;do "DISK ERROR" message and and stop the disk (??)
 ;
-;Call with the error code in A.
-;
-;Error codes:
-;  $10 Seek Error
-;  $11 Track Out of Range (read_sectors)
-;  $13 Drive Not Ready
-;  $14 No Drive Selected
-;  $15 Track Out of Range (seek_track)
-;  $17 Drive Not Responding
-;  $40 Read Error
-;  $50 Write Error
+;Call with the error code in A.  See the e_* constants at
+;the top of this file for the error codes.
 ;
     pha                 ;save A
     tya                 ;copy Y
@@ -834,7 +836,7 @@ l_ecf3:
     sta status_mask     ;save the WD1793 status byte mask
 
     lda sector          ;get the WD1793 sector number
-    beq disk_error_40   ;if zero go do disk error $40
+    beq read_error      ;if zero go do disk error $40
 
     sta fdc_sector      ;save the WD1793 sector register
 
@@ -873,10 +875,10 @@ l_ed2e:
     dec retries
     bne l_ecf3
 
-disk_error_40:
+read_error:
 ;Read Error
 ;
-    lda #$40
+    lda #e_read_err
     jmp disk_error      ;do "DISK ERROR" message and ??
 
     ;no error exit
@@ -921,7 +923,7 @@ l_ed55:
     sta status_mask     ;save the WD1793 status byte mask
 
     lda sector          ;get the WD1793 sector number
-    beq disk_error_50   ;if zero go do disk error $50
+    beq write_error     ;if zero go do disk error $50
 
     sta fdc_sector      ;save the WD1793 sector register
     lda #$a8            ;set write single sector command, side 1
@@ -977,10 +979,10 @@ l_ed9d:
     dec retries
     bne l_ed55
 
-disk_error_50:
+write_error:
 ;Write Error
 ;
-    lda #$50            ;set disk error $50
+    lda #e_writ_err     ;set disk error $50
     jmp disk_error      ;do "DISK ERROR" message and ??
 
 
@@ -991,7 +993,7 @@ do_protected:
     ldy #>protected     ;set the message pointer high byte
     jsr puts            ;message out
     clc
-    bcc disk_error_50   ;do disk error $50, branch always
+    bcc write_error   ;do disk error $50, branch always
 
 
 protected:
@@ -1027,13 +1029,13 @@ l_edd3:
     bit valtyp          ;test the datatype
     bmi l_eddf          ;if string type go get a filename from a string
 
-    lda #$03            ;else set disk error $03, no filename
+    lda #e_no_fname     ;else set disk error $03, no filename
+                        ;Fall through into jmp_dsk_err_res
 
-
-l_eddc:
+jmp_dsk_err_res:
 ;do disk error and restore the stack
 ;
-    jmp l_ec8e
+    jmp dsk_err_restore
 
 
 l_eddf:
@@ -1065,11 +1067,11 @@ l_edec:
     cpy #$06            ;compare the index with max + 1
     bcc l_edfb          ;if not max + 1 continue
 
+bad_filename:
 ;do disk error $04, bad filename
-
-l_edf6:
-    lda #$04            ;set disk error $04, bad filename
-    jmp l_eddc          ;do disk error and restore the stack
+;
+    lda #e_bad_fname    ;set disk error $04, bad filename
+    jmp jmp_dsk_err_res ;do disk error and restore the stack
 
 l_edfb:
     sta filename,y      ;save a filename character
@@ -1116,7 +1118,7 @@ l_ee0f:
 l_ee28:
     jsr chrget          ;get the next BASIC byte
     cmp #quote          ;compare it with a close quote character
-    bne l_edf6          ;if it's not a close quote go do disk error $04,
+    bne bad_filename    ;if it's not a close quote go do disk error $04,
                         ;  bad filename
 
     jsr chrget          ;get the next BASIC byte
@@ -1193,7 +1195,7 @@ find_file:
     lda $7f0a
     sta oldlin+1
 
-    lda #$10            ;set the index to the first directory entry
+    lda #$10            ;set index to first user-visible directory entry
 l_ee5d:
     sta $22             ;set the directory search pointer low byte
 l_ee5f:
