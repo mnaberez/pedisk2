@@ -1038,7 +1038,7 @@ l_eddc:
 
 
 l_eddf:
-;get a filename from a string
+;Get a filename from a string
 ;
     ldy #$01            ;set the index to the string pointer low byte
     lda (varpnt),y      ;get the string pointer low byte
@@ -1048,11 +1048,14 @@ l_eddf:
     sta $25             ;save the filename pointer high byte
 
 l_edea:
-;get a filename
+;Get a filename
 ;
-;unless I'm mistaken a filename must include a ":" character and the drive number
-;at the end. no check is done on the drive number character so any character will
-;be taken as a valid drive number
+;Filenames are in the format "name:drive".  The name portion is may be up to
+;six characters.  Drive is a single digit where 0, 1, or 2 are supported.
+;The drive number must always be included ("name" with no drive is an error).
+;
+;No check is done on the drive number character so any character will be taken
+;as a valid drive number.
 ;
     ldy #$00            ;clear the index
 l_edec:
