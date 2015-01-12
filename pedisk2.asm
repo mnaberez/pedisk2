@@ -1,7 +1,7 @@
 ;This is a bit correct disassembly of the PEDISK II ROM
 ;Based on work by Lee Davison 2013-07-04
 
-drive_sel    = $e900    ;Drive Select Latch (??)
+latch        = $e900    ;Drive Select Latch
                         ;  bit function
                         ;  === ======
                         ;  7-4 not used
@@ -446,7 +446,7 @@ deselect:
 ;deselect the drives and stop the motors ??
 ;
     lda #%00001000
-    sta drive_sel       ;save the drive select latch
+    sta latch           ;save the drive select latch
     rts
 
 
@@ -526,7 +526,7 @@ select_drive:
     lda $7f91           ;get the drive select latch copy
     beq no_drive_sel    ;if zero go do disk error $14, no drive selected
 
-    lda drive_sel       ;read the drive select latch
+    lda latch           ;read the drive select latch
     and #%00000111      ;mask the drive select bits
     cmp $7f91           ;compare it with the drive select latch copy
     beq l_ebcd          ;if the same just exit
@@ -536,7 +536,7 @@ select_drive:
     bcs no_drive_sel    ;if >= $07 go do disk error $14, no drive selected
 
     ora #%00001000      ;mask xxxx 1xxx, set ?? bit
-    sta drive_sel       ;save the drive select latch
+    sta latch           ;save the drive select latch
 
     lda #35             ;set the delay count, 35ms
     jsr delay           ;delay for A * 1000 cycles
