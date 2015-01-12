@@ -88,6 +88,8 @@ wedge_x     = $7f89     ;Temp storage for X register used by the wedge
 wedge_y     = $7f8a     ;Temp storage for Y register used by the wedge
 wedge_sp    = $7f8b     ;Temp storage for stack pointer used by the wedge
 retries     = $7f8c     ;Counts down retries remaining for disk operations
+save_a      = $7f8d     ;Temp storage for A reg used by several routines
+save_x      = $7f8e     ;Temp storage for X reg used by several routines
 status_mask = $7f90     ;Mask to apply when checking WD1793 status register
 drive_sel   = $7f91     ;Drive select bit pattern to write to the latch
 track       = $7f92     ;Track number to write to WD1793 (0-76 or $00-4c)
@@ -510,11 +512,11 @@ put_spc_hex:
 put_hex_byte:
 ;Output the byte in A as a two digit hex number
 ;
-    sta $7f8d           ;save A
-    stx $7f8e           ;save X
+    sta save_a          ;save A
+    stx save_x          ;save X
     jsr wrob            ;Print A as a two digit hex number
-    ldx $7f8e           ;restore X
-    lda $7f8d           ;restore A
+    ldx save_x          ;restore X
+    lda save_a          ;restore A
     rts
 
 
@@ -652,9 +654,9 @@ l_ec27:
     beq l_ec4c          ;if not busy go return not counted out
 
     lda #$23            ;set the wait count
-    sta $7f8d           ;save the wait count
+    sta save_a          ;save the wait count
 l_ec33:
-    dec $7f8d           ;decrement the wait count
+    dec save_a          ;decrement the wait count
     bne l_ec33          ;loop if more to do
 
     dex                 ;decrement the inner loop count
@@ -691,18 +693,18 @@ delay_1ms:
 delay:
 ;Delay for number of millseconds in A.
 ;
-    sta $7f8d           ;save the outer loop count
-    stx $7f8e           ;save X
+    sta save_a          ;save the outer loop count
+    stx save_x          ;save X
 delay_outer:
     ldx #$c6            ;set the inner loop count
 delay_inner:
     dex                 ;decrement the inner loop count
     bne delay_inner     ;loop if more to do
 
-    dec $7f8d           ;decrement the outer loop count
+    dec save_a          ;decrement the outer loop count
     bne delay_outer     ;loop if more to do
 
-    ldx $7f8e           ;restore X
+    ldx save_x          ;restore X
     rts
 
 
