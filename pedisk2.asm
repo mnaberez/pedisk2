@@ -89,7 +89,7 @@ buf_1       = dos+$0680 ;Unknown, possible buffer area #1
 buf_2       = dos+$06a0 ;Unknown, possible buffer area #2
 buf_3       = dos+$06c0 ;Unknown, possible buffer area #3
 buf_4       = dos+$06e0 ;Unknown, possible buffer area #4
-save_oldlin = dos+$0709 ;2 bytes, Unknown, written to oldln in find_file
+dir_sector  = dos+$0700 ;128 bytes for directory sector used by find_file
 save_char   = dos+$0788 ;Temp storage for char read at PEDISK monitor prompt
 wedge_x     = dos+$0789 ;Temp storage for X register used by the wedge
 wedge_y     = dos+$078a ;Temp storage for Y register used by the wedge
@@ -1215,9 +1215,9 @@ find_file:
     iny                 ;set sector 1 (first sector, sectors start at 1)
     sty sector          ;save the WD1793 sector number
 
-    lda #$00            ;set the memory pointer low byte
+    lda #<dir_sector    ;set the memory pointer low byte
     sta target          ;save the memory pointer low byte
-    lda #$7f            ;set the memory pointer high byte
+    lda #>dir_sector    ;set the memory pointer high byte
     sta target+1        ;save the memory pointer high byte
     sta $23             ;set the search pointer high byte
 
@@ -1226,9 +1226,9 @@ find_file:
 
 ;there was no error
 
-    lda save_oldlin
+    lda dir_sector+$09  ;TODO what does this do?
     sta oldlin
-    lda save_oldlin+1
+    lda dir_sector+$0a
     sta oldlin+1
 
     lda #$10            ;set index to first user-visible directory entry
