@@ -1319,26 +1319,33 @@ load_file:
     clc                 ;clear carry for add
     adc txttab          ;add BASIC start of program low byte
     sta vartab          ;save BASIC start of variables low byte
+
     iny                 ;increment the index to the file length high byte
     lda ($22),y         ;get the file length high byte
     adc txttab+1        ;add BASIC start of program high byte
     sta vartab+1        ;save BASIC start of variables high byte
+
 l_eebe:
-    ldy #$08
-    lda ($22),y
+    ldy #$08            ;set index to load address low byte
+    lda ($22),y         ;get load address low byte from dir entry
     sta target          ;save the memory pointer low byte
-    iny
-    lda ($22),y
+
+    iny                 ;increment index to load address high byte
+    lda ($22),y         ;get load address high byte from dir entry
     sta target+1        ;save the memory pointer high byte
-    ldy #$0c
-    lda ($22),y
-    sta track           ;save the WD1793 track number
-    iny
-    lda ($22),y
-    sta sector          ;save the WD1793 sector number
-    iny
-    lda ($22),y
-    sta num_sectors     ;save the sector count
+
+    ldy #$0c            ;set index to file's track number
+    lda ($22),y         ;get track number from dir entry
+    sta track           ;save the track number to read
+
+    iny                 ;increment index to file's sector number
+    lda ($22),y         ;get sector number from dir entry
+    sta sector          ;save the sector number to read
+
+    iny                 ;increment index to file's sector count
+    lda ($22),y         ;get number of sectors for file from dir entry
+    sta num_sectors     ;save the sector count to read
+
     jsr read_sectors    ;read <n> sector(s) to memory
     bne load_failed     ;if there was an error go flag it and exit
 
