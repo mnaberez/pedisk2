@@ -84,6 +84,7 @@ dos_print   = dos+$0c   ;Entry point for !PRINT in RAM
 dos_run     = dos+$0f   ;Entry point for !RUN (load and run) in RAM
 dos_sys     = dos+$12   ;Entry point for !SYS (disk monitor) in RAM
 dos_list    = dos+$15   ;Entry point for !LIST (directory) in RAM
+save_char   = $7f88     ;Temp storage for char read at PEDISK monitor prompt
 wedge_x     = $7f89     ;Temp storage for X register used by the wedge
 wedge_y     = $7f8a     ;Temp storage for Y register used by the wedge
 wedge_sp    = $7f8b     ;Temp storage for stack pointer used by the wedge
@@ -360,7 +361,7 @@ init:
     ldy #>banner        ;set the message pointer high byte
     jsr puts            ;message out
 
-;test the RAM, well one byte of it at $78F2 anyway
+;test the RAM, well one byte of it at dos+$00f2 anyway
 
     ldx #$f2            ;set the index/test byte
 l_eab8:
@@ -1477,14 +1478,14 @@ l_ef59:
     jsr chrout          ;do character out
 
     jsr l_ef7b          ;wait for and echo a character
-    sta $7f88           ;save the character
+    sta save_char       ;save the character
 
     pla                 ;pull Y
     tay                 ;restore Y
     pla                 ;pull X
     tax                 ;restore X
 
-    lda $7f88           ;restore the character
+    lda save_char       ;restore the character
     cmp #stop           ;compare it with {STOP}
     bne l_ef58          ;if not {STOP} just exit
 
