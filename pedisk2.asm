@@ -84,6 +84,9 @@ dos_print   = dos+$0c   ;Entry point for !PRINT in RAM
 dos_run     = dos+$0f   ;Entry point for !RUN (load and run) in RAM
 dos_sys     = dos+$12   ;Entry point for !SYS (disk monitor) in RAM
 dos_list    = dos+$15   ;Entry point for !LIST (directory) in RAM
+wedge_x     = $7f89     ;Temp storage for X register used by the wedge
+wedge_y     = $7f8a     ;Temp storage for Y register used by the wedge
+wedge_sp    = $7f8b     ;Temp storage for stack pointer used by the wedge
 retries     = $7f8c     ;Counts down retries remaining for disk operations
 status_mask = $7f90     ;Mask to apply when checking WD1793 status register
 drive_sel   = $7f91     ;Drive select bit pattern to write to the latch
@@ -94,6 +97,7 @@ command     = $7f95     ;Last command byte written to WD1793
 num_sectors = $7f96     ;Number of sectors to read or write
 filename    = $7fa0     ;Buffer used to store filename (6 bytes)
 drive_sel_f = $7fb1     ;Drive select bit pattern parsed from a filename
+wedge_stack = $7fe0     ;32 bytes for preserving the stack used by the wedge
 ptrget      = $c12b     ;BASIC Find a variable
 wrob        = $d722     ;Monitor Write byte in A out as a two digit hex
 hexit       = $d78d     ;Monitor Evaluate char in A to a hex nibble
@@ -224,12 +228,12 @@ wedge:
     cmp #'!'            ;Is it the lead-in char for PEDISK commands?
     bne check_colon     ;  No: skip over the token check
 
-    sty $7f8a           ;Save original Y
+    sty wedge_y         ;Save original Y
     ldy #$01            ;Set Y to look ahead at the next byte
     lda (txtptr),y      ;Get the next byte after the "!"
     bmi handle_token    ;Branch if it has bit 7 set (indicates BASIC token)
 
-    ldy $7f8a           ;Restore original Y
+    ldy wedge_y         ;Restore original Y
     lda #'!'            ;Restore A to its original value ("!")
 
 check_colon:
@@ -247,16 +251,16 @@ handle_token:
 ;a valid PEDISK command, and either dispatch it or show an error.
 ;
     cld                 ;Clear decimal mode
-    stx $7f89           ;Save X
+    stx wedge_x         ;Save X
     tsx
-    stx $7f8b           ;Save the stack pointer
+    stx wedge_sp        ;Save the stack pointer
 
                         ;Save the top of the stack, must have no IRQs:
     ldx #$1f            ;  Set the byte count/index
     sei                 ;  Disable interrupts
 save_stack_loop:        ;
     lda $01e0,x         ;  Get the byte from the stack
-    sta $7fe0,x         ;  Save it off to temporary storage
+    sta wedge_stack,x   ;  Save it off to temporary storage
     dex                 ;  Decrement bytes remaining
     bpl save_stack_loop ;  Loop until 32 bytes are saved
                         ;  X has been decremented past 0 and is now $ff
@@ -474,16 +478,16 @@ restore:
     ldx #$1f            ;set the byte count/index
     sei                 ;disable interrupts
 l_eb61:
-    lda $7fe0,x         ;get a saved stack page byte
+    lda wedge_stack,x   ;get a saved stack page byte
     sta $01e0,x         ;restore it
     dex                 ;decrement the byte count/index
     bpl l_eb61          ;loop if more to do
 
-    ldx $7f8b           ;get the saved stack pointer
+    ldx wedge_sp        ;get the saved stack pointer
     txs                 ;restore it
     cli                 ;enable interrupts
-    ldy $7f8a           ;restore Y
-    ldx $7f89           ;restore X
+    ldy wedge_y         ;restore Y
+    ldx wedge_x         ;restore X
     lda #$00            ;return an End Of Text byte
     jmp check_colon     ;Jump out to the wedge
 
