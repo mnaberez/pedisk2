@@ -1596,7 +1596,11 @@ l_efe2:
 
 
 puts:
-;message out
+;Print a null-terminated string.
+;
+;Call with a pointer to the string in A and Y:
+;  A = pointer low byte
+;  Y = pointer high byte
 ;
     sta $6c             ;save the message pointer low byte
     sty $6d             ;save the message pointer high byte
