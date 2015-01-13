@@ -135,17 +135,18 @@ From the ROM:
 Board Jumpers
 -------------
 
+Jumper W1 is ``8`` or ``5``.  This means 8" or 5.25".  When the jumpered
+for ``8``, FD1793 pin 24 ``CLK`` measures 2.0 MHz on the logic analyzer.  When
+jumpered for ``5``, ``CLK`` measures 1.0 MHz.  This matches what the datasheet
+says ``CLK`` should be for 8" and 5.25" drives.
+
 Jumper W2 is ``250`` or ``125``.  It is set to ``250``.  This is probably
 the bit rate (kbits/sec).  For Single Density 8", the bit rate is 250
 kbits/sec.  According to a [table](http://en.wikipedia.org/wiki/List_of_floppy_disk_formats),
 all the 8" double density formats are 500 kbits/sec.  There is no
 ``500`` option on the PEDISK board.
 
-Jumper "W1" is ``8`` or ``5``.  This means 8" or 5.25".  When the jumpered
-for ``8``, FD1793 pin 24 ``CLK`` measures 2.0 MHz on the logic analyzer.  When
-jumpered for ``5``, ``CLK`` measures 1.0 MHz.  This matches what the datasheet
-says ``CLK`` should be for 8" and 5.25" drives.
-
+Jumpers W3, W4, and W5 are unknown.  They are all open.
 
 BASIC Wedge
 -----------
