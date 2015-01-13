@@ -1158,7 +1158,7 @@ l_ee32:
 find_file:
 ;Search for filename in the directory
 ;
-;Returns $22/23 pointing to the entry and A with status.
+;Returns dir_ptr pointing to the entry and A with status.
 ;A=0 means found, A=nonzero means not found.
 ;
 ;The directory is 8 sectors on track 0: sectors 1 through 8.  This area
