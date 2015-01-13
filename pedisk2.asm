@@ -865,7 +865,7 @@ l_ecf3:
     sta status_mask     ;save the WD1793 status byte mask
 
     lda sector          ;get the requested sector number
-    beq read_error      ;if zero go do disk error $40
+    beq read_error      ;if 0, goto disk error $40 because sectors start at 1
 
     sta fdc_sector      ;Write to the WDC1793 sector register
 
@@ -952,7 +952,7 @@ l_ed55:
     sta status_mask     ;save the WD1793 status byte mask
 
     lda sector          ;get the requested sector number
-    beq write_error     ;if zero go do disk error $50
+    beq write_error     ;if 0, goto disk error $50 because sectors start at 1
 
     sta fdc_sector      ;Write to the WD1793 sector register
 
