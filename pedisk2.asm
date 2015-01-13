@@ -1385,7 +1385,7 @@ addr_prompt:
 
 
 l_eefb:
-;get a hex address into $66/67
+;get a hex address into edit_ptr
 ;
     pha                 ;save A
     tya                 ;copy Y
@@ -1525,7 +1525,7 @@ l_ef7b:
 edit_memory:
 ;display/edit memory
 ;
-    jsr l_eefb          ;get a hex address into $66/67
+    jsr l_eefb          ;get a hex address into edit_ptr
 l_ef86:
     lda #cr             ;set [CR]
     jsr chrout          ;do character out
