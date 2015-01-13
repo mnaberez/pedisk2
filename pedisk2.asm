@@ -540,7 +540,9 @@ disk_err_msg:
 
 
 select_drive:
-;select a drive
+;Select a drive
+;
+;Sets the Z flag on success, clears Z on failure.
 ;
     lda #0              ;clear A
     sta status          ;clear the WD1793 status register copy
@@ -572,7 +574,9 @@ select_done:
 
 
 seek_track:
-;seek to track with retries
+;Seek to track with retries
+;
+;Sets the Z flag on success, clears Z on failure.
 ;
     lda #$03            ;set the retry count
     sta retries         ;save the retry count
