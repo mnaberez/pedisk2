@@ -582,7 +582,7 @@ l_ebd3:
     cmp #tracks         ;compare it with max + 1
     bpl bad_track       ;if > max go do disk error $15
 
-    sta fdc_data        ;write the target_ptr track to the WD1793 data register
+    sta fdc_data        ;write the target track to the WD1793 data register
     lda #%10011000      ;mask x00x x000,
                         ;     x--- ----  drive not ready
                         ;     ---x ----  record not found
@@ -982,7 +982,7 @@ l_ed74:
     beq l_ed74          ;if no flags set go wait some more
 
 l_ed7b:
-    lda (target_ptr),y      ;get a byte from memory
+    lda (target_ptr),y  ;get a byte from memory
     sta fdc_data        ;write the WD1793 data register
     iny                 ;increment the index
     dex                 ;decrement the byte count
