@@ -595,7 +595,6 @@ l_ebd3:
     lda track           ;get the WD1793 track number
     cmp fdc_track       ;compare it with the WD1793 track register
     bne l_ebf2          ;go handle any difference
-
     rts
 
     ;there was an error or the track numbers differ
@@ -729,23 +728,21 @@ next_sector:
     clc                 ;clear carry for add
     adc #sector_size    ;add the sector byte count
     sta target_ptr      ;save the memory pointer low byte
-    bcc l_ec74          ;if no carry skip the highbyte increment
-
+    bcc next_incr       ;if no carry skip the high byte increment
     inc target_ptr+1    ;else increment the memory pointer high byte
-l_ec74:
+next_incr:
     ldx sector          ;get the WD1793 sector number
     inx                 ;increment the sector number
     cpx #sectors+1      ;compare it with max + 1
-    bmi l_ec89          ;if < max + 1 just exit
+    bmi next_done       ;if < max + 1 just exit
 
     ldx track           ;get the WD1793 track number
     inx                 ;increment the track number
     stx track           ;save the WD1793 track number
     cpx #tracks         ;compare it with max + 1
     bpl end_of_disk     ;if > max go do disk error $11
-
     ldx #$01
-l_ec89:
+next_done:
     stx sector          ;save the WD1793 sector number
     clc                 ;flag ok
     rts
