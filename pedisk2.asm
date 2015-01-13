@@ -63,7 +63,7 @@ fdc_data     = fdc+3    ;  Data register
 ;                     0  busy
 
 ;In the zero page locations below, ** indicates the PEDISK destroys
-;a location that is used for other some purpose by CBM BASIC 4.
+;a location that is used for some other purpose by CBM BASIC 4.
 
 valtyp      = $07       ;Data type of value: 0=numeric, $ff=string
 dir_ptr     = $22       ;Pointer: PEDISK directory **
