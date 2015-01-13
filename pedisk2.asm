@@ -192,6 +192,11 @@ under_io:
     !byte $da,$aa,$fb,$bf,$fe,$fe,$7e,$3e,$04,$04,$00,$44,$00,$00,$04,$20
 
 entry_points:
+;From BASIC, the user will SYS to the first entry point (init) to start
+;the PEDISK system and install the wedge.  The rest of the entry points
+;are not usable from BASIC, they exist so the RAM-resident portion of
+;the PEDISK can call into this ROM.
+;
     jmp init            ;Initialize the system (SYS 55904)
     jmp edit_memory     ;Display/edit memory ("ADDR?")
     jmp read_sectors    ;Read sectors into memory
