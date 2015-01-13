@@ -61,9 +61,15 @@ fdc_data     = fdc+3    ;  Data register
 ;                     2  track zero/lost data
 ;                     1  data request
 ;                     0  busy
-;
+
+;In the zero page locations below, ** indicates the PEDISK destroys
+;a location that is used for other some purpose by CBM BASIC 4.
 
 valtyp      = $07       ;Data type of value: 0=numeric, $ff=string
+dir_ptr     = $22       ;Pointer: PEDISK directory **
+fname_ptr   = $24       ;Pointer: PEDISK filename **
+hex_save_a  = $26       ;PEDISK temporarily saves A during hex conversion **
+edit_pos    = $27       ;PEDISK memory editor position on current line **
 txttab      = $28       ;Pointer: Start of BASIC text
 vartab      = $2a       ;Pointer: Start of BASIC variables
 fretop      = $30       ;Pointer: Bottom of string storage
@@ -72,9 +78,11 @@ memsiz      = $34       ;Pointer: Highest address used by BASIC
 curlin      = $36       ;Current BASIC line number (2 bytes)
 varpnt      = $44       ;Pointer: Current BASIC variable
 oldlin      = $56       ;Previous BASIC line number (2 bytes)
+edit_ptr    = $66       ;Pointer: PEDISK current address of memory editor **
+puts_ptr    = $6c       ;Pointer: PEDISK string to print for puts **
 chrget      = $70       ;Subroutine: Get Next Byte of BASIC Text
 txtptr      = $77       ;Pointer: Current Byte of BASIC Text
-target      = $b7       ;Pointer: target address for memory operations
+target_ptr  = $b7       ;Pointer: PEDISK target address for memory ops **
 dos         = $7800     ;Base address for the RAM-resident portion
 dos_save    = dos+$0000 ;Entry point for !SAVE
 dos_open    = dos+$0003 ;Entry point for !OPEN
@@ -410,9 +418,9 @@ load_dos:
 ;jump into the DOS will be when the user enters a wedge command (e.g. !LIST).
 ;
     lda #<dos           ;set the memory pointer low byte
-    sta target          ;save the memory pointer low byte
+    sta target_ptr      ;save the memory pointer low byte
     lda #>dos           ;set the memory pointer high byte
-    sta target+1        ;save the memory pointer high byte
+    sta target_ptr+1    ;save the memory pointer high byte
 
     ldx #dos_track      ;set track zero
     stx track           ;save the WD1793 track number
@@ -574,7 +582,7 @@ l_ebd3:
     cmp #tracks         ;compare it with max + 1
     bpl bad_track       ;if > max go do disk error $15
 
-    sta fdc_data        ;write the target track to the WD1793 data register
+    sta fdc_data        ;write the target_ptr track to the WD1793 data register
     lda #%10011000      ;mask x00x x000,
                         ;     x--- ----  drive not ready
                         ;     ---x ----  record not found
@@ -718,13 +726,13 @@ delay_inner:
 next_sector:
 ;increment pointers to the next sector
 ;
-    lda target          ;get the memory pointer low byte
+    lda target_ptr      ;get the memory pointer low byte
     clc                 ;clear carry for add
     adc #sector_size    ;add the sector byte count
-    sta target          ;save the memory pointer low byte
+    sta target_ptr      ;save the memory pointer low byte
     bcc l_ec74          ;if no carry skip the highbyte increment
 
-    inc target+1        ;else increment the memory pointer high byte
+    inc target_ptr+1    ;else increment the memory pointer high byte
 l_ec74:
     ldx sector          ;get the WD1793 sector number
     inx                 ;increment the sector number
@@ -872,7 +880,7 @@ l_ed05:
     beq l_ed05          ;if no data request or error go try again
 
     lda fdc_data        ;read the WD1793 data register
-    sta (target),y      ;save the byte to memory
+    sta (target_ptr),y  ;save the byte to memory
     iny                 ;increment the index
     dex                 ;decrement the count
     bne l_ed05          ;loop if more to do
@@ -974,7 +982,7 @@ l_ed74:
     beq l_ed74          ;if no flags set go wait some more
 
 l_ed7b:
-    lda (target),y      ;get a byte from memory
+    lda (target_ptr),y      ;get a byte from memory
     sta fdc_data        ;write the WD1793 data register
     iny                 ;increment the index
     dex                 ;decrement the byte count
@@ -1040,9 +1048,9 @@ l_edbd:
 
     jsr chrget          ;get the next BASIC byte
     lda txtptr          ;get the BASIC byte pointer low byte
-    sta $24             ;save the filename pointer low byte
+    sta fname_ptr       ;save the filename pointer low byte
     lda txtptr+1        ;get the BASIC byte pointer high byte
-    sta $25             ;save the filename pointer high byte
+    sta fname_ptr+1     ;save the filename pointer high byte
     jmp l_edea          ;get a filename
 
 l_edd3:
@@ -1064,10 +1072,10 @@ l_eddf:
 ;
     ldy #$01            ;set the index to the string pointer low byte
     lda (varpnt),y      ;get the string pointer low byte
-    sta $24             ;save the filename pointer low byte
+    sta fname_ptr       ;save the filename pointer low byte
     iny                 ;increment the index to the string pointer high byte
     lda (varpnt),y      ;get the string pointer high byte
-    sta $25             ;save the filename pointer high byte
+    sta fname_ptr+1     ;save the filename pointer high byte
 
 l_edea:
 ;Get a filename
@@ -1081,7 +1089,7 @@ l_edea:
 ;
     ldy #0              ;clear the index
 l_edec:
-    lda ($24),y         ;get a filename character
+    lda (fname_ptr),y   ;get a filename character
     cmp #':'            ;compare it with ":"
     beq l_ee01          ;if it is ":" go get a drive number
 
@@ -1118,7 +1126,7 @@ l_ee05:
 
 l_ee0f:
     iny                 ;increment the index to the drive character
-    lda ($24),y         ;get the drive character
+    lda (fname_ptr),y   ;get the drive character
     and #%00000011      ;mask to get the the drive number from the character
     tax                 ;copy it to the index
     lda drive_selects,x ;convert drive number to a drive select bit pattern
@@ -1216,10 +1224,10 @@ find_file:
     sty sector          ;save the WD1793 sector number
 
     lda #<dir_sector    ;set the memory pointer low byte
-    sta target          ;save the memory pointer low byte
+    sta target_ptr      ;save the memory pointer low byte
     lda #>dir_sector    ;set the memory pointer high byte
-    sta target+1        ;save the memory pointer high byte
-    sta $23             ;set the search pointer high byte
+    sta target_ptr+1    ;save the memory pointer high byte
+    sta dir_ptr+1       ;set the search pointer high byte
 
     jsr read_a_sector   ;read one sector to memory
     bne l_ee94          ;if there was an error just exit
@@ -1233,10 +1241,10 @@ find_file:
 
     lda #$10            ;set index to first user-visible directory entry
 l_ee5d:
-    sta $22             ;set the directory search pointer low byte
+    sta dir_ptr         ;set the directory search pointer low byte
 l_ee5f:
     ldy #0              ;clear the index
-    lda ($22),y         ;get a character from the directory
+    lda (dir_ptr),y     ;get a character from the directory
     cmp #$ff            ;compare it with the end marker
     beq l_ee95          ;if end of directory go do the not found exit
 
@@ -1249,16 +1257,16 @@ l_ee67:
     cpy #$06            ;compare it with max + 1
     bpl l_ee92          ;if all compared go do the file found exit
 
-    lda ($22),y         ;else get the next character from the directory
+    lda (dir_ptr),y     ;else get the next character from the directory
     jmp l_ee67          ;go compare the characters
 
 ;no match so try the next entry
 
 l_ee76:
-    lda $22             ;get the directory search pointer low byte
+    lda dir_ptr         ;get the directory search pointer low byte
     clc                 ;clear carry for add
     adc #$10            ;add the offset to the next directory entry
-    sta $22             ;save the directory search pointer low byte
+    sta dir_ptr         ;save the directory search pointer low byte
     bpl l_ee5f          ;if not past the end of the sector go test the next entry
 
 ;else this sector is all done, get the next directory sector
@@ -1306,7 +1314,7 @@ load_file:
     bne not_found       ;if not found go do "??????" message
 
     ldy #$0a            ;set the index to the file type
-    lda ($22),y         ;get the file type
+    lda (dir_ptr),y     ;get the file type
     cmp #$03            ;compare it with ?? type
     bmi not_found       ;if less than ?? go do "??????" message
 
@@ -1315,35 +1323,35 @@ load_file:
 ;the file is type $03
 
     ldy #$06            ;set the index to the file length low byte
-    lda ($22),y         ;get the file length low byte
+    lda (dir_ptr),y     ;get the file length low byte
     clc                 ;clear carry for add
     adc txttab          ;add BASIC start of program low byte
     sta vartab          ;save BASIC start of variables low byte
 
     iny                 ;increment the index to the file length high byte
-    lda ($22),y         ;get the file length high byte
+    lda (dir_ptr),y     ;get the file length high byte
     adc txttab+1        ;add BASIC start of program high byte
     sta vartab+1        ;save BASIC start of variables high byte
 
 l_eebe:
     ldy #$08            ;set index to load address low byte
-    lda ($22),y         ;get load address low byte from dir entry
-    sta target          ;save the memory pointer low byte
+    lda (dir_ptr),y     ;get load address low byte from dir entry
+    sta target_ptr      ;save the memory pointer low byte
 
     iny                 ;increment index to load address high byte
-    lda ($22),y         ;get load address high byte from dir entry
-    sta target+1        ;save the memory pointer high byte
+    lda (dir_ptr),y     ;get load address high byte from dir entry
+    sta target_ptr+1    ;save the memory pointer high byte
 
     ldy #$0c            ;set index to file's track number
-    lda ($22),y         ;get track number from dir entry
+    lda (dir_ptr),y     ;get track number from dir entry
     sta track           ;save the track number to read
 
     iny                 ;increment index to file's sector number
-    lda ($22),y         ;get sector number from dir entry
+    lda (dir_ptr),y     ;get sector number from dir entry
     sta sector          ;save the sector number to read
 
     iny                 ;increment index to file's sector count
-    lda ($22),y         ;get number of sectors for file from dir entry
+    lda (dir_ptr),y     ;get number of sectors for file from dir entry
     sta num_sectors     ;save the sector count to read
 
     jsr read_sectors    ;read <n> sector(s) to memory
@@ -1394,9 +1402,9 @@ l_ef08:
     jsr l_ef1b          ;get and evaluate a hex byte
     bcs l_ef08          ;if error get another byte
 
-    sta $67             ;save the address high byte
+    sta edit_ptr+1      ;save the address high byte
     jsr l_ef1b          ;get and evaluate a hex byte
-    sta $66             ;save the address low byte
+    sta edit_ptr        ;save the address low byte
     bcc l_ef2e          ;if no error just exit
 
     jsr l_ef2f          ;output "??" and shift the cursor left
@@ -1418,11 +1426,11 @@ l_ef1e:
     asl                 ;.. low nibble ..
     asl                 ;.. to the ..
     asl                 ;.. high nibble
-    sta $26             ;save the high nibble
+    sta hex_save_a      ;save the high nibble
     jsr l_ef41          ;get and evaluate a hex character
     bcs l_ef2f          ;if there was an error output "??" and cursor left
 
-    ora $26             ;OR it with the high nibble
+    ora hex_save_a      ;OR it with the high nibble
     clc                 ;flag ok
 l_ef2e:
     rts
@@ -1517,19 +1525,19 @@ l_ef7b:
 edit_memory:
 ;display/edit memory
 ;
-    jsr l_eefb          ;get a hex address into $66   /67
+    jsr l_eefb          ;get a hex address into $66/67
 l_ef86:
     lda #cr             ;set [CR]
     jsr chrout          ;do character out
 
-    lda $67             ;get the address high byte
+    lda edit_ptr+1      ;get the address high byte
     jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex Byte
-    lda $66             ;get the address low byte
+    lda edit_ptr        ;get the address low byte
     jsr put_hex_byte    ;output A as a two digit hex Byte
 
     ldy #0              ;clear the index
 l_ef97:
-    lda ($66),y         ;get a byte from memory
+    lda (edit_ptr),y    ;get a byte from memory
     jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex Byte
     iny                 ;increment the index
     cpy #$08            ;compare it with max + 1
@@ -1547,7 +1555,7 @@ l_efa8:
     bne l_efa8          ;loop if more to do
 
 l_efae:
-    stx $27             ;save the line index
+    stx edit_pos        ;save the line index
     jsr l_ef59          ;get a character and test for {STOP}
     cmp #cr             ;compare the character with [CR]
     beq edit_memory     ;if [CR] go get another hex address
@@ -1568,20 +1576,20 @@ l_efc0:
     bcs l_efae          ;if error go retry this byte
 
     ldy #0              ;clear the index
-    sta ($66),y         ;save the byte
-    cmp ($66),y         ;compare the byte with the saved copy
+    sta (edit_ptr),y    ;save the byte
+    cmp (edit_ptr),y    ;compare the byte with the saved copy
     bne l_efe2          ;if not the same go do "??" to show it didn't save
 
 ;the byte saved or [SPACE] was returned
 
 l_efd0:
     jsr put_spc         ;output a [SPACE] character
-    inc $66             ;increment the memory address low byte
+    inc edit_ptr        ;increment the memory address low byte
     bne l_efd9          ;if no rollover skip the high byte increment
 
-    inc $67             ;else increment the memory address high byte
+    inc edit_ptr+1      ;else increment the memory address high byte
 l_efd9:
-    ldx $27             ;restore the line index
+    ldx edit_pos        ;restore the line index
     inx                 ;increment it
     cpx #$08            ;compare it with max + 1
     bmi l_efae          ;if not there yet go do another byte
@@ -1602,12 +1610,12 @@ puts:
 ;  A = pointer low byte
 ;  Y = pointer high byte
 ;
-    sta $6c             ;save the message pointer low byte
-    sty $6d             ;save the message pointer high byte
+    sta puts_ptr        ;save the message pointer low byte
+    sty puts_ptr+1      ;save the message pointer high byte
     ldy #$ff            ;set -1 for pre increment
 puts_loop:
     iny                 ;increment the index
-    lda ($6c),y         ;get the next character
+    lda (puts_ptr),y    ;get the next character
     beq puts_done       ;if it's the end marker just exit
 
     jsr chrout          ;do character out
