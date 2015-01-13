@@ -552,7 +552,7 @@ select_drive:
     lda latch           ;read the drive select latch
     and #%00000111      ;mask the drive select bits
     cmp drive_sel       ;compare it with select pattern we want to write
-    beq l_ebcd          ;if the same just exit
+    beq select_done     ;if the same just exit
 
     lda drive_sel       ;get pattern to write to drive select latch
     cmp #%00000111      ;compare it with all drives selected
@@ -567,8 +567,7 @@ select_drive:
     lda fdc_cmdst       ;get the WD1793 status register
     and #%10000000      ;mask x000 0000, drive not ready
     bne drv_not_rdy     ;if the drive is not ready go do disk error $13,
-                        ;  drive not ready
-l_ebcd:
+select_done:
     rts
 
 
