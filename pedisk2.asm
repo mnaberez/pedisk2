@@ -1128,7 +1128,8 @@ l_ee05:
     inx                 ;increment the index
     bpl l_ee05          ;go try another space, branch always
 
-;get the drive number. there seems to be no checking for drive 3 which may break things
+;get the drive number.
+;there seems to be no checking for drive 3 which may break things
 
 l_ee0f:
     iny                 ;increment the index to the drive character
@@ -1273,7 +1274,7 @@ l_ee76:
     clc                 ;clear carry for add
     adc #$10            ;add the offset to the next directory entry
     sta dir_ptr         ;save the directory search pointer low byte
-    bpl l_ee5f          ;if not past the end of the sector go test the next entry
+    bpl l_ee5f          ;if not past end of the sector go test the next entry
 
 ;else this sector is all done, get the next directory sector
 
