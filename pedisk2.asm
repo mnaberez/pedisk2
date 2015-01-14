@@ -112,7 +112,7 @@ sector      = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
 status      = dos+$0794 ;Last status byte read from WD1793 (no masking)
 command     = dos+$0795 ;Last command byte written to WD1793
 num_sectors = dos+$0796 ;Number of sectors to read or write
-filename    = dos+$07a0 ;Buffer used to store filename (6 bytes)
+filename    = dos+$07a0 ;6 byte buffer used to store filename
 drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename
 wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
 ptrget      = $c12b     ;BASIC Find a variable
@@ -1165,14 +1165,20 @@ l_ee32:
 find_file:
 ;Search for filename in the directory
 ;
-;Returns dir_ptr pointing to the entry and A with status.
-;A=0 means found, A=nonzero means not found.
+;Calling parameters:
+;  drive_sel_f: drive select pattern of drive to be searched.
+;  filename: buffer containing a 6 character filename.  If the filename is
+;            is less than 6 characters, it must be padded with spaces ($20).
+;
+;Returns:
+;   A=0 means found, A=nonzero means not found.
+;   dir_ptr: points to the matching directory entry, if one was found
 ;
 ;The directory is 8 sectors on track 0: sectors 1 through 8.  This area
 ;is 1024 bytes total (8 sectors * 128 bytes).  Each directory entry is
 ;16 bytes, so there are 64 entries possible.  A directory entry consists of:
 ;
-;  $00-$05   byte  filename
+;  $00-$05   byte  filename (6 bytes, padded with spaces)
 ;  $06-$07   word  file length
 ;  $08-$09   word  load address
 ;  $0A       byte  file type
@@ -1309,12 +1315,23 @@ romdos_load:
 ;Entry point for !LOAD, the only PEDISK II command that is resident
 ;in the ROM instead of the RAM portion.
 ;
+;Call with drive_sel_f and filename set, see load_file below.
+;
     jsr load_file       ;perform !LOAD
     jmp restore         ;restore top 32 bytes of stack page and return EOT
 
 
 load_file:
 ;Perform !LOAD.  Load a file from disk.
+;
+;Calling parameters:
+;  drive_sel_f: drive select pattern of drive to be searched.
+;  filename: buffer containing a 6 character filename.  If the filename is
+;            is less than 6 characters, it must be padded with spaces ($20).
+;
+;Returns:
+;  X=0 means successfully loaded, X=nonzero means load failed.
+;  If loading failed for any reason, "??????" will be printed.
 ;
 ;See an explanation of directory entries and files in find_file.
 ;
