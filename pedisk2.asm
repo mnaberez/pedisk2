@@ -1185,6 +1185,9 @@ find_file:
 ;The first directory entry is special.  This routine will always skip over
 ;it.  That leaves 63 entries for user files.
 ;
+;The directory ends when offset 0 of an entry is $FF, or when all entries
+;in the directory have been read.
+;
 ;We know from load_file that a file consists of N contiguous sectors, where N
 ;is specified by the byte at offset $0E.  A file can be at most 255 sectors
 ;(32640 bytes).  A file can span tracks (if the last sector of a track is
@@ -1252,9 +1255,8 @@ l_ee5d:
 l_ee5f:
     ldy #0              ;clear the index
     lda (dir_ptr),y     ;get a character from the directory
-    cmp #$ff            ;compare it with the end marker
+    cmp #$ff            ;compare it with the end of directory marker
     beq l_ee95          ;if end of directory go do the not found exit
-
 
 l_ee67:
     cmp filename,y      ;compare it with a filename character
