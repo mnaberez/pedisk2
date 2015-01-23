@@ -713,7 +713,7 @@ delay_1ms:
                         ;Fall through into delay
 
 delay:
-;Delay for number of millseconds in A.
+;Delay for the number of millseconds in A.
 ;
     sta save_a          ;save the outer loop count
     stx save_x          ;save X
