@@ -28,15 +28,29 @@ LFFD2 = $FFD2
 
         *=$7800
 
-        jmp     L7A04
-        jmp     L7A37
-        jmp     L7B76
-        jmp     L7C6B
-        jmp     L7CA5
-        jmp     L7CE2
-        jmp     L79D0
-        jmp     L7D13
-L7818:  lda     $2A
+
+dos_save:
+        jmp     _dos_save
+dos_open:
+        jmp     _dos_open
+dos_close:
+        jmp     _dos_close
+dos_input:
+        jmp     _dos_input
+dos_print:
+        jmp     _dos_print
+dos_run:
+        jmp     _dos_run
+dos_sys:
+        jmp     _dos_sys
+dos_list:
+        jmp     _dos_list
+
+dos_stop:
+        ;fall through
+
+_dos_stop:
+        lda     $2A
         sec
         sbc     $28
         sta     $7FA6
@@ -247,7 +261,9 @@ L79C8:  sta     $5F
         pla
         sta     $5E
         jmp     L79AB
-L79D0:  lda     #$00
+
+_dos_sys:
+        lda     #$00
         sta     $B7
         lda     #$7A
         sta     $B8
@@ -274,7 +290,9 @@ L79F3:  jmp     LEB5E
 L7A00:  !byte   $46
 L7A01:  eor     #$25
         brk
-L7A04:  jsr     L7818
+
+_dos_save:
+        jsr     _dos_stop
         jmp     LEB5E
 L7A0A:  ldx     #$03
         lda     #$7E
@@ -299,7 +317,9 @@ L7A2D:  dex
         sec
         sbc     #$20
         bne     L7A12
-L7A37:  jsr     L7A0A
+
+_dos_open:
+        jsr     L7A0A
         inx
         beq     L7A41
         lda     #$30
@@ -447,7 +467,9 @@ L7B5B:  sta     L7A01
         pla
         sta     $77
         rts
-L7B76:  jsr     L7BA6
+
+_dos_close:
+        jsr     L7BA6
         ldy     #$00
         lda     ($77),y
         cmp     #$80
@@ -551,7 +573,9 @@ L7C56:  lda     $7FBB
         lda     $7FB1
         sta     $7F91
         rts
-L7C6B:  jsr     L7BA6
+
+_dos_input:
+        jsr     L7BA6
         jsr     L7BC4
         jsr     LECDF
         bne     L7CA2
@@ -577,7 +601,9 @@ L7C91:  ldy     #$00
         sta     ($44),y
         jmp     L7B00
 L7CA2:  jmp     LEB5E
-L7CA5:  jsr     L7BA6
+
+_dos_print:
+        jsr     L7BA6
         jsr     L7BC4
         jsr     LCF6D
         bit     $07
@@ -605,7 +631,9 @@ L7CD2:  lda     ($22),y
         jsr     LED3A
         bne     L7CA2
         jmp     L7B00
-L7CE2:  jsr     LEE9E
+
+_dos_run:
+        jsr     LEE9E
         txa
         bne     L7D10
         lda     #$0C
@@ -630,14 +658,16 @@ L7CF3:  lda     $7FE0,x
         brk
         brk
 L7D10:  jmp     LEB5E
-L7D13:  lda     #$28
+
+_dos_list:
+        lda     #$28
         ldy     #$7D
         jsr     LEFE7
         jsr     LEF59
         cmp     #$30
-        bmi     L7D13
+        bmi     _dos_list
         cmp     #$34
-        bpl     L7D13
+        bpl     _dos_list
         jmp     L7D83
         ora     $440D
         eor     $56
