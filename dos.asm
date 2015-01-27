@@ -28,7 +28,6 @@ LFFD2 = $FFD2
 
         *=$7800
 
-
 dos_save:
         jmp     _dos_save
 dos_open:
@@ -90,15 +89,15 @@ L786A:  lda     $7FA8
         lda     $7FA9
         sta     $B8
         lda     $56
-        sta     $7F92
+        sta     $7F92   ;Track number to write to WD1793 (0-76 or $00-4c)
         lda     $57
-        sta     $7F93
+        sta     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
         lda     $7FAE
-        sta     $7F96
+        sta     $7F96   ;Number of sectors to read or write
         jsr     LED3F
         bne     L7890
         lda     #$00
-        sta     $E900
+        sta     $E900   ;Drive Select Latch
         lda     #$00
 L7890:  rts
 L7891:  lda     $58
@@ -109,7 +108,7 @@ L7891:  lda     $58
 L789A:  asl     ;a
         lda     $59
         rol     ;a
-        sta     $7F96
+        sta     $7F96   ;Number of sectors to read or write
         rts
 L78A2:  lda     #$00
         sta     $7FB5
@@ -135,7 +134,7 @@ L78C2:  lda     $7FA0,y
         jsr     LED3A
         bne     L7890
         lda     #$01
-        sta     $7F93
+        sta     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
         jsr     LECDF
         bne     L7890
 L78E0:  inc     $7F08
@@ -664,62 +663,25 @@ _dos_list:
         ldy     #$7D
         jsr     LEFE7
         jsr     LEF59
-        cmp     #$30
+        cmp     #'0'
         bmi     _dos_list
-        cmp     #$34
+        cmp     #'4'
         bpl     _dos_list
         jmp     L7D83
-        ora     $440D
-        eor     $56
-        eor     #$43
-        eor     $3F
-        brk
-        ora     $4F4D
-        !byte   $52
-        eor     $2E
-        rol     $9300
-        !byte   $44
-        eor     #$53
-        !byte   $4B
-        lsr     $4D41
-        eor     $3D
-        jsr     L0D00
-        ora     $414E
-        eor     $2045
-        jsr     L5954
-        bvc     L7D97
-        jsr     L5254
-        !byte   $4B
-        jsr     L4353
-        !byte   $54
-        !byte   $52
-        jsr     L5323
-        !byte   $43
-        !byte   $54
-        !byte   $52
-        !byte   $53
-        brk
-        !byte   $53
-        eor     $51
-        brk
-        eor     #$4E
-        !byte   $44
-        brk
-        eor     #$53
-        eor     $4200
-        eor     ($53,x)
-        brk
-        eor     ($53,x)
-        eor     $4C00
-        !byte   $44
-        jsr     L5400
-        cli
-        !byte   $54
-        brk
-        !byte   $4F
-        !byte   $42
-        lsr     ;a
-        brk
+
+        !text $0d,$0d,"DEVICE?",0
+        !text $0d,"MORE",$2e,$2e,0
+        !text $93,"DISKNAME= ",0
+        !text $0d,$0d,"NAME  TYPE TRK SCTR #SCTRS",0
+        !text "SEQ",0
+        !text "IND",0
+        !text "ISM",0
+        !text "BAS",0
+        !text "ASM",0
+        !text "LD ",0
+        !text "TXT",0
+        !text "OBJ",0
+
 L7D83:  and     #$03
         tax
         sec
