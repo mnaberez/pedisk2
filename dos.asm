@@ -63,7 +63,7 @@ _dos_stop:
         lda     $29
         sta     $7FA9
         jsr     L7891
-        lda     $7F96
+        lda     $7F96   ;Number of sectors to read or write
         sta     $7FAE
         lda     #$00
         sta     $7FAF
@@ -84,10 +84,13 @@ L7857:  lda     #$00
         beq     L786A
         lda     #$06
         bne     L7852
-L786A:  lda     $7FA8
+
+L786A:  lda     $7FA8   ;Load address low byte
         sta     $B7
-        lda     $7FA9
+
+        lda     $7FA9   ;Load address high byte
         sta     $B8
+
         lda     $56
         sta     $7F92   ;Track number to write to WD1793 (0-76 or $00-4c)
         lda     $57
@@ -128,7 +131,7 @@ L78C2:  lda     $7FA0,y
         sta     ($22),y
         dey
         bpl     L78C2
-        lda     $7F93
+        lda     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
         cmp     #$01
         beq     L78E0
         jsr     LED3A
@@ -262,18 +265,23 @@ L79C8:  sta     $5F
         jmp     L79AB
 
 _dos_sys:
-        lda     #$00
+        lda     #$00    ;Load address low byte
         sta     $B7
-        lda     #$7A
+        lda     #$7A    ;Load address high byte
         sta     $B8
+
         ldx     #$00
-        stx     $7F92
+        stx     $7F92   ;Track number to write to WD1793 (0-76 or $00-4c)
+
         inx
-        stx     $7F91
+        stx     $7F91   ;Drive select bit pattern to write to the latch
+
         lda     #$16
-        sta     $7F93
+        sta     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
+
         lda     #$04
-        sta     $7F96
+        sta     $7F96   ;Number of sectors to read or write
+
         jsr     LECE4
         bne     L79F3
         jmp     L7A00
@@ -554,7 +562,7 @@ L7C2A:  inc     $7FBB
         lda     #$01
         sta     $7FBB
 L7C3C:  lda     $7FBA
-        sta     $7F92
+        sta     $7F92   ;Track number to write to WD1793 (0-76 or $00-4c)
         cmp     $7FBC
         bcc     L7C56
         bne     L7C51
@@ -563,14 +571,18 @@ L7C3C:  lda     $7FBA
         bcc     L7C56
 L7C51:  lda     #$08
         jmp     L7B3D
+
 L7C56:  lda     $7FBB
-        sta     $7F93
-        lda     #$00
+        sta     $7F93   ;Number of sectors to read or write
+
+        lda     #$00    ;Load address low byte
         sta     $B7
-        lda     #$7F
+
+        lda     #$7F    ;Load address high byte
         sta     $B8
+
         lda     $7FB1
-        sta     $7F91
+        sta     $7F91   ;Drive select bit pattern to write to the latch
         rts
 
 _dos_input:
@@ -688,17 +700,22 @@ L7D83:  and     #$03
 L7D87:  rol     ;a
         dex
         bpl     L7D87
-        sta     $7F91
+        sta     $7F91   ;Drive select bit pattern to write to the latch
+
         ldx     #$00
-        stx     $7F92
+        stx     $7F92   ;Track number to write to WD1793 (0-76 or $00-4c)
+
         inx
-        stx     $7F93
-L7D97:  lda     #$00
+        stx     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
+
+L7D97:  lda     #$00    ;Load address low byte
         sta     $B7
         sta     $22
-        lda     #$7F
+
+        lda     #$7F    ;Load address high byte
         sta     $B8
         sta     $23
+
         jsr     LECDF
         beq     L7DAB
         jmp     LEB5E
@@ -723,7 +740,7 @@ L7DCF:  lda     $22
         clc
         adc     #$10
         bpl     L7DE3
-        inc     $7F93
+        inc     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
         jsr     LECDF
         beq     L7DE1
         jmp     LEB5E
