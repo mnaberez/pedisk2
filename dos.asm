@@ -671,8 +671,8 @@ L7CF3:  lda     $7FE0,x
 L7D10:  jmp     LEB5E
 
 _dos_list:
-        lda     #$28
-        ldy     #$7D
+        lda     #<device
+        ldy     #>device
         jsr     LEFE7
         jsr     LEF59
         cmp     #'0'
@@ -681,10 +681,15 @@ _dos_list:
         bpl     _dos_list
         jmp     L7D83
 
+device:
         !text $0d,$0d,"DEVICE?",0
+more:
         !text $0d,"MORE",$2e,$2e,0
+diskname:
         !text $93,"DISKNAME= ",0
+dirheader:
         !text $0d,$0d,"NAME  TYPE TRK SCTR #SCTRS",0
+filetypes:
         !text "SEQ",0
         !text "IND",0
         !text "ISM",0
@@ -719,8 +724,8 @@ L7D97:  lda     #$00    ;Load address low byte
         jsr     LECDF
         beq     L7DAB
         jmp     LEB5E
-L7DAB:  lda     #$3A
-        ldy     #$7D
+L7DAB:  lda     #<diskname
+        ldy     #>diskname
         jsr     LEFE7
         ldy     #$00
         ldx     #$08
@@ -729,8 +734,8 @@ L7DB6:  lda     ($22),y
         iny
         dex
         bne     L7DB6
-        lda     #$46
-        ldy     #$7D
+        lda     #<dirheader
+        ldy     #>dirheader
         jsr     LEFE7
 L7DC6:  lda     #$12
         sta     $27
@@ -769,8 +774,8 @@ L7DFF:  lda     ($22),y
         asl     ;a
         asl     ;a
         clc
-        adc     #$63
-        ldy     #$7D
+        adc     #<filetypes
+        ldy     #>filetypes
         jsr     LEFE7
         jsr     LEB7A
         ldy     #$0C
@@ -791,8 +796,8 @@ L7DFF:  lda     ($22),y
         dec     $27
         bmi     L7E49
         jmp     L7DCF
-L7E49:  lda     #$32
-        ldy     #$7D
+L7E49:  lda     #<more
+        ldy     #>more
         jsr     LEFE7
         jsr     LEF59
         jmp     L7DC6
