@@ -3,24 +3,43 @@ L0076 = $0076
 L3400 = $3400
 LC873 = $C873
 LCF6D = $CF6D
-LEA44 = $EA44
-LEB0B = $EB0B
-LEB5E = $EB5E
-LEB7A = $EB7A
-LEB7F = $EB7F
-LEB84 = $EB84
-LEC96 = $EC96
-LECDF = $ECDF
-LECE4 = $ECE4
-LED3A = $ED3A
-LED3F = $ED3F
-LEE33 = $EE33
-LEE9E = $EE9E
+check_colon = $EA44
+deselect = $EB0B
+restore = $EB5E
+put_spc = $EB7A
+put_spc_hex = $EB7F
+put_spc_byte = $EB84
+disk_error = $EC96
+read_a_sector = $ECDF
+read_sectors = $ECE4
+write_a_sector = $ED3A
+write_sectors = $ED3F
+find_file = $EE33
+load_file = $EE9E
 LEF59 = $EF59
-LEFE7 = $EFE7
-LFFD2 = $FFD2
+puts = $EFE7
+chrout = $FFD2
 
-        *=$7800
+;In the zero page locations below, ** indicates the PEDISK destroys
+;a location that is used for some other purpose by CBM BASIC 4.
+
+dir_ptr     = $22       ;Pointer: PEDISK directory **
+vartab      = $2a       ;Pointer: Start of BASIC variables
+
+dos         = $7800     ;Base address for the RAM-resident portion
+buf_1       = dos+$0680 ;Unknown, possible buffer area #1
+buf_2       = dos+$06a0 ;Unknown, possible buffer area #2
+buf_3       = dos+$06c0 ;Unknown, possible buffer area #3
+buf_4       = dos+$06e0 ;Unknown, possible buffer area #4
+dir_sector  = dos+$0700 ;128 bytes for directory sector used by find_file
+wedge_y     = dos+$078a ;Temp storage for Y register used by the wedge
+wedge_sp    = dos+$078b ;Temp storage for stack pointer used by the wedge
+num_sectors = dos+$0796 ;Number of sectors to read or write
+filename    = dos+$07a0 ;6 byte buffer used to store filename
+wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
+drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename
+
+        *=dos
 
 dos_save:
         jmp     _dos_save
@@ -43,7 +62,7 @@ dos_stop:
         ;fall through
 
 _dos_stop:
-        lda     $2A
+        lda     vartab
         sec
         sbc     $28
         sta     $7FA6
@@ -57,18 +76,18 @@ _dos_stop:
         lda     $29
         sta     $7FA9
         jsr     L7891
-        lda     $7F96   ;Number of sectors to read or write
+        lda     num_sectors   ;Number of sectors to read or write
         sta     $7FAE
         lda     #$00
         sta     $7FAF
         lda     #$03
         sta     $7FAA
-        jsr     LEE33
+        jsr     find_file
         tax
         bmi     L7890
         bne     L7857
         lda     #$05
-L7852:  jsr     LEC96
+L7852:  jsr     disk_error
         bne     L7890
 L7857:  lda     #$00
         sta     $7FAB
@@ -90,8 +109,8 @@ L786A:  lda     $7FA8   ;Load address low byte
         lda     $57
         sta     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
         lda     $7FAE
-        sta     $7F96   ;Number of sectors to read or write
-        jsr     LED3F
+        sta     num_sectors   ;Number of sectors to read or write
+        jsr     write_sectors
         bne     L7890
         lda     #$00
         sta     $E900   ;Drive Select Latch
@@ -105,7 +124,7 @@ L7891:  lda     $58
 L789A:  asl     ;a
         lda     $59
         rol     ;a
-        sta     $7F96   ;Number of sectors to read or write
+        sta     num_sectors   ;Number of sectors to read or write
         rts
 L78A2:  lda     #$00
         sta     $7FB5
@@ -121,25 +140,25 @@ L78A2:  lda     #$00
         sta     $7FB5
         rts
 L78C0:  ldy     #$0F
-L78C2:  lda     $7FA0,y
-        sta     ($22),y
+L78C2:  lda     filename,y
+        sta     (dir_ptr),y
         dey
         bpl     L78C2
         lda     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
         cmp     #$01
         beq     L78E0
-        jsr     LED3A
+        jsr     write_a_sector
         bne     L7890
         lda     #$01
         sta     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
-        jsr     LECDF
+        jsr     read_a_sector
         bne     L7890
 L78E0:  inc     $7F08
         lda     $58
         sta     $7F09
         lda     $59
         sta     $7F0A
-        jsr     LED3A
+        jsr     write_a_sector
         rts
 L78F1:  jsr     L790D
         lda     $7FAD
@@ -274,12 +293,12 @@ _dos_sys:
         sta     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
 
         lda     #$04
-        sta     $7F96   ;Number of sectors to read or write
+        sta     num_sectors   ;Number of sectors to read or write
 
-        jsr     LECE4
+        jsr     read_sectors
         bne     L79F3
         jmp     L7A00
-L79F3:  jmp     LEB5E
+L79F3:  jmp     restore
         !byte   $B3
         !byte   $FA
         rti
@@ -294,27 +313,27 @@ L7A01:  eor     #$25
 
 _dos_save:
         jsr     _dos_stop
-        jmp     LEB5E
+        jmp     restore
 L7A0A:  ldx     #$03
         lda     #$7E
-        sta     $23
+        sta     dir_ptr+1
         lda     #$E0
-L7A12:  sta     $22
+L7A12:  sta     dir_ptr
         ldy     #$05
-L7A16:  lda     ($22),y
-        cmp     $7FA0,y
+L7A16:  lda     (dir_ptr),y
+        cmp     filename,y
         bne     L7A2D
         dey
         bpl     L7A16
         ldy     #$11
-        lda     ($22),y
-        cmp     $7FB1
+        lda     (dir_ptr),y
+        cmp     drive_sel_f
         bne     L7A2D
 L7A29:  stx     $7F8F
         rts
 L7A2D:  dex
         bmi     L7A29
-        lda     $22
+        lda     dir_ptr
         sec
         sbc     #$20
         bne     L7A12
@@ -327,7 +346,7 @@ _dos_open:
         bne     L7A73
 L7A41:  ldx     #$03
         ldy     #$60
-L7A45:  lda     $7E80,y
+L7A45:  lda     buf_1,y
         cmp     #$FF
         beq     L7A5B
         dex
@@ -340,9 +359,9 @@ L7A53:  tya
         tay
         jmp     L7A45
 L7A5B:  stx     $7F8F
-        jsr     LEE33
+        jsr     find_file
         bpl     L7A66
-        jmp     LEB5E
+        jmp     restore
 L7A66:  pha
         jsr     L0076
         cmp     #$A2
@@ -396,8 +415,8 @@ L7AD6:  pla
         lda     #$32
 L7ADB:  jmp     L7B3D
 L7ADE:  ldy     #$0F
-L7AE0:  lda     ($22),y
-        sta     $7FA0,y
+L7AE0:  lda     (dir_ptr),y
+        sta     filename,y
         dey
         bpl     L7AE0
 L7AE8:  lda     #$00
@@ -424,12 +443,12 @@ L7B00:  jsr     L7B55
         iny
         sta     ($44),y
         jsr     L7B2F
-L7B22:  lda     $7FA0,y
-        sta     $7E80,x
+L7B22:  lda     filename,y
+        sta     buf_1,x
         dex
         dey
         bpl     L7B22
-L7B2C:  jmp     LEB5E
+L7B2C:  jmp     restore
 L7B2F:  lda     $7F8F
         asl     ;a
         asl     ;a
@@ -478,25 +497,25 @@ _dos_close:
         jsr     L0070
         jsr     L7C22
         lda     #$FF
-        sta     $7F00
-        jsr     LED3A
+        sta     dir_sector
+        jsr     write_a_sector
         bne     L7BA3
 L7B91:  lda     #$FF
-        sta     $7FA0
+        sta     filename
         sta     $7FB5
         lda     #$00
         sta     $E900
         lda     #$FF
         jmp     L7B00
-L7BA3:  jmp     LEB5E
+L7BA3:  jmp     restore
 L7BA6:  jsr     L7A0A
         inx
         bne     L7BB1
         lda     #$07
         jmp     L7B3D
 L7BB1:  jsr     L7B2F
-L7BB4:  lda     $7E80,x
-        sta     $7FA0,y
+L7BB4:  lda     buf_1,x
+        sta     filename,y
         dex
         dey
         bpl     L7BB4
@@ -575,21 +594,21 @@ L7C56:  lda     $7FBB
         lda     #$7F    ;Load address high byte
         sta     $B8
 
-        lda     $7FB1
+        lda     drive_sel_f
         sta     $7F91   ;Drive select bit pattern to write to the latch
         rts
 
 _dos_input:
         jsr     L7BA6
         jsr     L7BC4
-        jsr     LECDF
+        jsr     read_a_sector
         bne     L7CA2
         jsr     LCF6D
         bit     $07
         bmi     L7C82
         lda     #$09
 L7C7F:  jmp     L7B3D
-L7C82:  lda     $7F00
+L7C82:  lda     dir_sector
         cmp     #$FF
         beq     L7C7F
         cmp     #$80
@@ -605,7 +624,7 @@ L7C91:  ldy     #$00
         lda     #$7F
         sta     ($44),y
         jmp     L7B00
-L7CA2:  jmp     LEB5E
+L7CA2:  jmp     restore
 
 _dos_print:
         jsr     L7BA6
@@ -621,24 +640,24 @@ L7CB7:  ldy     #$00
         bcc     L7CC3
         lda     #$0A
         bne     L7CB4
-L7CC3:  sta     $7F00
+L7CC3:  sta     dir_sector
         iny
         lda     ($44),y
-        sta     $22
+        sta     dir_ptr
         iny
         lda     ($44),y
-        sta     $23
+        sta     dir_ptr+1
         ldy     #$7E
-L7CD2:  lda     ($22),y
-        sta     $7F01,y
+L7CD2:  lda     (dir_ptr),y
+        sta     dir_sector+1,y
         dey
         bpl     L7CD2
-        jsr     LED3A
+        jsr     write_a_sector
         bne     L7CA2
         jmp     L7B00
 
 _dos_run:
-        jsr     LEE9E
+        jsr     load_file
         txa
         bne     L7D10
         lda     #$0C
@@ -647,27 +666,27 @@ _dos_run:
         sta     $78
         ldx     #$1F
         sei
-L7CF3:  lda     $7FE0,x
+L7CF3:  lda     wedge_stack,x
         sta     $01E0,x
         dex
         bpl     L7CF3
-        ldx     $7F8B
+        ldx     wedge_sp
         txs
         cli
-        ldy     $7F8A
+        ldy     wedge_y
         ldx     $7F89
         lda     #$8A
-        jmp     LEA44
+        jmp     check_colon
         txa
         brk
         brk
         brk
-L7D10:  jmp     LEB5E
+L7D10:  jmp     restore
 
 _dos_list:
         lda     #<device
         ldy     #>device
-        jsr     LEFE7
+        jsr     puts
         jsr     LEF59
         cmp     #'0'
         bmi     _dos_list
@@ -709,97 +728,97 @@ L7D87:  rol     ;a
 
 L7D97:  lda     #$00    ;Load address low byte
         sta     $B7
-        sta     $22
+        sta     dir_ptr
 
         lda     #$7F    ;Load address high byte
         sta     $B8
-        sta     $23
+        sta     dir_ptr+1
 
-        jsr     LECDF
+        jsr     read_a_sector
         beq     L7DAB
-        jmp     LEB5E
+        jmp     restore
 L7DAB:  lda     #<diskname
         ldy     #>diskname
-        jsr     LEFE7
+        jsr     puts
         ldy     #$00
         ldx     #$08
-L7DB6:  lda     ($22),y
-        jsr     LFFD2
+L7DB6:  lda     (dir_ptr),y
+        jsr     chrout
         iny
         dex
         bne     L7DB6
         lda     #<dirheader
         ldy     #>dirheader
-        jsr     LEFE7
+        jsr     puts
 L7DC6:  lda     #$12
         sta     $27
         lda     #$0D
-        jsr     LFFD2
-L7DCF:  lda     $22
+        jsr     chrout
+L7DCF:  lda     dir_ptr
         clc
         adc     #$10
         bpl     L7DE3
         inc     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
-        jsr     LECDF
+        jsr     read_a_sector
         beq     L7DE1
-        jmp     LEB5E
+        jmp     restore
 L7DE1:  lda     #$00
-L7DE3:  sta     $22
+L7DE3:  sta     dir_ptr
         ldy     #$00
-        lda     ($22),y
+        lda     (dir_ptr),y
         cmp     #$FF
         bne     L7DF0
         jmp     L7E56
 L7DF0:  ldy     #$05
-        lda     ($22),y
+        lda     (dir_ptr),y
         cmp     #$FF
         beq     L7DCF
         lda     #$0D
-        jsr     LFFD2
+        jsr     chrout
         ldy     #$00
-L7DFF:  lda     ($22),y
-        jsr     LFFD2
+L7DFF:  lda     (dir_ptr),y
+        jsr     chrout
         iny
         cpy     #$06
         bmi     L7DFF
-        jsr     LEB7A
+        jsr     put_spc
         ldy     #$0A
-        lda     ($22),y
+        lda     (dir_ptr),y
         asl     ;a
         asl     ;a
         clc
         adc     #<filetypes
         ldy     #>filetypes
-        jsr     LEFE7
-        jsr     LEB7A
+        jsr     puts
+        jsr     put_spc
         ldy     #$0C
-        lda     ($22),y
-        jsr     LEB84
-        jsr     LEB7A
+        lda     (dir_ptr),y
+        jsr     put_spc_byte
+        jsr     put_spc
         ldy     #$0D
-        lda     ($22),y
-        jsr     LEB7F
-        jsr     LEB7A
-        jsr     LEB7A
+        lda     (dir_ptr),y
+        jsr     put_spc_hex
+        jsr     put_spc
+        jsr     put_spc
         ldy     #$0F
-        lda     ($22),y
-        jsr     LEB7F
+        lda     (dir_ptr),y
+        jsr     put_spc_hex
         ldy     #$0E
-        lda     ($22),y
-        jsr     LEB84
+        lda     (dir_ptr),y
+        jsr     put_spc_byte
         dec     $27
         bmi     L7E49
         jmp     L7DCF
 L7E49:  lda     #<more
         ldy     #>more
-        jsr     LEFE7
+        jsr     puts
         jsr     LEF59
         jmp     L7DC6
 L7E56:  lda     #$0D
-        jsr     LFFD2
-        jsr     LEB0B
+        jsr     chrout
+        jsr     deselect
         jsr     L0070
-        jmp     LEB5E
+        jmp     restore
         !byte   $CF
         sbc     $FFF4,x
         cpy     $8C
