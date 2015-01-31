@@ -1,4 +1,4 @@
-L0070 = $0070
+chrget = $70 ;Subroutine: Get Next Byte of BASIC Text
 L0076 = $0076
 L3400 = $3400
 LC873 = $C873
@@ -381,10 +381,10 @@ L7A75:  lda     #$64
         sta     $7FAA
         sta     $7FAB
         sta     $7FAF
-        jsr     L0070
+        jsr     chrget
         cmp     #$C3
         bne     L7AAC
-        jsr     L0070
+        jsr     chrget
         bcs     L7AB3
         jsr     LC873
         lda     $11
@@ -466,7 +466,7 @@ L7B44:  cmp     #$00
         beq     L7B52
         cmp     #$3A
         beq     L7B52
-        jsr     L0070
+        jsr     chrget
         jmp     L7B44
 L7B52:  jmp     L7B00
 L7B55:  lda     #$49
@@ -494,7 +494,7 @@ _dos_close:
         lda     ($77),y
         cmp     #$80
         bne     L7B91
-        jsr     L0070
+        jsr     chrget
         jsr     L7C22
         lda     #$FF
         sta     dir_sector
@@ -526,7 +526,7 @@ L7BC4:  ldy     #$00
         lda     ($77),y
         cmp     #$B9
         bne     L7C22
-        jsr     L0070
+        jsr     chrget
         jsr     L7B55
         ldy     #$00
         lda     ($44),y
@@ -817,7 +817,7 @@ L7E49:  lda     #<more
 L7E56:  lda     #$0D
         jsr     chrout
         jsr     deselect
-        jsr     L0070
+        jsr     chrget
         jmp     restore
         !byte   $CF
         sbc     $FFF4,x
