@@ -34,6 +34,8 @@ chrout = $FFD2
 
 dir_ptr     = $22       ;Pointer: PEDISK directory **
 vartab      = $2a       ;Pointer: Start of BASIC variables
+txtptr      = $77       ;Pointer: Current Byte of BASIC Text
+target_ptr  = $b7       ;Pointer: PEDISK target address for memory ops **
 
 dos         = $7800     ;Base address for the RAM-resident portion
 buf_1       = dos+$0680 ;Unknown, possible buffer area #1
@@ -111,10 +113,10 @@ L7857:  lda     #$00
         bne     L7852
 
 L786A:  lda     $7FA8   ;Load address low byte
-        sta     $B7
+        sta     target_ptr
 
         lda     $7FA9   ;Load address high byte
-        sta     $B8
+        sta     target_ptr+1
 
         lda     $56
         sta     track   ;Track number to write to WD1793 (0-76 or $00-4c)
@@ -291,9 +293,9 @@ L79C8:  sta     $5F
 
 _dos_sys:
         lda     #$00    ;Load address low byte
-        sta     $B7
+        sta     target_ptr
         lda     #$7A    ;Load address high byte
-        sta     $B8
+        sta     target_ptr+1
 
         ldx     #$00    ;Set track 0 (first track)
         stx     track   ;Track number to write to WD1793 (0-76 or $00-4c)
@@ -474,7 +476,7 @@ L7B2F:  lda     $7F8F
         rts
 L7B3D:  sta     $7FB5
         ldy     #$00
-        lda     ($77),y
+        lda     (txtptr),y
 L7B44:  cmp     #$00
         beq     L7B52
         cmp     #$3A
@@ -486,25 +488,25 @@ L7B55:  lda     #$49
         bne     L7B5B
 L7B59:  lda     #$43
 L7B5B:  sta     L7A01
-        lda     $77
+        lda     txtptr
         pha
-        lda     $78
+        lda     txtptr+1
         pha
         lda     #$00
-        sta     $77
+        sta     txtptr
         lda     #$7A
-        sta     $78
+        sta     txtptr+1
         jsr     LCF6D
         pla
-        sta     $78
+        sta     txtptr+1
         pla
-        sta     $77
+        sta     txtptr
         rts
 
 _dos_close:
         jsr     L7BA6
         ldy     #$00
-        lda     ($77),y
+        lda     (txtptr),y
         cmp     #$80
         bne     L7B91
         jsr     chrget
@@ -536,7 +538,7 @@ L7BB4:  lda     buf_1,x
         sta     $7FB5
         rts
 L7BC4:  ldy     #$00
-        lda     ($77),y
+        lda     (txtptr),y
         cmp     #$B9
         bne     L7C22
         jsr     chrget
@@ -602,10 +604,10 @@ L7C56:  lda     $7FBB
         sta     sector   ;Number of sectors to read or write
 
         lda     #$00    ;Load address low byte
-        sta     $B7
+        sta     target_ptr
 
         lda     #$7F    ;Load address high byte
-        sta     $B8
+        sta     target_ptr+1
 
         lda     drive_sel_f
         sta     drive_sel   ;Drive select bit pattern to write to the latch
@@ -674,9 +676,9 @@ _dos_run:
         txa
         bne     L7D10
         lda     #$0C
-        sta     $77
+        sta     txtptr
         lda     #$7D
-        sta     $78
+        sta     txtptr+1
         ldx     #$1F
         sei
 L7CF3:  lda     wedge_stack,x
@@ -740,11 +742,11 @@ L7D87:  rol     ;a
         stx     sector   ;Sector number to write to WD1793 (1-26 or $01-1a)
 
 L7D97:  lda     #$00    ;Load address low byte
-        sta     $B7
+        sta     target_ptr
         sta     dir_ptr
 
         lda     #$7F    ;Load address high byte
-        sta     $B8
+        sta     target_ptr+1
         sta     dir_ptr+1
 
         jsr     read_a_sector
