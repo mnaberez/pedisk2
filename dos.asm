@@ -1,3 +1,12 @@
+latch        = $e900    ;Drive Select Latch
+                        ;  bit function
+                        ;  === ======
+                        ;  7-4 not used
+                        ;  3   motor ??
+                        ;  2   drive 3 select
+                        ;  1   drive 2 select
+                        ;  0   drive 1 select
+
 chrget = $70 ;Subroutine: Get Next Byte of BASIC Text
 L0076 = $0076
 L3400 = $3400
@@ -116,7 +125,7 @@ L786A:  lda     $7FA8   ;Load address low byte
         jsr     write_sectors
         bne     L7890
         lda     #$00
-        sta     $E900   ;Drive Select Latch
+        sta     latch   ;Drive Select Latch
         lda     #$00
 L7890:  rts
 L7891:  lda     $58
@@ -508,7 +517,7 @@ L7B91:  lda     #$FF
         sta     filename
         sta     $7FB5
         lda     #$00
-        sta     $E900
+        sta     latch
         lda     #$FF
         jmp     L7B00
 L7BA3:  jmp     restore
