@@ -34,6 +34,9 @@ buf_4       = dos+$06e0 ;Unknown, possible buffer area #4
 dir_sector  = dos+$0700 ;128 bytes for directory sector used by find_file
 wedge_y     = dos+$078a ;Temp storage for Y register used by the wedge
 wedge_sp    = dos+$078b ;Temp storage for stack pointer used by the wedge
+drive_sel   = dos+$0791 ;Drive select bit pattern to write to the latch
+track       = dos+$0792 ;Track number to write to WD1793 (0-76 or $00-4c)
+sector      = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
 num_sectors = dos+$0796 ;Number of sectors to read or write
 filename    = dos+$07a0 ;6 byte buffer used to store filename
 wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
@@ -105,9 +108,9 @@ L786A:  lda     $7FA8   ;Load address low byte
         sta     $B8
 
         lda     $56
-        sta     $7F92   ;Track number to write to WD1793 (0-76 or $00-4c)
+        sta     track   ;Track number to write to WD1793 (0-76 or $00-4c)
         lda     $57
-        sta     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
+        sta     sector   ;Sector number to write to WD1793 (1-26 or $01-1a)
         lda     $7FAE
         sta     num_sectors   ;Number of sectors to read or write
         jsr     write_sectors
@@ -144,13 +147,13 @@ L78C2:  lda     filename,y
         sta     (dir_ptr),y
         dey
         bpl     L78C2
-        lda     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
+        lda     sector   ;Sector number to write to WD1793 (1-26 or $01-1a)
         cmp     #$01
         beq     L78E0
         jsr     write_a_sector
         bne     L7890
         lda     #$01
-        sta     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
+        sta     sector   ;Sector number to write to WD1793 (1-26 or $01-1a)
         jsr     read_a_sector
         bne     L7890
 L78E0:  inc     $7F08
@@ -283,14 +286,14 @@ _dos_sys:
         lda     #$7A    ;Load address high byte
         sta     $B8
 
-        ldx     #$00
-        stx     $7F92   ;Track number to write to WD1793 (0-76 or $00-4c)
+        ldx     #$00    ;Set track 0 (first track)
+        stx     track   ;Track number to write to WD1793 (0-76 or $00-4c)
 
-        inx
-        stx     $7F91   ;Drive select bit pattern to write to the latch
+        inx             ;Set drive 1 (first drive)
+        stx     drive_sel   ;Drive select bit pattern to write to the latch
 
-        lda     #$16
-        sta     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
+        lda     #$16    ;Set sector 22
+        sta     sector   ;Sector number to write to WD1793 (1-26 or $01-1a)
 
         lda     #$04
         sta     num_sectors   ;Number of sectors to read or write
@@ -298,6 +301,7 @@ _dos_sys:
         jsr     read_sectors
         bne     L79F3
         jmp     L7A00
+
 L79F3:  jmp     restore
         !byte   $B3
         !byte   $FA
@@ -575,7 +579,7 @@ L7C2A:  inc     $7FBB
         lda     #$01
         sta     $7FBB
 L7C3C:  lda     $7FBA
-        sta     $7F92   ;Track number to write to WD1793 (0-76 or $00-4c)
+        sta     track   ;Track number to write to WD1793 (0-76 or $00-4c)
         cmp     $7FBC
         bcc     L7C56
         bne     L7C51
@@ -586,7 +590,7 @@ L7C51:  lda     #$08
         jmp     L7B3D
 
 L7C56:  lda     $7FBB
-        sta     $7F93   ;Number of sectors to read or write
+        sta     sector   ;Number of sectors to read or write
 
         lda     #$00    ;Load address low byte
         sta     $B7
@@ -595,7 +599,7 @@ L7C56:  lda     $7FBB
         sta     $B8
 
         lda     drive_sel_f
-        sta     $7F91   ;Drive select bit pattern to write to the latch
+        sta     drive_sel   ;Drive select bit pattern to write to the latch
         rts
 
 _dos_input:
@@ -718,13 +722,13 @@ L7D83:  and     #$03
 L7D87:  rol     ;a
         dex
         bpl     L7D87
-        sta     $7F91   ;Drive select bit pattern to write to the latch
+        sta     drive_sel   ;Drive select bit pattern to write to the latch
 
         ldx     #$00
-        stx     $7F92   ;Track number to write to WD1793 (0-76 or $00-4c)
+        stx     track   ;Track number to write to WD1793 (0-76 or $00-4c)
 
         inx
-        stx     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
+        stx     sector   ;Sector number to write to WD1793 (1-26 or $01-1a)
 
 L7D97:  lda     #$00    ;Load address low byte
         sta     $B7
@@ -758,7 +762,7 @@ L7DCF:  lda     dir_ptr
         clc
         adc     #$10
         bpl     L7DE3
-        inc     $7F93   ;Sector number to write to WD1793 (1-26 or $01-1a)
+        inc     sector   ;Sector number to write to WD1793 (1-26 or $01-1a)
         jsr     read_a_sector
         beq     L7DE1
         jmp     restore
