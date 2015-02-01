@@ -43,6 +43,7 @@ buf_2       = dos+$06a0 ;Unknown, possible buffer area #2
 buf_3       = dos+$06c0 ;Unknown, possible buffer area #3
 buf_4       = dos+$06e0 ;Unknown, possible buffer area #4
 dir_sector  = dos+$0700 ;128 bytes for directory sector used by find_file
+wedge_x     = dos+$0789 ;Temp storage for X register used by the wedge
 wedge_y     = dos+$078a ;Temp storage for Y register used by the wedge
 wedge_sp    = dos+$078b ;Temp storage for stack pointer used by the wedge
 drive_sel   = dos+$0791 ;Drive select bit pattern to write to the latch
@@ -689,7 +690,7 @@ L7CF3:  lda     wedge_stack,x
         txs
         cli
         ldy     wedge_y
-        ldx     $7F89
+        ldx     wedge_x
         lda     #$8A
         jmp     check_colon
         txa
