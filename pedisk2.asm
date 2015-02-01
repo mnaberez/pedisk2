@@ -1228,8 +1228,7 @@ find_file:
 ;  user tried them.  This approach would leave 12 of the 13 DOS sectors free,
 ;  giving an extra 1536 bytes for user files.
 ;
-;  The filename in entry 0 may be used to store the disk name.  This seems
-;  to be true based on three disks analyzed.
+;  The first 8 bytes of entry 0 hold the disk name.
 ;
     lda drive_sel_f     ;get drive select bit pattern parsed from filename
     sta drive_sel       ;save pattern to write to drive select latch

@@ -25,7 +25,7 @@ write_a_sector = $ED3A
 write_sectors = $ED3F
 find_file = $EE33
 load_file = $EE9E
-LEF59 = $EF59
+l_ef59 = $EF59 ;Get a character and test for {STOP}
 puts = $EFE7
 chrout = $FFD2
 
@@ -700,15 +700,21 @@ L7CF3:  lda     wedge_stack,x
 L7D10:  jmp     restore
 
 _dos_list:
+        ;Print "DEVICE?"
+
         lda     #<device
         ldy     #>device
         jsr     puts
-        jsr     LEF59
+
+        ;Get a character until it is a valid drive number
+
+        jsr     l_ef59          ;Get a character and test for {STOP}
         cmp     #'0'
         bmi     _dos_list
         cmp     #'4'
         bpl     _dos_list
-        jmp     L7D83
+
+        jmp     L7D83           ;Jump over the strings
 
 device:
         !text $0d,$0d,"DEVICE?",0
@@ -728,6 +734,8 @@ filetypes:
         !text "TXT",0
         !text "OBJ",0
 
+        ;Convert char to a drive select bit pattern, store the pattern
+
 L7D83:  and     #$03
         tax
         sec
@@ -736,8 +744,12 @@ L7D87:  rol     ;a
         bpl     L7D87
         sta     drive_sel   ;Drive select bit pattern to write to the latch
 
+        ;Set track 0
+
         ldx     #$00
         stx     track   ;Track number to write to WD1793 (0-76 or $00-4c)
+
+        ;Set sector 1
 
         inx
         stx     sector   ;Sector number to write to WD1793 (1-26 or $01-1a)
@@ -753,9 +765,15 @@ L7D97:  lda     #$00    ;Load address low byte
         jsr     read_a_sector
         beq     L7DAB
         jmp     restore
+
+        ;Print "DISKNAME= "
+
 L7DAB:  lda     #<diskname
         ldy     #>diskname
         jsr     puts
+
+        ;Print first disk name (first 8 bytes of track 0, sector 1)
+
         ldy     #$00
         ldx     #$08
 L7DB6:  lda     (dir_ptr),y
@@ -763,6 +781,7 @@ L7DB6:  lda     (dir_ptr),y
         iny
         dex
         bne     L7DB6
+
         lda     #<dirheader
         ldy     #>dirheader
         jsr     puts
@@ -828,7 +847,7 @@ L7DFF:  lda     (dir_ptr),y
 L7E49:  lda     #<more
         ldy     #>more
         jsr     puts
-        jsr     LEF59
+        jsr     l_ef59
         jmp     L7DC6
 L7E56:  lda     #$0D
         jsr     chrout
