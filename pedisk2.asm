@@ -1175,8 +1175,17 @@ find_file:
 ;   dir_ptr: points to the matching directory entry, if one was found
 ;
 ;The directory is 8 sectors on track 0: sectors 1 through 8.  This area
-;is 1024 bytes total (8 sectors * 128 bytes).  Each directory entry is
-;16 bytes, so there are 64 entries possible.  A directory entry consists of:
+;is 1024 bytes total (8 sectors * 128 bytes).  The first 16 bytes hold
+;disk information:
+;
+;  $00-$07   byte  disk name (8 bytes, padded with spaces)
+;  $08       byte  number of active files
+;  $09       byte  next open track
+;  $0A       byte  next open sector
+;  $0B-0F    byte  ??
+;
+;Each successive 16 bytes is a directory entry for a file.  There are a total
+;of 63 entries possible.  A directory entry consists of:
 ;
 ;  $00-$05   byte  filename (6 bytes, padded with spaces)
 ;  $06-$07   word  file length
@@ -1187,9 +1196,6 @@ find_file:
 ;  $0D       byte  file sector number
 ;  $0E       byte  file sector count
 ;  $0F       byte  ??
-;
-;The first directory entry is special.  This routine will always skip over
-;it.  That leaves 63 entries for user files.
 ;
 ;The directory ends when offset 0 of an entry is $FF, or when all entries
 ;in the directory have been read.
@@ -1227,8 +1233,6 @@ find_file:
 ;  could make the DOS commands a no-op so the computer wouldn't crash if the
 ;  user tried them.  This approach would leave 12 of the 13 DOS sectors free,
 ;  giving an extra 1536 bytes for user files.
-;
-;  The first 8 bytes of entry 0 hold the disk name.
 ;
     lda drive_sel_f     ;get drive select bit pattern parsed from filename
     sta drive_sel       ;save pattern to write to drive select latch
