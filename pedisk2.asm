@@ -77,7 +77,8 @@ frespc      = $32       ;Pointer: Utility string
 memsiz      = $34       ;Pointer: Highest address used by BASIC
 curlin      = $36       ;Current BASIC line number (2 bytes)
 varpnt      = $44       ;Pointer: Current BASIC variable
-oldlin      = $56       ;Previous BASIC line number (2 bytes)
+open_track  = $56       ;Next track open for a new file **
+open_sector = $57       ;Next sector open for a new file **
 edit_ptr    = $66       ;Pointer: PEDISK current address of memory editor **
 puts_ptr    = $6c       ;Pointer: PEDISK string to print for puts **
 chrget      = $70       ;Subroutine: Get Next Byte of BASIC Text
@@ -1254,10 +1255,11 @@ find_file:
 
 ;there was no error
 
-    lda dir_sector+$09  ;TODO what does this do?
-    sta oldlin
-    lda dir_sector+$0a
-    sta oldlin+1
+    lda dir_sector+$09  ;get next open track
+    sta open_track      ;save it
+
+    lda dir_sector+$0a  ;get next open sector
+    sta open_sector     ;save it
 
     lda #$10            ;set index to first user-visible directory entry
 l_ee5d:
