@@ -728,7 +728,7 @@ _dos_list:
 device:
         !text $0d,$0d,"DEVICE?",0
 more:
-        !text $0d,"MORE",$2e,$2e,0
+        !text $0d,"MORE..",0
 diskname:
         !text $93,"DISKNAME= ",0
 dirheader:
