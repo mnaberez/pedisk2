@@ -791,21 +791,30 @@ L7DB6:  lda     (dir_ptr),y
         dex
         bne     L7DB6
 
+        ;Print "NAME  TYPE TRK SCTR #SCTRS"
+
         lda     #<dirheader
         ldy     #>dirheader
         jsr     puts
+
+        ;TODO ??
+
 L7DC6:  lda     #$12
         sta     edit_pos
+
+        ;Print a newline
+
         lda     #$0D
         jsr     chrout
+
 L7DCF:  lda     dir_ptr
         clc
         adc     #$10
         bpl     L7DE3
-        inc     sector   ;Sector number to write to WD1793 (1-26 or $01-1a)
+        inc     sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
         jsr     read_a_sector
         beq     L7DE1
-        jmp     restore
+        jmp     restore 
 L7DE1:  lda     #$00
 L7DE3:  sta     dir_ptr
         ldy     #$00
@@ -817,17 +826,30 @@ L7DF0:  ldy     #$05
         lda     (dir_ptr),y
         cmp     #$FF
         beq     L7DCF
+
+        ;Print a newline
+
         lda     #$0D
         jsr     chrout
+
+        ;Print filename
+
         ldy     #$00
 L7DFF:  lda     (dir_ptr),y
         jsr     chrout
         iny
         cpy     #$06
         bmi     L7DFF
+
+        ;Print a space
+
         jsr     put_spc
+
+        ;Set pointer to file type
+
         ldy     #$0A
         lda     (dir_ptr),y
+
         asl     ;a
         asl     ;a
         clc
@@ -835,24 +857,36 @@ L7DFF:  lda     (dir_ptr),y
         ldy     #>filetypes
         jsr     puts
         jsr     put_spc
+
+        ;Set pointer to file track number
+
         ldy     #$0C
         lda     (dir_ptr),y
+
         jsr     put_spc_byte
         jsr     put_spc
+
+        ;Set pointer to file sector number
+
         ldy     #$0D
         lda     (dir_ptr),y
+
         jsr     put_spc_hex
         jsr     put_spc
         jsr     put_spc
+
         ldy     #$0F
         lda     (dir_ptr),y
         jsr     put_spc_hex
+
         ldy     #$0E
         lda     (dir_ptr),y
         jsr     put_spc_byte
+
         dec     edit_pos
         bmi     L7E49
         jmp     L7DCF
+
 L7E49:  lda     #<more
         ldy     #>more
         jsr     puts
