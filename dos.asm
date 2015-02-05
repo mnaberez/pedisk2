@@ -301,22 +301,22 @@ L79C8:  sta     $5F
         jmp     L79AB
 
 _dos_sys:
-        lda     #$00    ;Load address low byte
+        lda     #$00            ;Load address low byte
         sta     target_ptr
-        lda     #$7A    ;Load address high byte
+        lda     #$7A            ;Load address high byte
         sta     target_ptr+1
 
-        ldx     #$00    ;Set track 0 (first track)
-        stx     track   ;Track number to write to WD1793 (0-76 or $00-4c)
+        ldx     #$00            ;Set track 0 (first track)
+        stx     track           ;Track number to write to WD1793 (0-76 or $00-4c)
 
-        inx             ;Set drive 1 (first drive)
-        stx     drive_sel   ;Drive select bit pattern to write to the latch
+        inx                     ;Increment to 1 (drive select pattern for drive 0)
+        stx     drive_sel       ;Drive select bit pattern to write to the latch
 
-        lda     #$16    ;Set sector 22
-        sta     sector   ;Sector number to write to WD1793 (1-26 or $01-1a)
+        lda     #$16            ;Set sector 22
+        sta     sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
 
         lda     #$04
-        sta     num_sectors   ;Number of sectors to read or write
+        sta     num_sectors     ;Number of sectors to read or write
 
         jsr     read_sectors
         bne     L79F3
