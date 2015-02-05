@@ -33,6 +33,7 @@ chrout = $FFD2
 ;a location that is used for some other purpose by CBM BASIC 4.
 
 dir_ptr     = $22       ;Pointer: PEDISK directory **
+edit_pos    = $27       ;PEDISK memory editor position on current line **
 txttab      = $28       ;Pointer: Start of BASIC text
 vartab      = $2a       ;Pointer: Start of BASIC variables
 open_track  = $56       ;Next track open for a new file **
@@ -794,7 +795,7 @@ L7DB6:  lda     (dir_ptr),y
         ldy     #>dirheader
         jsr     puts
 L7DC6:  lda     #$12
-        sta     $27
+        sta     edit_pos
         lda     #$0D
         jsr     chrout
 L7DCF:  lda     dir_ptr
@@ -849,7 +850,7 @@ L7DFF:  lda     (dir_ptr),y
         ldy     #$0E
         lda     (dir_ptr),y
         jsr     put_spc_byte
-        dec     $27
+        dec     edit_pos
         bmi     L7E49
         jmp     L7DCF
 L7E49:  lda     #<more
