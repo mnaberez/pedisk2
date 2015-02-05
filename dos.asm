@@ -35,6 +35,8 @@ chrout = $FFD2
 dir_ptr     = $22       ;Pointer: PEDISK directory **
 txttab      = $28       ;Pointer: Start of BASIC text
 vartab      = $2a       ;Pointer: Start of BASIC variables
+open_track  = $56       ;Next track open for a new file **
+open_sector = $57       ;Next sector open for a new file **
 txtptr      = $77       ;Pointer: Current Byte of BASIC Text
 target_ptr  = $b7       ;Pointer: PEDISK target address for memory ops **
 
@@ -120,10 +122,12 @@ L786A:  lda     $7FA8   ;Load address low byte
         lda     $7FA9   ;Load address high byte
         sta     target_ptr+1
 
-        lda     $56
+        lda     open_track
         sta     track   ;Track number to write to WD1793 (0-76 or $00-4c)
-        lda     $57
+
+        lda     open_sector
         sta     sector   ;Sector number to write to WD1793 (1-26 or $01-1a)
+
         lda     $7FAE
         sta     num_sectors   ;Number of sectors to read or write
         jsr     write_sectors
@@ -144,10 +148,13 @@ L789A:  asl     ;a
         rts
 L78A2:  lda     #$00
         sta     $7FB5
-        lda     $56
+
+        lda     open_track
         sta     $7FAC
-        lda     $57
+
+        lda     open_sector
         sta     $7FAD
+
         jsr     L78F1
         lda     $58
         cmp     #$51
