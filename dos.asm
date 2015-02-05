@@ -83,7 +83,7 @@ _dos_stop:
         sbc     txttab
         sta     $7FA6
         sta     $58
-        lda     $2B
+        lda     vartab+1
         sbc     txttab+1
         sta     $59
         sta     $7FA7
