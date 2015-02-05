@@ -33,6 +33,7 @@ chrout = $FFD2
 ;a location that is used for some other purpose by CBM BASIC 4.
 
 dir_ptr     = $22       ;Pointer: PEDISK directory **
+txttab      = $28       ;Pointer: Start of BASIC text
 vartab      = $2a       ;Pointer: Start of BASIC variables
 txtptr      = $77       ;Pointer: Current Byte of BASIC Text
 target_ptr  = $b7       ;Pointer: PEDISK target address for memory ops **
@@ -79,16 +80,16 @@ dos_stop:
 _dos_stop:
         lda     vartab
         sec
-        sbc     $28
+        sbc     txttab
         sta     $7FA6
         sta     $58
         lda     $2B
-        sbc     $29
+        sbc     txttab+1
         sta     $59
         sta     $7FA7
-        lda     $28
+        lda     txttab
         sta     $7FA8
-        lda     $29
+        lda     txttab+1
         sta     $7FA9
         jsr     L7891
         lda     num_sectors   ;Number of sectors to read or write
