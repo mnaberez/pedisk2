@@ -17,7 +17,7 @@ deselect = $EB0B
 restore = $EB5E
 put_spc = $EB7A
 put_spc_hex = $EB7F
-put_spc_byte = $EB84
+put_hex_byte = $EB84
 disk_error = $EC96
 read_a_sector = $ECDF
 read_sectors = $ECE4
@@ -797,9 +797,9 @@ L7DB6:  lda     (dir_ptr),y
         ldy     #>dirheader
         jsr     puts
 
-        ;TODO ??
+        ;Set line number countdown until "MORE.." prompt
 
-L7DC6:  lda     #$12
+L7DC6:  lda     #18
         sta     edit_pos
 
         ;Print a newline
@@ -832,7 +832,7 @@ L7DF0:  ldy     #$05
         lda     #$0D
         jsr     chrout
 
-        ;Print filename
+        ;Print filename followed by a space
 
         ldy     #$00
 L7DFF:  lda     (dir_ptr),y
@@ -840,15 +840,14 @@ L7DFF:  lda     (dir_ptr),y
         iny
         cpy     #$06
         bmi     L7DFF
-
-        ;Print a space
-
         jsr     put_spc
 
         ;Set pointer to file type
 
         ldy     #$0A
         lda     (dir_ptr),y
+
+        ;Print file type followed by a space
 
         asl     ;a
         asl     ;a
@@ -863,7 +862,9 @@ L7DFF:  lda     (dir_ptr),y
         ldy     #$0C
         lda     (dir_ptr),y
 
-        jsr     put_spc_byte
+        ;Print track number in hex followed by a space
+
+        jsr     put_hex_byte
         jsr     put_spc
 
         ;Set pointer to file sector number
@@ -871,32 +872,46 @@ L7DFF:  lda     (dir_ptr),y
         ldy     #$0D
         lda     (dir_ptr),y
 
+        ;Print sector number in hex followed by two spaces
+
         jsr     put_spc_hex
         jsr     put_spc
         jsr     put_spc
+
+        ;Print high byte of sector count in hex
 
         ldy     #$0F
         lda     (dir_ptr),y
         jsr     put_spc_hex
 
+        ;Print low byte of sector count in hex
+
         ldy     #$0E
         lda     (dir_ptr),y
-        jsr     put_spc_byte
+        jsr     put_hex_byte
 
         dec     edit_pos
         bmi     L7E49
         jmp     L7DCF
 
+        ;Print "MORE.."
+
 L7E49:  lda     #<more
         ldy     #>more
         jsr     puts
-        jsr     l_ef59
+
+        jsr     l_ef59          ;Get a character and test for {STOP}
         jmp     L7DC6
+
+        ;Print a newline
+
 L7E56:  lda     #$0D
         jsr     chrout
+
         jsr     deselect
         jsr     chrget
         jmp     restore
+
         !byte   $CF
         sbc     $FFF4,x
         cpy     $8C

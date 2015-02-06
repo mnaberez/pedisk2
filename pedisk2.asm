@@ -1195,18 +1195,22 @@ find_file:
 ;  $0B       byte  ??
 ;  $0C       byte  file track number
 ;  $0D       byte  file sector number
-;  $0E       byte  file sector count
-;  $0F       byte  ??
+;  $0E-$0F   word  file sector count
 ;
 ;The directory ends when offset 0 of an entry is $FF, or when all entries
 ;in the directory have been read.
 ;
-;We know from load_file that a file consists of N contiguous sectors, where N
-;is specified by the byte at offset $0E.  A file can be at most 255 sectors
-;(32640 bytes).  A file can span tracks (if the last sector of a track is
-;read but the file has has more sectors, it will continue on the first sector
-;of the next track).  The first track and sector of the file is specified by
-;$0C/$0D.  The file length word at offset $06 seems to be informational only.
+;A file consists of N contiguous sectors, where N is specified by the sector
+;count word at offset $0E.  A file can be at most 65,535 sectors (8,388,480
+;bytes).  However, load_file only considers the low byte of the sector count,
+;so a program file can only be 255 sectors (32,640 bytes).  A file can span
+;tracks (if the last sector of a track is read but the file has has more
+;sectors, it will continue on the first sector of the next track).  The first
+;track and sector of the file is specified by $0C/$0D.
+;
+;There is a file length word at $06 that is used by load_file.  Its maximum
+;value is 65,535 bytes, which is far less than the maximum file size that
+;the sector count word seems to allow.
 ;
 ;Speculation:
 ;  The first entry (entry 0) may be a special one for the DOS code.  The
