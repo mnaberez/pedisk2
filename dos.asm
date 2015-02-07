@@ -32,10 +32,12 @@ chrout = $FFD2
 ;In the zero page locations below, ** indicates the PEDISK destroys
 ;a location that is used for some other purpose by CBM BASIC 4.
 
+valtyp      = $07       ;Data type of value: 0=numeric, $ff=string
 dir_ptr     = $22       ;Pointer: PEDISK directory **
 edit_pos    = $27       ;PEDISK memory editor position on current line **
 txttab      = $28       ;Pointer: Start of BASIC text
 vartab      = $2a       ;Pointer: Start of BASIC variables
+varpnt      = $44       ;Pointer: Current BASIC variable
 open_track  = $56       ;Next track open for a new file **
 open_sector = $57       ;Next sector open for a new file **
 txtptr      = $77       ;Pointer: Current Byte of BASIC Text
@@ -95,7 +97,7 @@ _dos_stop:
         lda     txttab+1
         sta     $7FA9
         jsr     L7891
-        lda     num_sectors   ;Number of sectors to read or write
+        lda     num_sectors     ;Number of sectors to read or write
         sta     $7FAE
         lda     #$00
         sta     $7FAF
@@ -117,24 +119,24 @@ L7857:  lda     #$00
         lda     #$06
         bne     L7852
 
-L786A:  lda     $7FA8   ;Load address low byte
+L786A:  lda     $7FA8           ;Load address low byte
         sta     target_ptr
 
-        lda     $7FA9   ;Load address high byte
+        lda     $7FA9           ;Load address high byte
         sta     target_ptr+1
 
         lda     open_track
-        sta     track   ;Track number to write to WD1793 (0-76 or $00-4c)
+        sta     track           ;Track number to write to WD1793 (0-76 or $00-4c)
 
         lda     open_sector
-        sta     sector   ;Sector number to write to WD1793 (1-26 or $01-1a)
+        sta     sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
 
         lda     $7FAE
-        sta     num_sectors   ;Number of sectors to read or write
+        sta     num_sectors     ;Number of sectors to read or write
         jsr     write_sectors
         bne     L7890
         lda     #$00
-        sta     latch   ;Drive Select Latch
+        sta     latch           ;Drive Select Latch
         lda     #$00
 L7890:  rts
 L7891:  lda     $58
@@ -145,16 +147,16 @@ L7891:  lda     $58
 L789A:  asl     ;a
         lda     $59
         rol     ;a
-        sta     num_sectors   ;Number of sectors to read or write
+        sta     num_sectors     ;Number of sectors to read or write
         rts
 L78A2:  lda     #$00
         sta     $7FB5
 
         lda     open_track
-        sta     $7FAC
+        sta     $7FAC           ;track
 
         lda     open_sector
-        sta     $7FAD
+        sta     $7FAD           ;sector
 
         jsr     L78F1
         lda     $58
@@ -168,13 +170,13 @@ L78C2:  lda     filename,y
         sta     (dir_ptr),y
         dey
         bpl     L78C2
-        lda     sector   ;Sector number to write to WD1793 (1-26 or $01-1a)
+        lda     sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
         cmp     #$01
         beq     L78E0
         jsr     write_a_sector
         bne     L7890
         lda     #$01
-        sta     sector   ;Sector number to write to WD1793 (1-26 or $01-1a)
+        sta     sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
         jsr     read_a_sector
         bne     L7890
 L78E0:  inc     $7F08
@@ -185,15 +187,15 @@ L78E0:  inc     $7F08
         jsr     write_a_sector
         rts
 L78F1:  jsr     L790D
-        lda     $7FAD
+        lda     $7FAD           ;sector
         clc
         adc     $59
-        cmp     #$1D
+        cmp     #29
         bmi     L7902
-        sbc     #$1C
+        sbc     #28
         inc     $58
 L7902:  sta     $59
-        lda     $7FAC
+        lda     $7FAC           ;track
         clc
         adc     $58
         sta     $58
@@ -340,9 +342,9 @@ _dos_save:
         jsr     _dos_stop
         jmp     restore
 L7A0A:  ldx     #$03
-        lda     #$7E
+        lda     #>buf_4
         sta     dir_ptr+1
-        lda     #$E0
+        lda     #<buf_4
 L7A12:  sta     dir_ptr
         ldy     #$05
 L7A16:  lda     (dir_ptr),y
@@ -420,7 +422,7 @@ L7AAC:  jsr     L78A2
         bne     L7B2C
         beq     L7AE8
 L7AB3:  jsr     LCF6D
-        lda     $07
+        lda     valtyp
         bne     L7AC2
         bit     $08
         bmi     L7AC6
@@ -429,10 +431,10 @@ L7AB3:  jsr     LCF6D
 L7AC2:  lda     #$35
         bne     L7ADB
 L7AC6:  ldy     #$00
-        lda     ($44),y
+        lda     (varpnt),y
         sta     $7FAF
         iny
-        lda     ($44),y
+        lda     (varpnt),y
         sta     $7FAE
         jmp     L7AAC
 L7AD6:  pla
@@ -448,25 +450,25 @@ L7AE8:  lda     #$00
         sta     $7FB2
         sta     $7FB3
         sta     $7FB5
-        lda     $7FAC
+        lda     $7FAC           ;track
         sta     $7FBA
-        ldx     $7FAD
+        ldx     $7FAD           ;sector
         dex
         stx     $7FBB
 L7B00:  jsr     L7B55
         ldy     #$00
         lda     $7FB3
-        sta     ($44),y
+        sta     (varpnt),y
         iny
         lda     $7FB2
-        sta     ($44),y
+        sta     (varpnt),y
         jsr     L7B59
         ldy     #$00
         lda     #$00
-        sta     ($44),y
+        sta     (varpnt),y
         lda     $7FB5
         iny
-        sta     ($44),y
+        sta     (varpnt),y
         jsr     L7B2F
 L7B22:  lda     filename,y
         sta     buf_1,x
@@ -554,10 +556,10 @@ L7BC4:  ldy     #$00
         jsr     chrget
         jsr     L7B55
         ldy     #$00
-        lda     ($44),y
+        lda     (varpnt),y
         sta     $7FB3
         iny
-        lda     ($44),y
+        lda     (varpnt),y
         sta     $7FB2
         ora     $7FB3
         bne     L7BE9
@@ -577,10 +579,10 @@ L7BE9:  lda     $7FB2
         jsr     L797B
         lda     $5E
         clc
-        adc     $7FAD
+        adc     $7FAD           ;sector
         pha
         lda     $62
-        adc     $7FAC
+        adc     $7FAC           ;track
         sta     $7FBA
         pla
         cmp     #$1D
@@ -600,7 +602,7 @@ L7C2A:  inc     $7FBB
         lda     #$01
         sta     $7FBB
 L7C3C:  lda     $7FBA
-        sta     track   ;Track number to write to WD1793 (0-76 or $00-4c)
+        sta     track           ;Track number to write to WD1793 (0-76 or $00-4c)
         cmp     $7FBC
         bcc     L7C56
         bne     L7C51
@@ -611,16 +613,16 @@ L7C51:  lda     #$08
         jmp     L7B3D
 
 L7C56:  lda     $7FBB
-        sta     sector   ;Number of sectors to read or write
+        sta     sector          ;Number of sectors to read or write
 
-        lda     #$00    ;Load address low byte
+        lda     #$00            ;Load address low byte
         sta     target_ptr
 
-        lda     #$7F    ;Load address high byte
+        lda     #$7F            ;Load address high byte
         sta     target_ptr+1
 
         lda     drive_sel_f
-        sta     drive_sel   ;Drive select bit pattern to write to the latch
+        sta     drive_sel       ;Drive select bit pattern to write to the latch
         rts
 
 _dos_input:
@@ -629,7 +631,7 @@ _dos_input:
         jsr     read_a_sector
         bne     L7CA2
         jsr     LCF6D
-        bit     $07
+        bit     valtyp
         bmi     L7C82
         lda     #$09
 L7C7F:  jmp     L7B3D
@@ -641,13 +643,13 @@ L7C82:  lda     dir_sector
         lda     #$0A
         bne     L7C7F
 L7C91:  ldy     #$00
-        sta     ($44),y
+        sta     (varpnt),y
         iny
         lda     #$01
-        sta     ($44),y
+        sta     (varpnt),y
         iny
         lda     #$7F
-        sta     ($44),y
+        sta     (varpnt),y
         jmp     L7B00
 L7CA2:  jmp     restore
 
@@ -655,22 +657,22 @@ _dos_print:
         jsr     L7BA6
         jsr     L7BC4
         jsr     LCF6D
-        bit     $07
+        bit     valtyp
         bmi     L7CB7
         lda     #$09
 L7CB4:  jmp     L7B3D
 L7CB7:  ldy     #$00
-        lda     ($44),y
+        lda     (varpnt),y
         cmp     #$80
         bcc     L7CC3
         lda     #$0A
         bne     L7CB4
 L7CC3:  sta     dir_sector
         iny
-        lda     ($44),y
+        lda     (varpnt),y
         sta     dir_ptr
         iny
-        lda     ($44),y
+        lda     (varpnt),y
         sta     dir_ptr+1
         ldy     #$7E
 L7CD2:  lda     (dir_ptr),y
@@ -751,23 +753,23 @@ L7D83:  and     #$03
 L7D87:  rol     ;a
         dex
         bpl     L7D87
-        sta     drive_sel   ;Drive select bit pattern to write to the latch
+        sta     drive_sel       ;Drive select bit pattern to write to the latch
 
         ;Set track 0
 
         ldx     #$00
-        stx     track   ;Track number to write to WD1793 (0-76 or $00-4c)
+        stx     track           ;Track number to write to WD1793 (0-76 or $00-4c)
 
         ;Set sector 1
 
         inx
-        stx     sector   ;Sector number to write to WD1793 (1-26 or $01-1a)
+        stx     sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
 
-L7D97:  lda     #$00    ;Load address low byte
+L7D97:  lda     #$00            ;Load address low byte
         sta     target_ptr
         sta     dir_ptr
 
-        lda     #$7F    ;Load address high byte
+        lda     #$7F            ;Load address high byte
         sta     target_ptr+1
         sta     dir_ptr+1
 
@@ -814,7 +816,7 @@ L7DCF:  lda     dir_ptr
         inc     sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
         jsr     read_a_sector
         beq     L7DE1
-        jmp     restore 
+        jmp     restore
 L7DE1:  lda     #$00
 L7DE3:  sta     dir_ptr
 
