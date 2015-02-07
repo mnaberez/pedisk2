@@ -1208,56 +1208,43 @@ find_file:
 ;  $06 "TXT" "TEXT"
 ;  $07 "OBJ" "OBJCT"
 ;
-;The directory ends when offset 0 of an entry is $FF, or when all entries
-;in the directory have been read.
-;
-;If the last byte of a filename is $FF, the file has been deleted.
+;The directory ends when offset 0 of an entry is $FF, or when all 63 possible
+;entries in the directory have been read.
 ;
 ;A file consists of N contiguous sectors, where N is specified by the sector
-;count word at offset $0E.  A file can be at most 65,535 sectors (8,388,480
+;count word at offset $0E of an entry.  The first track and sector of the file
+;is specified by $0C/$0D.  A file can be at most 65,535 sectors (8,388,480
 ;bytes).  However, load_file only considers the low byte of the sector count,
 ;so a program file can only be 255 sectors (32,640 bytes).  A file can span
-;tracks (if the last sector of a track is read but the file has has more
-;sectors, it will continue on the first sector of the next track).  The first
-;track and sector of the file is specified by $0C/$0D.
+;tracks.  If the last sector of a track is read but the file has more sectors,
+;it will continue on the first sector of the next track.
 ;
-;The word at offset $06 has a dual purpose.  For file type $05 ("LOAD"
-;meaning machine language programs), it is the entry address and the file
-;size in bytes is implied (number of sectors * 128).  For all other types,
-;it is the size of the file in bytes.  The load_file routine has special
-;handling for type $03 (CBM BASIC) and uses the file size to set the
+;Files start on track 0, sector 9 and work upward.  Each file is stored
+;higher than the previous one.  Offset $09/$0A in the disk info specifies the
+;track/sector that will be used for the next file.  If the last byte of a
+;filename is replaced with $FF, the file is deleted.  Listing the directory
+;will no longer show the file, but the space is not reclaimed.  To reclaim
+;the space, the disk must be reorganized so that all free space is contiguous
+;after the last file.  The program that does this is called "disk compression"
+;and is found on track 1, sector 19.
+;
+;The word at offset $06 in a directory entry has a dual purpose.  For file
+;type $05 ("LOAD" meaning machine language programs), it is the entry address
+;and the file size in bytes is implied (number of sectors * 128).  For all
+;other types, it is the size of the file in bytes.  The load_file routine has
+;special handling for type $03 (CBM BASIC) and uses the file size to set the
 ;end of BASIC text / start of variables pointers.
 ;
 ;Note that when the word at $06/$07 is used as a file size, its maximum value
 ;is 65,535 bytes.  This is far less than the maximum file size that the sector
 ;count word seems to allow.
 ;
-;Speculation:
-;  The first entry (entry 0) may be a special one for the DOS code.  The
-;  PEDISK review from the Feb 1981 issue of Compute! magazine! states:
-;  "Provision is made when initializing a diskette for omitting the boot,
-;  thereby saving more room when only files are stored."
-;
-;  We know from load_dos that the DOS is always 13 sectors stored right after
-;  the directory (track 0, sectors 9 through 21).  If the DOS was written to
-;  the disk, then entry 0 would show 13 sectors allocated starting from
-;  track 0, sector 9.
-;
-;  If no DOS code was written to disk, then entry 0 could show 0 sectors
-;  allocated.  All 13 sectors normally used for the DOS could then be
-;  available for user files, giving an extra 1664 bytes for user files.
-;  However, load_dos just blindly loads 13 sectors into RAM and installs the
-;  wedge if there's no read error.  Those sectors could contain anything, and
-;  if the user tries one of the wedge commands provided by the DOS, the
-;  computer will probably crash.
-;
-;  Another possibility for no DOS code is that entry 0 could show 1 sector
-;  allocated (always track 0, sector 9).  The load_dos routine would load
-;  this sector at dos+$0000.  The first 24 bytes of the sector would become
-;  the DOS jump table (see cmd_vectors), leaving 104 bytes for 6502 code.  It
-;  could make the DOS commands a no-op so the computer wouldn't crash if the
-;  user tried them.  This approach would leave 12 of the 13 DOS sectors free,
-;  giving an extra 1536 bytes for user files.
+;The RAM-resident portion of the DOS is stored in multiple LOAD (type $05)
+;files.  These files are always at the top of the directory and are always
+;named starting with "*****" (five asterisks) followed by a unique character.
+;The user can see these files in a directory listing.  Their track/sector
+;positions on the disk are important.  Some routines load code from these files
+;directly by track/sector number, not filename.
 ;
     lda drive_sel_f     ;get drive select bit pattern parsed from filename
     sta drive_sel       ;save pattern to write to drive select latch
