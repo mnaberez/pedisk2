@@ -19,10 +19,10 @@ L5420 = $5420
 L7931 = $7931
 L7A05 = $7A05
 L7AD1 = $7AD1
-LEB7F = $EB7F
-LEB84 = $EB84
-LECDF = $ECDF
-LEF59 = $EF59
+put_spc_hex = $EB7F
+put_hex_byte = $EB84
+read_a_sector = $ECDF
+l_ef59 = $EF59 ;Get a character and test for {STOP}
 puts = $EFE7
 chrout = $FFD2
 
@@ -68,7 +68,7 @@ L7CB4:
     lda #$7F
     sta $B8
     sta $23
-    jsr LECDF
+    jsr read_a_sector
     beq L7CD7
     jmp L7A05
 L7CD7:
@@ -114,9 +114,9 @@ L7D14:
     sta $62
     lda #$04
     sbc $63
-    jsr LEB84
+    jsr put_hex_byte
     lda $62
-    jsr LEB84
+    jsr put_hex_byte
 
     ;Print "NAME   TYPE  TRK SCTR #SCTRS LOAD ENTRY"
     lda #<dirheader
@@ -138,7 +138,7 @@ L7D3C:
     adc #$10
     bpl L7D50
     inc $7F93
-    jsr LECDF
+    jsr read_a_sector
     beq L7D4E
     jmp L7A05
 L7D4E:
@@ -176,22 +176,22 @@ L7D6C:
     jsr puts
     ldy #$0C
     lda (dir_ptr),y
-    jsr LEB84
+    jsr put_hex_byte
     ;Print space
     lda #$20
     jsr chrout
     ldy #$0D
     lda (dir_ptr),y
-    jsr LEB7F
+    jsr put_spc_hex
     lda #$20
     jsr chrout
     jsr chrout
     ldy #$0F
     lda (dir_ptr),y
-    jsr LEB7F
+    jsr put_spc_hex
     ldy #$0E
     lda (dir_ptr),y
-    jsr LEB84
+    jsr put_hex_byte
     ldy #$0A
     lda (dir_ptr),y
     cmp #$05
@@ -201,16 +201,16 @@ L7D6C:
     jsr chrout
     ldy #$09
     lda (dir_ptr),y
-    jsr LEB7F
+    jsr put_spc_hex
     dey
     lda (dir_ptr),y
-    jsr LEB84
+    jsr put_hex_byte
     dey
     lda (dir_ptr),y
-    jsr LEB7F
+    jsr put_spc_hex
     dey
     lda (dir_ptr),y
-    jsr LEB84
+    jsr put_hex_byte
 L7DD7:
     dec $27
     bmi L7DDE
@@ -221,7 +221,7 @@ L7DDE:
     ldy #>more
     jsr puts
 
-    jsr LEF59
+    jsr l_ef59
     jmp L7D2E
 L7DEB:
     lda #$0D
