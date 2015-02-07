@@ -1199,14 +1199,14 @@ find_file:
 ;
 ;File types are:
 ;
-;  $00 SEQTL
-;  $01 INDEX
-;  $02 ISAM
-;  $03 BASIC  CBM BASIC program
-;  $04 ASSMB
-;  $05 LOAD   Machine language program
-;  $06 TEXT
-;  $07 OBJCT
+;  $00 "SEQ" "SEQTL"                                File type short names are
+;  $01 "IND" "INDEX"                                from the !LIST routine,
+;  $02 "ISM" "ISAM"                                 longer names are from the
+;  $03 "BAS" "BASIC"  CBM BASIC program             directory program on
+;  $04 "ASM" "ASSMB"                                track 1, sector 1.
+;  $05 "LD"  "LOAD"   Machine language program
+;  $06 "TXT" "TEXT"
+;  $07 "OBJ" "OBJCT"
 ;
 ;The directory ends when offset 0 of an entry is $FF, or when all entries
 ;in the directory have been read.
