@@ -28,8 +28,12 @@ chrout = $FFD2
 
 ;In the zero page locations below, ** indicates the PEDISK destroys
 ;a location that is used for some other purpose by CBM BASIC 4.
-
 dir_ptr     = $22       ;Pointer: PEDISK directory **
+edit_pos    = $27       ;PEDISK memory editor position on current line **
+dos         = $7800     ;Base address for the RAM-resident portion
+drive_sel   = dos+$0791 ;Drive select bit pattern to write to the latch
+track       = dos+$0792 ;Track number to write to WD1793 (0-76 or $00-4c)
+sector      = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
 
     *=$7c00
 
@@ -57,11 +61,11 @@ filetypes:
 
 L7CB4:
     jsr L7AD1
-    sta $7F91
+    sta drive_sel
     ldx #$00
-    stx $7F92
+    stx track
     inx
-    stx $7F93
+    stx sector
     lda #$00
     sta $B7
     sta dir_ptr
@@ -124,20 +128,26 @@ L7D14:
     jsr puts
 
 L7D2E:
+    ;Start line countdown used to pause screen
+
     lda #$12
-    sta $27
+    sta edit_pos
+
     ;Print newline
+
     lda #$0D
     jsr chrout
+
 L7D37:
     lda #$0A
     jsr chrout
+
 L7D3C:
     lda dir_ptr
     clc
     adc #$10
     bpl L7D50
-    inc $7F93
+    inc sector
     jsr read_a_sector
     beq L7D4E
     jmp L7A05
@@ -145,19 +155,30 @@ L7D4E:
     lda #$00
 L7D50:
     sta dir_ptr
+
+    ;Check for end of directory
+
     ldy #$00
-    lda (dir_ptr),y
-    cmp #$FF
-    bne L7D5D
-    jmp L7DEB
+    lda (dir_ptr),y     ;Get first byte of filename
+    cmp #$FF            ;Equal to $FF?
+    bne L7D5D           ;  No: continue
+    jmp L7DEB           ;  Yes: jump, end of directory
+
 L7D5D:
+    ;Check if file has been deleted
+
     ldy #$05
-    lda (dir_ptr),y
-    cmp #$FF
-    beq L7D3C
+    lda (dir_ptr),y     ;Get last byte of filename
+    cmp #$FF            ;Equal to $FF?
+    beq L7D3C           ;  Yes: file is deleted, skip it
+
     ;Print newline
     lda #$0D
     jsr chrout
+
+    ;Under "NAME" column
+    ;Print filename
+
     ldy #$00
 L7D6C:
     lda (dir_ptr),y
@@ -165,6 +186,10 @@ L7D6C:
     iny
     cpy #$06
     bmi L7D6C
+
+    ;Under "TYPE" column
+    ;Print file type
+
     ldy #$0A
     lda (dir_ptr),y
     asl ;a
@@ -174,61 +199,120 @@ L7D6C:
     adc #<filetypes
     ldy #>filetypes
     jsr puts
+
+    ;Under "TRK" column
+    ;Print file track number
+
     ldy #$0C
     lda (dir_ptr),y
     jsr put_hex_byte
+
     ;Print space
+
     lda #$20
     jsr chrout
+
+    ;Under "SCTR" column
+    ;Print file sector number
+
     ldy #$0D
     lda (dir_ptr),y
     jsr put_spc_hex
+
+    ;Print two spaces
+
     lda #$20
     jsr chrout
     jsr chrout
+
+    ;Under "#SCTRS" column (1/2)
+    ;Print file sector count high byte
+
     ldy #$0F
     lda (dir_ptr),y
     jsr put_spc_hex
+
+    ;Under "#SCTRS" column (2/2)
+    ;Print file sector count low byte
+
     ldy #$0E
     lda (dir_ptr),y
     jsr put_hex_byte
+
+    ;If the file type is not $05 ("LOAD") then skip printing both
+    ;the load address and the entry address.  Note: for all other
+    ;file types except $05, the word at offset $06/07 is the file
+    ;length, not an entry address.
+
     ldy #$0A
     lda (dir_ptr),y
     cmp #$05
     bne L7DD7
+
+    ;Print two spaces
+
     lda #$20
     jsr chrout
     jsr chrout
+
+    ;Under "LOAD" column (1/2)
+    ;Print load address high byte
+
     ldy #$09
     lda (dir_ptr),y
     jsr put_spc_hex
-    dey
+
+    ;Under "LOAD" column (2/2)
+    ;Print load address low byte
+
+    dey                 ;Y=$08
     lda (dir_ptr),y
     jsr put_hex_byte
-    dey
+
+    ;Under "ENTRY" column (1/2)
+    ;Print entry address high byte
+
+    dey                 ;Y=$07
     lda (dir_ptr),y
     jsr put_spc_hex
-    dey
+
+    ;Under "ENTRY" column (2/2)
+    ;Print entry address low byte
+
+    dey                 ;Y=$06
     lda (dir_ptr),y
     jsr put_hex_byte
+
 L7DD7:
-    dec $27
+    ;Decrement lines count.  If not time for a pause,
+    ;jump back to do the next line.
+
+    dec edit_pos
     bmi L7DDE
     jmp L7D37
+
 L7DDE:
+    ;Time for a pause.  Wait for a keypress, then
+    ;jump back to do the next line.
+
     ;Print "MORE..."
     lda #<more
     ldy #>more
     jsr puts
 
-    jsr l_ef59
+    jsr l_ef59          ;Get a character and test for {STOP}
     jmp L7D2E
+
 L7DEB:
+    ;Print newline
     lda #$0D
     jsr chrout
+
     lda #$00
     sta $E900
+
     jmp L7A05
+
     !byte $07
     sta $7FAA
     lda #$02
