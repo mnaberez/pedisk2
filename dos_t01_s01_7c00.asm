@@ -24,7 +24,7 @@ LEB84 = $EB84
 LECDF = $ECDF
 LEF59 = $EF59
 puts = $EFE7
-LFFD2 = $FFD2
+chrout = $FFD2
 
     *=$7c00
 
@@ -67,20 +67,25 @@ L7CB4:
     beq L7CD7
     jmp L7A05
 L7CD7:
+    ;Print "MORE..."
     lda #<more
     ldy #>more
     jsr puts
+
     ldy #$00
     ldx #$08
 L7CE2:
     lda ($22),y
-    jsr LFFD2
+    jsr chrout
     iny
     dex
     bne L7CE2
+
+    ;Print "  SECTORS LEFT= "
     lda #<sectors_left
     ldy #>sectors_left
     jsr puts
+
     ldx #$00
     stx $59
     lda $7F09
@@ -107,17 +112,21 @@ L7D14:
     jsr LEB84
     lda $62
     jsr LEB84
+
+    ;Print "NAME   TYPE  TRK SCTR #SCTRS LOAD ENTRY"
     lda #<dirheader
     ldy #>dirheader
     jsr puts
+
 L7D2E:
     lda #$12
     sta $27
+    ;Print newline
     lda #$0D
-    jsr LFFD2
+    jsr chrout
 L7D37:
     lda #$0A
-    jsr LFFD2
+    jsr chrout
 L7D3C:
     lda $22
     clc
@@ -141,12 +150,13 @@ L7D5D:
     lda ($22),y
     cmp #$FF
     beq L7D3C
+    ;Print newline
     lda #$0D
-    jsr LFFD2
+    jsr chrout
     ldy #$00
 L7D6C:
     lda ($22),y
-    jsr LFFD2
+    jsr chrout
     iny
     cpy #$06
     bmi L7D6C
@@ -162,14 +172,15 @@ L7D6C:
     ldy #$0C
     lda ($22),y
     jsr LEB84
+    ;Print space
     lda #$20
-    jsr LFFD2
+    jsr chrout
     ldy #$0D
     lda ($22),y
     jsr LEB7F
     lda #$20
-    jsr LFFD2
-    jsr LFFD2
+    jsr chrout
+    jsr chrout
     ldy #$0F
     lda ($22),y
     jsr LEB7F
@@ -181,8 +192,8 @@ L7D6C:
     cmp #$05
     bne L7DD7
     lda #$20
-    jsr LFFD2
-    jsr LFFD2
+    jsr chrout
+    jsr chrout
     ldy #$09
     lda ($22),y
     jsr LEB7F
@@ -200,14 +211,16 @@ L7DD7:
     bmi L7DDE
     jmp L7D37
 L7DDE:
+    ;Print "MORE..."
     lda #<more
     ldy #>more
     jsr puts
+
     jsr LEF59
     jmp L7D2E
 L7DEB:
     lda #$0D
-    jsr LFFD2
+    jsr chrout
     lda #$00
     sta $E900
     jmp L7A05
