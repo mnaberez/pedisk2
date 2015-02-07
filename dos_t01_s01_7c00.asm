@@ -26,6 +26,11 @@ LEF59 = $EF59
 puts = $EFE7
 chrout = $FFD2
 
+;In the zero page locations below, ** indicates the PEDISK destroys
+;a location that is used for some other purpose by CBM BASIC 4.
+
+dir_ptr     = $22       ;Pointer: PEDISK directory **
+
     *=$7c00
 
     jmp L7CB4
@@ -59,7 +64,7 @@ L7CB4:
     stx $7F93
     lda #$00
     sta $B7
-    sta $22
+    sta dir_ptr
     lda #$7F
     sta $B8
     sta $23
@@ -75,7 +80,7 @@ L7CD7:
     ldy #$00
     ldx #$08
 L7CE2:
-    lda ($22),y
+    lda (dir_ptr),y
     jsr chrout
     iny
     dex
@@ -128,7 +133,7 @@ L7D37:
     lda #$0A
     jsr chrout
 L7D3C:
-    lda $22
+    lda dir_ptr
     clc
     adc #$10
     bpl L7D50
@@ -139,15 +144,15 @@ L7D3C:
 L7D4E:
     lda #$00
 L7D50:
-    sta $22
+    sta dir_ptr
     ldy #$00
-    lda ($22),y
+    lda (dir_ptr),y
     cmp #$FF
     bne L7D5D
     jmp L7DEB
 L7D5D:
     ldy #$05
-    lda ($22),y
+    lda (dir_ptr),y
     cmp #$FF
     beq L7D3C
     ;Print newline
@@ -155,13 +160,13 @@ L7D5D:
     jsr chrout
     ldy #$00
 L7D6C:
-    lda ($22),y
+    lda (dir_ptr),y
     jsr chrout
     iny
     cpy #$06
     bmi L7D6C
     ldy #$0A
-    lda ($22),y
+    lda (dir_ptr),y
     asl ;a
     asl ;a
     asl ;a
@@ -170,41 +175,41 @@ L7D6C:
     ldy #>filetypes
     jsr puts
     ldy #$0C
-    lda ($22),y
+    lda (dir_ptr),y
     jsr LEB84
     ;Print space
     lda #$20
     jsr chrout
     ldy #$0D
-    lda ($22),y
+    lda (dir_ptr),y
     jsr LEB7F
     lda #$20
     jsr chrout
     jsr chrout
     ldy #$0F
-    lda ($22),y
+    lda (dir_ptr),y
     jsr LEB7F
     ldy #$0E
-    lda ($22),y
+    lda (dir_ptr),y
     jsr LEB84
     ldy #$0A
-    lda ($22),y
+    lda (dir_ptr),y
     cmp #$05
     bne L7DD7
     lda #$20
     jsr chrout
     jsr chrout
     ldy #$09
-    lda ($22),y
+    lda (dir_ptr),y
     jsr LEB7F
     dey
-    lda ($22),y
+    lda (dir_ptr),y
     jsr LEB84
     dey
-    lda ($22),y
+    lda (dir_ptr),y
     jsr LEB7F
     dey
-    lda ($22),y
+    lda (dir_ptr),y
     jsr LEB84
 L7DD7:
     dec $27
