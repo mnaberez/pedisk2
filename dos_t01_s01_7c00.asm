@@ -23,104 +23,33 @@ LEB7F = $EB7F
 LEB84 = $EB84
 LECDF = $ECDF
 LEF59 = $EF59
-LEFE7 = $EFE7
+puts = $EFE7
 LFFD2 = $FFD2
 
-        *=$7c00
+    *=$7c00
 
-        jmp     L7CB4
-        ora     $4D0A
-        !byte   $4F
-        !byte   $52
-        eor     $2E
-        rol     $2E2E
-        brk
-        !byte   $93
-        jsr     L2020
-        jsr     L4550
-        !byte   $44
-        eor     #$53
-        !byte   $4B
-        jsr     L4949
-        jsr     L4944
-        !byte   $53
-        !byte   $4B
-        jsr     L4944
-        !byte   $52
-        eor     $43
-        !byte   $54
-        !byte   $4F
-        !byte   $52
-        eor     $0A0D,y
-        !byte   $44
-        eor     #$53
-        !byte   $4B
-        lsr     $4D41
-        eor     $3D
-        jsr     L2000
-        jsr     L4553
-        !byte   $43
-        !byte   $54
-        !byte   $4F
-        !byte   $52
-        !byte   $53
-        jsr     L454C
-        lsr     $54
-        and     L0020,x
-        ora     $0A0D
-        lsr     $4D41
-        eor     L0020
-        jsr     L5420
-        eor     L4550,y
-        jsr     L5420
-        !byte   $52
-        !byte   $4B
-        jsr     L4353
-        !byte   $54
-        !byte   $52
-        jsr     L5323
-        !byte   $43
-        !byte   $54
-        !byte   $52
-        !byte   $53
-        jsr     L4F4C
-        eor     ($44,x)
-        jsr     L4E45
-        !byte   $54
-        !byte   $52
-        eor     L2000,y
-        !byte   $53
-        eor     $51
-        !byte   $54
-        jmp     L0020
-        jsr     L4E49
-        !byte   $44
-        cli
-        jsr     L0020
-        jsr     L5349
-        eor     ($4D,x)
-        jsr     L0020
-        jsr     L4142
-        !byte   $53
-        eor     #$43
-        jsr     L2000
-        eor     ($53,x)
-        !byte   $53
-        eor     $2042
-        brk
-        jsr     L4F4C
-        eor     ($44,x)
-        jsr     L0020
-        jsr     L4554
-        cli
-        !byte   $54
-        jsr     L0020
-        jsr     L424F
-        lsr     ;a
-        !byte   $43
-        !byte   $54
-        !byte   $20
-        brk
+    jmp L7CB4
+
+more:
+    !text $0d,$0a,"MORE....",0
+pedisk_dir:
+    !text $93,"    PEDISK II DISK DIRECTORY",$0d,$0a
+diskname:
+    !text "DISKNAME= ",0
+sectors_left:
+    !text "  SECTORS LEFT= ",0
+dirheader:
+    !text $0d,$0d,$0a,"NAME   TYPE  TRK SCTR #SCTRS LOAD ENTRY",0
+filetypes:
+    !text " SEQTL ",0
+    !text " INDX  ",0
+    !text " ISAM  ",0
+    !text " BASIC ",0
+    !text " ASSMB ",0
+    !text " LOAD  ",0
+    !text " TEXT  ",0
+    !text " OBJCT ",0
+
 L7CB4:  jsr     L7AD1
         sta     $7F91
         ldx     #$00
@@ -136,9 +65,9 @@ L7CB4:  jsr     L7AD1
         jsr     LECDF
         beq     L7CD7
         jmp     L7A05
-L7CD7:  lda     #$0E
-        ldy     #$7C
-        jsr     LEFE7
+L7CD7:  lda     #<more
+        ldy     #>more
+        jsr     puts
         ldy     #$00
         ldx     #$08
 L7CE2:  lda     ($22),y
@@ -146,9 +75,9 @@ L7CE2:  lda     ($22),y
         iny
         dex
         bne     L7CE2
-        lda     #$38
-        ldy     #$7C
-        jsr     LEFE7
+        lda     #<sectors_left
+        ldy     #>sectors_left
+        jsr     puts
         ldx     #$00
         stx     $59
         lda     $7F09
@@ -174,9 +103,9 @@ L7D14:  lda     #$5F
         jsr     LEB84
         lda     $62
         jsr     LEB84
-        lda     #$49
-        ldy     #$7C
-        jsr     LEFE7
+        lda     #<dirheader
+        ldy     #>dirheader
+        jsr     puts
 L7D2E:  lda     #$12
         sta     $27
         lda     #$0D
@@ -216,9 +145,9 @@ L7D6C:  lda     ($22),y
         asl     ;a
         asl     ;a
         clc
-        adc     #$74
-        ldy     #$7C
-        jsr     LEFE7
+        adc     #<filetypes
+        ldy     #>filetypes
+        jsr     puts
         ldy     #$0C
         lda     ($22),y
         jsr     LEB84
@@ -258,9 +187,9 @@ L7D6C:  lda     ($22),y
 L7DD7:  dec     $27
         bmi     L7DDE
         jmp     L7D37
-L7DDE:  lda     #$03
-        ldy     #$7C
-        jsr     LEFE7
+L7DDE:  lda     #<more
+        ldy     #>more
+        jsr     puts
         jsr     LEF59
         jmp     L7D2E
 L7DEB:  lda     #$0D
