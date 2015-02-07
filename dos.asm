@@ -817,15 +817,22 @@ L7DCF:  lda     dir_ptr
         jmp     restore 
 L7DE1:  lda     #$00
 L7DE3:  sta     dir_ptr
+
+        ;Check for end of directory
+
         ldy     #$00
-        lda     (dir_ptr),y
-        cmp     #$FF
-        bne     L7DF0
-        jmp     L7E56
+        lda     (dir_ptr),y     ;Get first byte of filename
+        cmp     #$FF            ;Equal to $FF?
+        bne     L7DF0           ;  No: continue
+        jmp     L7E56           ;  Yes: jump, end of directory
+
+        ;Check if file has been deleted
+
 L7DF0:  ldy     #$05
-        lda     (dir_ptr),y
-        cmp     #$FF
-        beq     L7DCF
+        lda     (dir_ptr),y     ;Get last byte of filename
+        cmp     #$FF            ;Equal to $FF?
+        beq     L7DCF           ;  Yes: file is deleted, skip it
+                                ;  No: continue
 
         ;Print a newline
 

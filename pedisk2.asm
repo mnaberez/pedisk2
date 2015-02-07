@@ -1200,6 +1200,8 @@ find_file:
 ;The directory ends when offset 0 of an entry is $FF, or when all entries
 ;in the directory have been read.
 ;
+;If the last byte of a filename is $FF, the file has been deleted.
+;
 ;A file consists of N contiguous sectors, where N is specified by the sector
 ;count word at offset $0E.  A file can be at most 65,535 sectors (8,388,480
 ;bytes).  However, load_file only considers the low byte of the sector count,
