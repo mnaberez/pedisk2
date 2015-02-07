@@ -1189,13 +1189,24 @@ find_file:
 ;of 63 entries possible.  A directory entry consists of:
 ;
 ;  $00-$05   byte  filename (6 bytes, padded with spaces)
-;  $06-$07   word  file length
+;  $06-$07   word  for file type $05: entry address, other types: file size
 ;  $08-$09   word  load address
 ;  $0A       byte  file type
 ;  $0B       byte  ??
 ;  $0C       byte  file track number
 ;  $0D       byte  file sector number
 ;  $0E-$0F   word  file sector count
+;
+;File types are:
+;
+;  $00 SEQTL
+;  $01 INDEX
+;  $02 ISAM
+;  $03 BASIC  CBM BASIC program
+;  $04 ASSMB
+;  $05 LOAD   Machine language program
+;  $06 TEXT
+;  $07 OBJCT
 ;
 ;The directory ends when offset 0 of an entry is $FF, or when all entries
 ;in the directory have been read.
@@ -1210,9 +1221,16 @@ find_file:
 ;sectors, it will continue on the first sector of the next track).  The first
 ;track and sector of the file is specified by $0C/$0D.
 ;
-;There is a file length word at $06 that is used by load_file.  Its maximum
-;value is 65,535 bytes, which is far less than the maximum file size that
-;the sector count word seems to allow.
+;The word at offset $06 has a dual purpose.  For file type $05 ("LOAD"
+;meaning machine language programs), it is the entry address and the file
+;size in bytes is implied (number of sectors * 128).  For all other types,
+;it is the size of the file in bytes.  The load_file routine has special
+;handling for type $03 (CBM BASIC) and uses the file size to set the
+;end of BASIC text / start of variables pointers.
+;
+;Note that when the word at $06/$07 is used as a file size, its maximum value
+;is 65,535 bytes.  This is far less than the maximum file size that the sector
+;count word seems to allow.
 ;
 ;Speculation:
 ;  The first entry (entry 0) may be a special one for the DOS code.  The
