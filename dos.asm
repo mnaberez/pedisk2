@@ -98,7 +98,7 @@ _dos_stop:
         sta     $7FA9
         jsr     L7891
         lda     num_sectors     ;Number of sectors to read or write
-        sta     $7FAE
+        sta     $7FAE           ;number of sectors?
         lda     #$00
         sta     $7FAF
         lda     #$03
@@ -131,7 +131,7 @@ L786A:  lda     $7FA8           ;Load address low byte
         lda     open_sector
         sta     sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
 
-        lda     $7FAE
+        lda     $7FAE           ;number of sectors?
         sta     num_sectors     ;Number of sectors to read or write
         jsr     write_sectors
         bne     L7890
@@ -200,7 +200,7 @@ L7902:  sta     $59
         adc     $58
         sta     $58
         rts
-L790D:  lda     $7FAE
+L790D:  lda     $7FAE           ;number of sectors?
         sec
         sbc     #$01
         sta     $5E
@@ -398,7 +398,7 @@ L7A66:  pha
         lda     #$32
 L7A73:  bne     L7ADB
 L7A75:  lda     #$64
-        sta     $7FAE
+        sta     $7FAE           ;number of sectors?
         lda     #$80
         sta     $7FA6
         sta     $7FA8
@@ -415,7 +415,7 @@ L7A75:  lda     #$64
         bcs     L7AB3
         jsr     LC873
         lda     $11
-        sta     $7FAE
+        sta     $7FAE           ;number of sectors?
         lda     $12
         sta     $7FAF
 L7AAC:  jsr     L78A2
@@ -435,7 +435,7 @@ L7AC6:  ldy     #$00
         sta     $7FAF
         iny
         lda     (varpnt),y
-        sta     $7FAE
+        sta     $7FAE           ;number of sectors?
         jmp     L7AAC
 L7AD6:  pla
         beq     L7ADE
