@@ -99,7 +99,7 @@ L7CE2:
     stx $59
     lda $7F09
     sta $5E
-    lda #$1C
+    lda #$1C    ;TODO 28 sectors per track?
     sta $60
     lda #$00
     sta $5F
