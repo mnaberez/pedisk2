@@ -75,20 +75,22 @@ L7CB4:
     jsr read_a_sector
     beq L7CD7
     jmp L7A05
+
 L7CD7:
     ;Print "MORE..."
     lda #<more
     ldy #>more
     jsr puts
 
-    ldy #$00
-    ldx #$08
+    ;Print disk name
+    ldy #$00            ;Y = 0, index added to pointer
+    ldx #$08            ;X = 8 chars in disk name
 L7CE2:
-    lda (dir_ptr),y
-    jsr chrout
-    iny
-    dex
-    bne L7CE2
+    lda (dir_ptr),y     ;Get char of disk name
+    jsr chrout          ;Print it
+    iny                 ;Increment pointer to next char
+    dex                 ;Decrement chars remaining
+    bne L7CE2           ;Loop until 8 chars printed
 
     ;Print "  SECTORS LEFT= "
     lda #<sectors_left
