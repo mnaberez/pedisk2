@@ -28,8 +28,10 @@ chrout = $FFD2
 
 ;In the zero page locations below, ** indicates the PEDISK destroys
 ;a location that is used for some other purpose by CBM BASIC 4.
+
 dir_ptr     = $22       ;Pointer: PEDISK directory **
 edit_pos    = $27       ;PEDISK memory editor position on current line **
+target_ptr  = $b7       ;Pointer: PEDISK target address for memory ops **
 dos         = $7800     ;Base address for the RAM-resident portion
 drive_sel   = dos+$0791 ;Drive select bit pattern to write to the latch
 track       = dos+$0792 ;Track number to write to WD1793 (0-76 or $00-4c)
@@ -67,10 +69,10 @@ L7CB4:
     inx
     stx sector
     lda #$00
-    sta $B7
+    sta target_ptr
     sta dir_ptr
     lda #$7F
-    sta $B8
+    sta target_ptr+1
     sta $23
     jsr read_a_sector
     beq L7CD7
