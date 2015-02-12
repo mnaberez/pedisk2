@@ -14,65 +14,21 @@ LEFE7 = $EFE7
     *=$7c00
 
     jmp L7C6F
-    ora $4550
-    !byte $44
-    eor #$53
-    !byte $4B
-    jsr L4949
-    jsr L4946
-    jmp L2045
-    !byte $52
-    eor $4E
-    eor ($4D,x)
-    eor $20
-    eor $54,x
-    eor #$4C
-    eor #$54
-    eor $4F0D,y
-    jmp L2044
-    lsr $49
-    jmp L2D45
-    brk
-    ora $454E
-    !byte $57
-    jsr L4946
-    jmp L2D45
-    brk
-    ora $2A2A
-    rol ;a
-    rol ;a
-    lsr $4D41
-    eor $20
-    eor ($4C,x)
-    !byte $52
-    eor $41
-    !byte $44
-    eor $4920,y
-    lsr $4620
-    eor #$4C
-    eor $2A
-    rol ;a
-    rol ;a
-    rol ;a
-    brk
-    ora $2A2A
-    rol ;a
-    rol ;a
-    lsr $544F
-    jsr L4E49
-    jsr L4944
-    !byte $52
-    eor $43
-    !byte $54
-    !byte $4F
-    !byte $52
-    eor $2A2A,y
-    rol ;a
-    rol ;a
-    brk
+
+rename_utility:
+    !text $0d,"PEDISK II FILE RENAME UTILITY",$0d
+old_file:
+    !text "OLD FILE-",0
+new_file:
+    !text $0d,"NEW FILE-",0
+already_in_file:
+    !text $0d,"****NAME ALREADY IN FILE****",0
+not_in_dir:
+    !text $0d,"****NOT IN DIRECTORY****",0
+
 L7C6F:
-    lda #$03
-    ldy #$7C
+    lda #<rename_utility
+    ldy #>rename_utility
     jsr LEFE7
     jsr L7AA3
     ldx #$05
@@ -83,8 +39,8 @@ L7C7B:
     bpl L7C7B
     lda $7FB1
     sta L7CD8
-    lda #$2C
-    ldy #$7C
+    lda #<new_file
+    ldy #>new_file
     jsr LEFE7
     jsr L7AA3
     jsr LEE33
@@ -115,13 +71,13 @@ L7CB5:
 L7CC0:
     jmp L7A05
 L7CC3:
-    lda #$37
+    lda #<already_in_file
 L7CC5:
-    ldy #$7C
+    ldy #>already_in_file
     jsr LEFE7
     jmp L7A05
 L7CCD:
-    lda #$55
+    lda #<not_in_dir
     jmp L7CC5
 L7CD2:
     brk
