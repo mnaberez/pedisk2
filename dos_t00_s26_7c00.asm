@@ -25,124 +25,27 @@ LFFD2 = $FFD2
 
     jmp L7D03
 
-    eor ($2D,x)
-    eor $4341
-    !byte $52
-    !byte $4F
-    eor ($53,x)
-    eor $452F
-    !byte $44
-    eor #$54
-    and ($4E,x)
-    and $4552
-    lsr $4D41
-    eor $20
-    eor ($20,x)
-    lsr $49
-    jmp L2545
-    !byte $42
-    and $4F21
-    and $4325
-    and $5021
-    and L5250
-    eor #$4E
-    !byte $54
-    jsr L4944
-    !byte $53
-    !byte $4B
-    jsr L4944
-    !byte $52
-    eor $43
-    !byte $54
-    and $44
-    and $5544
-    eor $2050
-    !byte $44
-    eor #$53
-    !byte $4B
-    jsr L524F
-    jsr L454D
-    eor $5121
-    and $4525
-    and $5221
-    and $4552
-    and $4E45
-    !byte $54
-    eor $52
-    jsr L4142
-    !byte $53
-    eor #$43
-    and $46
-    and $5321
-    and $4153
-    lsr $45,x
-    jsr L2041
-    bvc L7CCA
-    !byte $4F
-    !byte $47
-    !byte $52
-    eor ($4D,x)
-    and $47
-    and $4F47
-    jsr L4F54
-    jsr L454D
-    eor L524F
-    eor $5421,y
-    and $4825
-    and $4548
-    jmp L2150
-    eor $2D,x
-    eor $54,x
-    eor #$4C
-    eor #$54
-    eor $4420,y
-    eor #$53
-    !byte $4B
-    jsr L454D
-    lsr $2555
-    eor #$2D
-    and ($56,x)
-    and $4A25
-    and $5721
-    and $4B25
-    and $494B
-    jmp L204C
-    eor ($20,x)
-    lsr $49
-    jmp L2145
-    cli
-    and $5845
-    !byte $45
+    !text "A-MACROASM/EDIT",$21
+    !text "N-RENAME A FILE",$25
+    !byte $42,$2d,$21,$4f,$2d,$25,$43,$2d,$21
+    !text "P-PRINT DISK DIRECT",$25
+    !text "D-DUMP DISK OR MEM",$21
+    !text $51,$2d,$25,$45,$2d,$21
+    !text "R-RE-ENTER BASIC",$25
+    !text $46,$2d,$21
+    !text "S-SAVE A PROGRAM",$25
+    !text "G-GO TO MEMORY",$21
+    !byte $54,$2d,$25
+    !text "H-HELP",$21
+    !text "U-UTILITY DISK MENU",$25
+    !byte $49,$2d,$21,$56,$2d,$25,$4a,$2d,$21,$57,$2d,$25
+    !text "K-KILL A FILE",$21
+    !text "X-EXECUTE DISK FILE",$25
+    !text "L-LOAD DISK PROGRAM",$21
+    !byte $59,$2d,$25
+    !text "M-MEMORY ALTER",$21
+    !byte $5a,$2d,$25,$ff
 
-L7CCA:
-    !byte $43
-    eor $54,x
-    eor $20
-    !byte $44
-    eor #$53
-    !byte $4B
-    jsr L4946
-    jmp L2545
-    jmp L4C2D
-    !byte $4F
-    eor ($44,x)
-    jsr L4944
-    !byte $53
-    !byte $4B
-    jsr L5250
-    !byte $4F
-    !byte $47
-    !byte $52
-    eor ($4D,x)
-    and ($59,x)
-    and $4D25
-    and L454D
-    eor L524F
-    eor $4120,y
-    jmp L4554
-    !byte $52
-    and ($5A,x)
-    and $FF25
 L7D03:
     lda #$03
     sta $54
