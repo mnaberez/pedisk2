@@ -38,6 +38,9 @@ drive_sel   = dos+$0791 ;Drive select bit pattern to write to the latch
 track       = dos+$0792 ;Track number to write to WD1793 (0-76 or $00-4c)
 sector      = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
 
+dir_track   = 0         ;Track where directory is stored (always one track)
+                        ;First sector of dir is hardcoded
+
     *=$7c00
 
     jmp L7CB4
@@ -65,19 +68,24 @@ filetypes:
 L7CB4:
     jsr L7AD1
     sta drive_sel
-    ldx #$00
-    stx track
-    inx
-    stx sector
+
+    ldx #dir_track      ;set track 0 (first track)
+    stx track           ;save the requested track number
+
+    inx                 ;set sector 1 (first sector, sectors start at 1)
+    stx sector          ;save the requested sector number
+
     lda #<dir_sector
     sta target_ptr
     sta dir_ptr
+
     lda #>dir_sector
     sta target_ptr+1
     sta $23
-    jsr read_a_sector
-    beq L7CD7
-    jmp L7A05
+
+    jsr read_a_sector   ;Read the first directory sector
+    beq L7CD7           ;If no error occured, branch to start printing
+    jmp L7A05           ;If an error occurred, jump to ?? TODO ??
 
 L7CD7:
     ;Print "MORE..."
@@ -153,9 +161,11 @@ L7D3C:
     adc #$10
     bpl L7D50
     inc sector
-    jsr read_a_sector
-    beq L7D4E
-    jmp L7A05
+
+    jsr read_a_sector   ;Read next sector in the directory
+    beq L7D4E           ;If no error occurred, branch to continue
+    jmp L7A05           ;If error occured, jump to ?? TODO ??
+
 L7D4E:
     lda #$00
 L7D50:
