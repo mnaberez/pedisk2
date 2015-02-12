@@ -88,9 +88,9 @@ L7CB4:
     jmp L7A05           ;If an error occurred, jump to ?? TODO ??
 
 L7CD7:
-    ;Print "MORE..."
-    lda #<more
-    ldy #>more
+    ;Clear screen and print "PEDISK II DISK DIRECTORY"
+    lda #<pedisk_dir
+    ldy #>pedisk_dir
     jsr puts
 
     ;Print disk name
