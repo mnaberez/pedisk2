@@ -81,7 +81,7 @@ L7CB4:
 
     lda #>dir_sector
     sta target_ptr+1
-    sta $23
+    sta dir_ptr+1
 
     jsr read_a_sector   ;Read the first directory sector
     beq L7CD7           ;If no error occured, branch to start printing
