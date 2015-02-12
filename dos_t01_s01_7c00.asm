@@ -140,7 +140,7 @@ L7D14:
     ldy #>dirheader
     jsr puts
 
-L7D2E:
+next_screen:
     ;Start line countdown used to pause screen
 
     lda #$12
@@ -151,7 +151,7 @@ L7D2E:
     lda #$0D
     jsr chrout
 
-L7D37:
+next_entry:
     lda #$0A
     jsr chrout
 
@@ -304,7 +304,7 @@ L7DD7:
 
     dec edit_pos
     bmi L7DDE
-    jmp L7D37
+    jmp next_entry
 
 L7DDE:
     ;Time for a pause.  Wait for a keypress, then
@@ -316,7 +316,7 @@ L7DDE:
     jsr puts
 
     jsr l_ef59          ;Get a character and test for {STOP}
-    jmp L7D2E
+    jmp next_screen
 
 L7DEB:
     ;Print newline
