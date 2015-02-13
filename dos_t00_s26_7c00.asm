@@ -140,35 +140,17 @@ finish_menu:
                         ;This seems to be the way that $7C00 overlays
                         ;return control to the $7A00 code.
 
-    eor $20
-    jsr $5954
-    bvc L7D97
-    jsr $5254
-    !byte $4B
-    jsr $4353
-    !byte $54
-    !byte $52
-    jsr $5323
-    !byte $43
-    !byte $54
-    !byte $52
-    !byte $53
-    brk
-    !byte $53
-    eor $51
-    brk
-    eor #$4E
-    !byte $44
-    brk
-    eor #$53
-    eor $4200
-    eor ($53,x)
-    brk
-    eor ($53,x)
-    eor $4C00
-    !byte $44
-    jsr $5400
-    cli
-    !byte $54
-    brk
-    !byte $4F
+filler:
+;These bytes are not used anywhere in the code above.  They are likely
+;part of another $7C00 overlay that happened to be in memory when
+;this overlay was saved to disk.
+;
+    !text $45,"  TYPE TRK SCTR #SCTRS",0
+    !text "SEQ",0
+    !text "IND",0
+    !text "ISM",0
+    !text "BAS",0
+    !text "ASM",0
+    !text "LD ",0
+    !text "TXT",0
+    !byte $4f
