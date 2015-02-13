@@ -11,25 +11,30 @@ menu_ptr = $54 ;Pointer used to read bytes from the menu
 menu:
     !text "A-MACROASM/EDIT",$21
     !text "N-RENAME A FILE",$25
-    !byte 'B','-',$21
-    !byte $4f,$2d,$25,$43,$2d,$21
+    !text "B-",$21
+    !text "O-",$25
+    !text "C-",$21
     !text "P-PRINT DISK DIRECT",$25
     !text "D-DUMP DISK OR MEM",$21
-    !text $51,$2d,$25,$45,$2d,$21
+    !text "Q-",$25
+    !text "E-",$21
     !text "R-RE-ENTER BASIC",$25
-    !text $46,$2d,$21
+    !text "F-",$21
     !text "S-SAVE A PROGRAM",$25
     !text "G-GO TO MEMORY",$21
-    !byte $54,$2d,$25
+    !text "T-",$25
     !text "H-HELP",$21
     !text "U-UTILITY DISK MENU",$25
-    !byte $49,$2d,$21,$56,$2d,$25,$4a,$2d,$21,$57,$2d,$25
+    !text "I-",$21
+    !text "V-",$25
+    !text "J-",$21
+    !text "W-",$25
     !text "K-KILL A FILE",$21
     !text "X-EXECUTE DISK FILE",$25
     !text "L-LOAD DISK PROGRAM",$21
-    !byte $59,$2d,$25
+    !text "Y-",$25
     !text "M-MEMORY ALTER",$21
-    !byte $5a,$2d,$25
+    !text "Z-",$25
     !byte $ff ;Signals end of menu
 
 start:
