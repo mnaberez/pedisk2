@@ -6,7 +6,7 @@ LEEFB = $EEFB
 LEF1B = $EF1B
 LEF59 = $EF59
 LEFE7 = $EFE7
-LFFD2 = $FFD2
+chrout = $ffd2 ;KERNAL Send a char to the current output device
 LFFE4 = $FFE4
 
     *=$7c00
@@ -32,17 +32,23 @@ L7C52:
     lda #$0A
     sta $27
     jsr LEF59
+
+    ;Save A, print a newline, restore A
     pha
     lda #$0D
-    jsr LFFD2
+    jsr chrout
     pla
+
     cmp #$44
     beq L7C94
     cmp #$4D
     bne L7C52
     jsr LEEFB
+
+    ;Print a newline
     lda #$0D
-    jsr LFFD2
+    jsr chrout
+
 L7C77:
     lda $67
     jsr LEB84
@@ -86,8 +92,11 @@ L7C94:
 L7CC0:
     jsr LECDF
     bne L7CEE
+
+    ;Print a newline
     lda #$0D
-    jsr LFFD2
+    jsr chrout
+
     lda $7F92
     jsr LEB84
     lda $7F93
@@ -115,8 +124,11 @@ L7CF5:
     sty $26
 L7CFB:
     ldx #$04
-    lda #$20
-    jsr LFFD2
+
+    ;Print a space
+    lda #' '
+    jsr chrout
+
 L7D02:
     lda ($66),y
     jsr LEB84
@@ -125,31 +137,39 @@ L7D02:
     bne L7D02
     dec $23
     bne L7CFB
-    lda #$20
-    jsr LFFD2
-    jsr LFFD2
-    jsr LFFD2
-    jsr LFFD2
+
+    ;Print four spaces
+    lda #' '
+    jsr chrout
+    jsr chrout
+    jsr chrout
+    jsr chrout
+
     ldy $26
     ldx #$10
 L7D21:
     txa
     and #$03
     bne L7D2B
-    lda #$20
-    jsr LFFD2
+
+    ;Print a space
+    lda #' '
+    jsr chrout
+
 L7D2B:
-    lda #$20
-    jsr LFFD2
+    ;Print a space
+    lda #' '
+    jsr chrout
+
     lda ($66),y
-    cmp #$20
+    cmp #' '
     bmi L7D3A
     cmp #$80
     bmi L7D3C
 L7D3A:
-    lda #$2E
+    lda #'.'
 L7D3C:
-    jsr LFFD2
+    jsr chrout
     iny
     dex
     bne L7D21
@@ -172,17 +192,20 @@ L7D4D:
     tay
     jsr LEF59
     lda #$0D
-    jsr LFFD2
+    jsr chrout
     lda #$0A
     sta $27
 L7D68:
     dec $22
     beq L7D7D
-    lda #$20
-    jsr LFFD2
-    jsr LFFD2
-    jsr LFFD2
-    jsr LFFD2
+
+    ;Print four spaces
+    lda #' '
+    jsr chrout
+    jsr chrout
+    jsr chrout
+    jsr chrout
+
     jmp L7CF5
 L7D7D:
     rts
