@@ -1,14 +1,11 @@
-L3D7D = $3D7D
 L7A05 = $7A05
 L7AD1 = $7AD1
-LCF83 = $CF83
 LECE4 = $ECE4
 LED3F = $ED3F
 LEEFB = $EEFB
 LEF1B = $EF1B
 LEF59 = $EF59
 LEFE7 = $EFE7
-LEFED = $EFED
 LFFD2 = $FFD2
 
     *=$7c00
@@ -85,38 +82,36 @@ L7CBA:
     jsr LECE4
     jmp L7A05
 
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
+filler:
+;The bytes from here to the end of the file are not used by the code
+;above.  They are likely part of another $7C00 overlay that happened
+;to be in memory when this overlay was saved to disk.
+;
+    !byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
     stx $3F92
     inx
     stx $3F93
     stx $E982
-L7CD2:
-    jsr L3D7D
+fill_1:
+    jsr $3D7D
     lda #$6C
     ldy #$3C
-    jsr LEFED
+    jsr $EFED
     lda #$00
     ldx $3F92
-    jsr LCF83
+    jsr $CF83
     inc $3F92
     lda #$50
     cmp $3F92
-    bpl L7CD2
+    bpl fill_1
     lda #$00
     sta $B7
     lda #$3F
     sta $B8
     ldy #$7F
     lda #$FF
-L7CFA:
+fill_2:
     sta ($B7),y
     dey
-    bpl L7CFA
+    bpl fill_2
     !byte $A2
