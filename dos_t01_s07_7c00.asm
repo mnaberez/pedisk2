@@ -15,16 +15,23 @@ LFFD2 = $FFD2
 
     jmp L7C5B
 
+read_or_write:
     !text $0d,"PEDISK II DISK UTILITY"
     !text $0d,"READ OR WRITE (HIT R OR W KEY)?",0
+enter_track:
     !text $0d,"TRACK? ",0
+enter_sector:
     !text $0d,"SECTOR? ",0
+enter_count:
     !text $0d,"# SECTORS? ",0
 
 L7C5B:
-    lda #$03
-    ldy #$7C
+    ;Print "PEDISK II DISK UTILITY"
+    ;and "READ OR WRITE (HIT R OR W KEY)?"
+    lda #<read_or_write
+    ldy #>read_or_write
     jsr LEFE7
+
     jsr LEF59
     sta $7F97
     cmp #$52
@@ -32,30 +39,43 @@ L7C5B:
     cmp #$57
     bne L7C5B
 L7C70:
+    ;Print newline
     lda #$0D
     jsr LFFD2
+
     jsr L7AD1
     sta $7F91
-    lda #$3B
-    ldy #$7C
+
+    ;Print "TRACK? "
+    lda #<enter_track
+    ldy #>enter_track
     jsr LEFE7
+
     jsr LEF1B
     sta $7F92
-    lda #$44
-    ldy #$7C
+
+    ;Print "SECTOR? "
+    lda #<enter_sector
+    ldy #>enter_sector
     jsr LEFE7
+
     jsr LEF1B
     sta $7F93
-    lda #$4E
-    ldy #$7C
+
+    ;Print "# SECTORS?"
+    lda #<enter_count
+    ldy #>enter_count
     jsr LEFE7
+
     jsr LEF1B
     sta $7F96
     jsr LEEFB
+
     lda $66
     sta $B7
     lda $67
     sta $B8
+
     lda $7F97
     cmp #$57
     bne L7CBA
@@ -64,6 +84,7 @@ L7C70:
 L7CBA:
     jsr LECE4
     jmp L7A05
+
     !byte $FF
     !byte $FF
     !byte $FF
