@@ -1,11 +1,3 @@
-L0D00 = $0D00
-L2044 = $2044
-L204D = $204D
-L454D = $454D
-L4949 = $4949
-L4D00 = $4D00
-L524F = $524F
-L5544 = $5544
 L7A05 = $7A05
 L7AD1 = $7AD1
 LEB84 = $EB84
@@ -20,48 +12,13 @@ LFFE4 = $FFE4
     *=$7c00
 
     jmp L7C52
-    ora $2020
-    bvc L7C4D
-    !byte $44
-    eor #$53
-    !byte $4B
-    jsr L4949
-    jsr L5544
-    eor $2050
-    eor $54,x
-    eor #$4C
-    eor #$54
-    eor $440D,y
-    eor #$53
-    !byte $4B
-    jsr L524F
-    jsr L454D
-    eor L524F
-    eor $2820,y
-    jsr L2044
-    !byte $4F
-    !byte $52
-    jsr L204D
-    and #$3F
-    brk
-    ora $5254
-    eor ($43,x)
-    !byte $4B
-    !byte $3F
-    jsr L0D00
-    !byte $53
-    eor $43
-    !byte $54
-    !byte $4F
-    !byte $52
-    !byte $3F
-    jsr L4D00
-    !byte $4F
-L7C4D:
-    !byte $52
-    eor $2E
-    !byte $2E
-    brk
+
+    !text $0d,"  PEDISK II DUMP UTILITY"
+    !text $0d,"DISK OR MEMORY ( D OR M )?",0
+    !text $0d,"TRACK? ",0
+    !text $0d,"SECTOR? ",0
+    !text "MORE..",0
+
 L7C52:
     lda #$03
     ldy #$7C
