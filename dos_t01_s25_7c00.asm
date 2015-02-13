@@ -13,16 +13,22 @@ LFFE4 = $FFE4
 
     jmp L7C52
 
+disk_or_mem:
     !text $0d,"  PEDISK II DUMP UTILITY"
     !text $0d,"DISK OR MEMORY ( D OR M )?",0
+enter_track:
     !text $0d,"TRACK? ",0
+enter_sector:
     !text $0d,"SECTOR? ",0
+more:
     !text "MORE..",0
 
 L7C52:
-    lda #$03
-    ldy #$7C
+    ;Print banner and "DISK OR MEMORY ( D OR M )?"
+    lda #<disk_or_mem
+    ldy #>disk_or_mem
     jsr LEFE7
+
     lda #$0A
     sta $27
     jsr LEF59
@@ -55,14 +61,20 @@ L7C77:
 L7C94:
     jsr L7AD1
     sta $7F91
-    lda #$38
-    ldy #$7C
+
+    ;Print "TRACK? "
+    lda #<enter_track
+    ldy #>enter_track
     jsr LEFE7
+
     jsr LEF1B
     sta $7F92
-    lda #$41
-    ldy #$7C
+
+    ;Print "SECTOR? "
+    lda #<enter_sector
+    ldy #>enter_sector
     jsr LEFE7
+
     jsr LEF1B
     sta $7F93
     lda #$00
@@ -150,9 +162,12 @@ L7D4D:
     bpl L7D68
     tya
     pha
-    lda #$4B
-    ldy #$7C
+
+    ;Print "MORE.."
+    lda #<more
+    ldy #>more
     jsr LEFE7
+
     pla
     tay
     jsr LEF59
