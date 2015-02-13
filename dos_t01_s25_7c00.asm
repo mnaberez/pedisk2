@@ -39,9 +39,9 @@ L7C52:
     jsr chrout
     pla
 
-    cmp #$44
+    cmp #'D'
     beq L7C94
-    cmp #$4D
+    cmp #'M'
     bne L7C52
     jsr LEEFB
 
@@ -83,6 +83,7 @@ L7C94:
 
     jsr LEF1B
     sta $7F93
+
     lda #$00
     sta $B7
     sta $66
@@ -103,10 +104,10 @@ L7CC0:
     jsr LEB84
     clc
     adc #$01
-    cmp #$1D
+    cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
     bmi L7CE3
     sec
-    sbc #$1C
+    sbc #$1C            ;TODO 28 sectors per track?
     inc $7F92
 L7CE3:
     sta $7F93
