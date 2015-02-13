@@ -1,13 +1,4 @@
-L0D00 = $0D00
-L2052 = $2052
-L2057 = $2057
 L3D7D = $3D7D
-L4553 = $4553
-L4944 = $4944
-L4949 = $4949
-L524F = $524F
-L5257 = $5257
-L5455 = $5455
 L7A05 = $7A05
 L7AD1 = $7AD1
 LCF83 = $CF83
@@ -24,57 +15,11 @@ LFFD2 = $FFD2
 
     jmp L7C5B
 
-    ora     $4550
-    !byte   $44
-    eor     #$53
-    !byte   $4B
-    jsr     L4949
-    jsr     L4944
-    !byte   $53
-    !byte   $4B
-    jsr     L5455
-    eor     #$4C
-    eor     #$54
-    eor     $520D,y
-    eor     $41
-    !byte   $44
-    jsr     L524F
-    jsr     L5257
-    eor     #$54
-    eor     $20
-    plp
-    pha
-    eor     #$54
-    jsr     L2052
-    !byte   $4F
-    !byte   $52
-    jsr     L2057
-    !byte   $4B
-    eor     $59
-    and     #$3F
-    brk
-    ora     $5254
-    eor     ($43,x)
-    !byte   $4B
-    !byte   $3F
-    jsr     L0D00
-    !byte   $53
-    eor     $43
-    !byte   $54
-    !byte   $4F
-    !byte   $52
-    !byte   $3F
-    jsr     L0D00
-    !byte   $23
-    jsr     L4553
-    !byte   $43
-    !byte   $54
-    !byte   $4F
-    !byte   $52
-    !byte   $53
-    !byte   $3F
-    !byte   $20
-    brk
+    !text $0d,"PEDISK II DISK UTILITY"
+    !text $0d,"READ OR WRITE (HIT R OR W KEY)?",0
+    !text $0d,"TRACK? ",0
+    !text $0d,"SECTOR? ",0
+    !text $0d,"# SECTORS? ",0
 
 L7C5B:
     lda #$03
