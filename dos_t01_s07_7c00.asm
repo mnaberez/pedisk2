@@ -10,7 +10,7 @@ LFFD2 = $FFD2
 
     *=$7c00
 
-    jmp L7C5B
+    jmp start
 
 read_or_write:
     !text $0d,"PEDISK II DISK UTILITY"
@@ -22,7 +22,7 @@ enter_sector:
 enter_count:
     !text $0d,"# SECTORS? ",0
 
-L7C5B:
+start:
     ;Print "PEDISK II DISK UTILITY"
     ;and "READ OR WRITE (HIT R OR W KEY)?"
     lda #<read_or_write
@@ -31,11 +31,12 @@ L7C5B:
 
     jsr LEF59
     sta $7F97
-    cmp #$52
-    beq L7C70
-    cmp #$57
-    bne L7C5B
-L7C70:
+    cmp #'R'
+    beq ask_trk_sec
+    cmp #'W'
+    bne start
+
+ask_trk_sec:
     ;Print newline
     lda #$0D
     jsr LFFD2
@@ -74,11 +75,13 @@ L7C70:
     sta $B8
 
     lda $7F97
-    cmp #$57
-    bne L7CBA
+    cmp #'W'
+    bne do_read
+
     jsr LED3F
     jmp L7A05
-L7CBA:
+
+do_read:
     jsr LECE4
     jmp L7A05
 
