@@ -9,6 +9,28 @@ menu_ptr = $54 ;Pointer used to read bytes from the menu
     jmp start
 
 menu:
+;The menu consists of two columns of 20 characters each.
+;It is displayed like this:
+;
+;  A-MACROASM/EDIT     N-RENAME A FILE
+;  B-                  O-
+;  C-                  P-PRINT DISK DIRECT
+;  D-DUMP DISK OR MEM  Q-
+;  E-                  R-RE-ENTER BASIC
+;  F-                  S-SAVE A PROGRAM
+;  G-GO TO MEMORY      T-
+;  H-HELP              U-UTILITY DISK MENU
+;  I-                  V-
+;  J-                  W-
+;  K-KILL A FILE       X-EXECUTE DISK FILE
+;  L-LOAD DISK PROGRAM Y-
+;  M-MEMORY ALTER      Z-
+;
+;The table uses these marker bytes:
+;  $21 End of a left column item
+;  $25 End of a right column item
+;  $FF End of the menu
+;
     !text "A-MACROASM/EDIT",$21
     !text "N-RENAME A FILE",$25
     !text "B-",$21
@@ -35,7 +57,7 @@ menu:
     !text "Y-",$25
     !text "M-MEMORY ALTER",$21
     !text "Z-",$25
-    !byte $ff ;Signals end of menu
+    !byte $ff
 
 start:
     ;Initialize pointer to menu
@@ -50,13 +72,13 @@ start:
 
     ldy #0              ;Init Y for use with LDA (ptr),Y.  Y never changes.
 
-next_line:
-;Read the next line in the menu
+next_item:
+;Read and display the next menu item
 ;
-    ldx #20             ;X = 33 characters in a line
+    ldx #20             ;X = 20 characters in this column
 
 next_char:
-;Read the next character on the line
+;Read the next character of the current menu item
 ;
     lda (menu_ptr),y    ;Get a character from the menu
     inc menu_ptr        ;Increment pointer low byte
@@ -66,42 +88,53 @@ next_char:
 eval_char:
 ;Evaluate the character
 ;
-    cmp #$21
-    beq handle_21
+    cmp #$21            ;Is this the end of a left column menu item?
+    beq finish_left     ;  Yes: branch to space over into the right side
 
-    cmp #$25
-    beq handle_25
+    cmp #$25            ;Is this the end of a right column menu item?
+    beq finish_right    ;  Yes: branch to go to the next line
 
-    cmp #$FF
-    beq handle_ff
+    cmp #$FF            ;Is this the end of the menu?
+    beq finish_menu     ;  Yes: branch to finish up
+
+    ;Menu byte read is a normal character that should be displayed
 
     jsr chrout          ;Print the character
     dex                 ;Decrement count of chars remaining
     bne next_char       ;Branch to do the next character
 
-handle_21:
+finish_left:
 ;Handle menu character = #$21
 ;
+;End of a left column menu item has been reached.  Space over
+;until we are at the start of the right column.
+;
     lda #' '            ;A = space character
-h21_loop:
+left_loop:
     jsr chrout          ;Print a space
     dex                 ;Decrement count of chars remaining
-    bne h21_loop        ;Loop until all spaces are printed
-    beq next_line       ;Branch always to next line
+    bne left_loop       ;Loop until all spaces are printed
+    beq next_item       ;Branch always to next line
 
-handle_25:
+finish_right:
 ;Handle menu character = #$25
 ;
-    lda #$0D            ;A = carriage return
-    jsr chrout          ;Print it
-    jmp next_line       ;Jump to next line
-
-handle_ff:
-;Handle menu character = #$FF
+;End of a right column menu item has been reached.  Print a newline
+;so the next menu item is displayed at the beginning of the next line.
 ;
     lda #$0D            ;A = carriage return
     jsr chrout          ;Print it
-    jsr chrout          ;Print another one
+    jmp next_item       ;Jump to next line
+
+finish_menu:
+;Handle menu character = #$FF
+;
+;End of the menu has been reached.  Print a newline to finish
+;the current line, and then another newline to finish the menu.
+;
+    lda #$0D            ;A = carriage return
+    jsr chrout          ;Print a CR to finish the current line
+    jsr chrout          ;Print another CR to finish the menu
 
     jmp L7A05           ;Jump out to ? TODO ?
                         ;This seems to be the way that $7C00 overlays
