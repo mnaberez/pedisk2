@@ -1,14 +1,18 @@
 L7A05 = $7A05
 L7D97 = $7D97
-LFFD2 = $FFD2
+chrout = $ffd2 ;KERNAL Send a char to the current output device
+
+menu_ptr = $54 ;Pointer used to read bytes from the menu
 
     *=$7c00
 
-    jmp L7D03
+    jmp start
 
+menu:
     !text "A-MACROASM/EDIT",$21
     !text "N-RENAME A FILE",$25
-    !byte $42,$2d,$21,$4f,$2d,$25,$43,$2d,$21
+    !byte 'B','-',$21
+    !byte $4f,$2d,$25,$43,$2d,$21
     !text "P-PRINT DISK DIRECT",$25
     !text "D-DUMP DISK OR MEM",$21
     !text $51,$2d,$25,$45,$2d,$21
@@ -25,53 +29,82 @@ LFFD2 = $FFD2
     !text "L-LOAD DISK PROGRAM",$21
     !byte $59,$2d,$25
     !text "M-MEMORY ALTER",$21
-    !byte $5a,$2d,$25,$ff
+    !byte $5a,$2d,$25
+    !byte $ff ;Signals end of menu
 
-L7D03:
-    lda #$03
-    sta $54
-    lda #$7C
-    sta $55
-    lda #$93
-    jsr LFFD2
-    ldy #$00
-L7D12:
-    ldx #$14
-L7D14:
-    lda ($54),y
-    inc $54
-    bne L7D1C
-    inc $55
-L7D1C:
+start:
+    ;Initialize pointer to menu
+    lda #<menu
+    sta menu_ptr        ;Set pointer low byte
+    lda #>menu
+    sta menu_ptr+1      ;Set pointer high byte
+
+    ;Clear the screen
+    lda #$93            ;A = clear screen
+    jsr chrout          ;Print it
+
+    ldy #0              ;Init Y for use with LDA (ptr),Y.  Y never changes.
+
+next_line:
+;Read the next line in the menu
+;
+    ldx #20             ;X = 33 characters in a line
+
+next_char:
+;Read the next character on the line
+;
+    lda (menu_ptr),y    ;Get a character from the menu
+    inc menu_ptr        ;Increment pointer low byte
+    bne eval_char       ;Branch if pointer high byte doesn't need to change
+    inc menu_ptr+1      ;Increment pointer high byte
+
+eval_char:
+;Evaluate the character
+;
     cmp #$21
-    beq L7D2E
+    beq handle_21
+
     cmp #$25
-    beq L7D38
+    beq handle_25
+
     cmp #$FF
-    beq L7D40
-    jsr LFFD2
-    dex
-    bne L7D14
-L7D2E:
-    lda #$20
-L7D30:
-    jsr LFFD2
-    dex
-    bne L7D30
-    beq L7D12
-L7D38:
-    lda #$0D
-    jsr LFFD2
-    jmp L7D12
-L7D40:
-    lda #$0D
-    jsr LFFD2
-    jsr LFFD2
-    jmp L7A05
+    beq handle_ff
+
+    jsr chrout          ;Print the character
+    dex                 ;Decrement count of chars remaining
+    bne next_char       ;Branch to do the next character
+
+handle_21:
+;Handle menu character = #$21
+;
+    lda #' '            ;A = space character
+h21_loop:
+    jsr chrout          ;Print a space
+    dex                 ;Decrement count of chars remaining
+    bne h21_loop        ;Loop until all spaces are printed
+    beq next_line       ;Branch always to next line
+
+handle_25:
+;Handle menu character = #$25
+;
+    lda #$0D            ;A = carriage return
+    jsr chrout          ;Print it
+    jmp next_line       ;Jump to next line
+
+handle_ff:
+;Handle menu character = #$FF
+;
+    lda #$0D            ;A = carriage return
+    jsr chrout          ;Print it
+    jsr chrout          ;Print another one
+
+    jmp L7A05           ;Jump out to ? TODO ?
+                        ;This seems to be the way that $7C00 overlays
+                        ;return control to the $7A00 code.
 
     eor $20
     jsr $5954
-    bvc $7D97
+    bvc L7D97
     jsr $5254
     !byte $4B
     jsr $4353
