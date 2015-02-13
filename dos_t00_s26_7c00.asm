@@ -141,9 +141,9 @@ finish_menu:
                         ;return control to the $7A00 code.
 
 filler:
-;These bytes are not used anywhere in the code above.  They are likely
-;part of another $7C00 overlay that happened to be in memory when
-;this overlay was saved to disk.
+;The bytes from here to the end of the file are not used by the code
+;above.  They are likely part of another $7C00 overlay that happened
+;to be in memory when this overlay was saved to disk.
 ;
     !text $45,"  TYPE TRK SCTR #SCTRS",0
     !text "SEQ",0
