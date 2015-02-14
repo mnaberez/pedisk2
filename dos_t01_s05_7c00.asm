@@ -52,7 +52,7 @@ LFFD2 = $FFD2
     ora     $2032
     !byte   $43
     !byte   $4F
-    bvc     L7C9E
+    bvc     $7C9E
     jsr     L4944
     !byte   $53
     !byte   $4B
@@ -101,11 +101,7 @@ LFFD2 = $FFD2
 L7C99:
     lda #$03
     ldy #$7C
-    !byte $20
-
-L7C9E:
-    !byte $E7
-    !byte $EF
+    jsr $EFE7
 
 L7CA0:
     jsr LEF59
