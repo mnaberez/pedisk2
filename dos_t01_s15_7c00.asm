@@ -38,9 +38,7 @@ start:
     sta $7F9C
     sta $5E
     lda #$00
-    !byte $85
-L7C8B:
-    !byte $5F
+    sta $5F
     sta $61
     lda #$1C
     sta $60
