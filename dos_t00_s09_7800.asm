@@ -63,18 +63,6 @@ drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename
 L0070 = $70
 L0076 = $76
 L0D00 = $0D00
-L2045 = $2045
-L3400 = $3400
-L3F45 = $3F45
-L4153 = $4153
-L4353 = $4353
-L4544 = $4544
-L5254 = $5254
-L5323 = $5323
-L5400 = $5400
-L5445 = $5445
-L5954 = $5954
-L8091 = $8091
 LB8F6 = $B8F6
 LC12B = $C12B
 LEA44 = $EA44
@@ -95,7 +83,6 @@ LEEE6 = $EEE6
 LEF08 = $EF08
 LEF59 = $EF59
 LEF83 = $EF83
-LEFE7 = $EFE7
 LFFCF = $FFCF
 LFFD2 = $FFD2
 
@@ -787,8 +774,6 @@ filetypes:
 
         ;Convert char to a drive select bit pattern, store the pattern
 
-        ;Convert char to a drive select bit pattern, store the pattern
-
 L7D83:  and     #$03
         tax
         sec
@@ -1021,19 +1006,13 @@ L7ED6:  jmp     L7B2B
 L7ED9:  jmp     LEF83
 L7EDC:  jmp     L7B1A
 L7EDF:  jmp     L7B12
-        ora     $4946
-        jmp     L3F45
-        jsr     L0D00
-        !byte   $44
-        eor     $56
-        eor     #$43
-        eor     $3F
-        jsr     L0D00
-        eor     $4E
-        !byte   $54
-        !byte   $52
-        eor     $203F,y
-        brk
+
+        !text $0d,"FILE? ",0
+
+        !text $0d,"DEVICE? ",0
+
+        !text $0d,"ENTRY? ",0
+
 L7EFD:  jsr     L0070
 L7F00:  !byte   $A9
 L7F01:  !byte   $EB
@@ -1056,9 +1035,11 @@ L7F0E:  sta     L7FA0,y
         sty     L7FB1
         jsr     LEE9E
         rts
+
         lda     #$62
         ldy     #$7A
-        jsr     LEFE7
+        jsr     puts
+
         ldy     #$00
 L7F2C:  jsr     LFFCF
         cmp     #$3A
@@ -1079,7 +1060,7 @@ L7F47:  jsr     LFFCF
         rts
 L7F51:  lda     #$6A
         ldy     #$7A
-        jsr     LEFE7
+        jsr     puts
         jsr     LEF59
         cmp     #$30
         bmi     L7F51
@@ -1166,7 +1147,7 @@ L7FE0:  ldx     $A97F
         sta     L7FAF
         lda     #$74
         ldy     #$7A
-        jsr     LEFE7
+        jsr     puts
         jsr     LEF08
         lda     #$0D
         jsr     LFFD2
@@ -1177,16 +1158,18 @@ L7FE0:  ldx     $A97F
         lda     #$05
         sta     L7FAA
         jsr     LEE33
+
         bmi     L8010
         tax
         beq     L8062
         !byte   $20
         !byte   $57
+
 L800F:  sei
 L8010:  jmp     L7A05
         lda     #$B4
         ldy     #$7B
-        jsr     LEFE7
+        jsr     puts
         jsr     L7AA3
         jsr     LEE33
         tax
@@ -1198,30 +1181,15 @@ L8010:  jmp     L7A05
         jsr     LED3A
 L802E:  jmp     L7A05
 L8031:  jmp     L7A25
-        ora     $2A2A
-        jsr     L4544
-        jmp     L5445
-        eor     $2D
-        brk
-        ora     $5544
-        bvc     L8091
-        eor     #$43
-        eor     ($54,x)
-        eor     $20
-        lsr     $49
-        jmp     L2045
-        lsr     $4D41
-L8053:  eor     $2D
-        !byte   $43
-        eor     ($4E,x)
-        lsr     $544F
-        jsr     L4153
-        lsr     $45,x
-        !byte   $0D
-        brk
+
+        !text $0d,"** DELETE-",0
+
+        !text $0d,"DUPLICATE FILE NAME-CANNOT SAVE",$0d,0
+
 L8062:  lda     #$C0
         ldy     #$7B
-        jsr     LEFE7
+        jsr     puts
+
         jmp     L7A05
         cmp     $E981
         bne     L8072
@@ -1229,7 +1197,7 @@ L8062:  lda     #$C0
 L8072:  lda     #$03
         jsr     LEC0D
         dec     L7F8C
-        bne     L8053
+        bne     $8053
         lda     #$10
         !byte   $2C
         !byte   $A9
