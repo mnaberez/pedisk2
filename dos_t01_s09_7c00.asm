@@ -7,31 +7,43 @@ LEC0D = $EC0D
 LECCC = $ECCC
 LED3A = $ED3A
 LEF7B = $EF7B
-LEFE7 = $EFE7
-LFFD2 = $FFD2
+puts = $EFE7
+chrout = $FFD2
 
     *=$7c00
 
     jmp start
 
+disk_format:
     !text $0d,$0d,"PEDISK II DISK FORMAT"
     !text $0d,"   DOUBLE DENSITY",$0d,0
+are_you_sure:
     !text $0d,"SURE? (Y-YES)",0
+enter_name:
     !text $0d,"NAME? ",$0d,0
+finished:
     !text $0d,"FINISHED!",0
+protected_disk:
     !text $0d,"PROTECTED DISK!!",$0d,0
+error:
     !text " ERROR!",0
+format_track:
     !text $0d,"FORMAT TRACK ",0
 
 start:
-    lda #$03
-    ldy #$7C
-    jsr LEFE7
+    ;Print banner
+    lda #<disk_format
+    ldy #>disk_format
+    jsr puts
+
     jsr L7AD1
     sta $7F91
-    lda #$2E
-    ldy #$7C
-    jsr LEFE7
+
+    ;Print "SURE? (Y-YES)"
+    lda #<are_you_sure
+    ldy #>are_you_sure
+    jsr puts
+
     jsr LEF7B
     cmp #$59
     bne L7CB5
@@ -52,9 +64,12 @@ L7CB5:
     jmp L7A05
 L7CB8:
     nop
-    lda #$51
-    ldy #$7C
-    jsr LEFE7
+
+    ;Print "PROTECTED DISK!!"
+    lda #<protected_disk
+    ldy #>protected_disk
+    jsr puts
+
     lda #$F3
     jmp L7D6C
 L7CC5:
@@ -65,9 +80,12 @@ L7CC5:
     stx $E982
 L7CD1:
     jsr L7D7D
-    lda #$6C
-    ldy #$7C
-    jsr LEFE7
+
+    ;Print "FORMAT TRACK "
+    lda #<format_track
+    ldy #>format_track
+    jsr puts
+
     lda #$00
     ldx $7F92
     jsr LCF83
@@ -106,9 +124,12 @@ L7D17:
     bmi L7D08
     lda #$01
     sta $7F93
-    lda #$3D
-    ldy #$7C
-    jsr LEFE7
+
+    ;PRINT "NAME? "
+    lda #<enter_name
+    ldy #>enter_name
+    jsr puts
+
     ldx #$00
 L7D30:
     stx $26
@@ -131,18 +152,24 @@ L7D30:
     sta $7F0F
     jsr LED3A
     bne L7D0B
-    lda #$46
-    ldy #$7C
-    jsr LEFE7
+
+    ;Print "FINISHED!"
+    lda #<finished
+    ldy #>finished
+    jsr puts
+
     jmp L7A05
 L7D6C:
     pha
     lda L000D
-    jsr LFFD2
+    jsr chrout
     pla
-    lda #$64
-    ldy #$7C
-    jsr LEFE7
+
+    ;Print " ERROR!"
+    lda #<error
+    ldy #>error
+    jsr puts
+
     jmp L7A05
 L7D7D:
     lda $7F92
