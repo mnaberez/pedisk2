@@ -1,15 +1,3 @@
-L2020 = $2020
-L2045 = $2045
-L4420 = $4420
-L454B = $454B
-L4552 = $4552
-L4944 = $4944
-L4C41 = $4C41
-L4E49 = $4E49
-L4F43 = $4F43
-L4F4C = $4F4C
-L5257 = $5257
-L5445 = $5445
 L790D = $790D
 L7A05 = $7A05
 L7A47 = $7A47
@@ -25,86 +13,17 @@ LFFD2 = $FFD2
     jmp start
 
 L7C03:
-    brk
+    !byte 0
 L7C04:
-    ora     #$0D
-    rol     ;a
-    rol     ;a
-    jsr     L4944
-    !byte   $53
-    !byte   $4B
-    jsr     L4F43
-    eor     $5250
-    eor     $53
-    !byte   $53
-    eor     #$4F
-    lsr     $2A20
-    rol     ;a
-    ora     L2020
-    jsr     L454B
-    eor     $4F42,y
-    eor     ($52,x)
-    !byte   $44
-    jsr     L4F4C
-    !byte   $43
-    !byte   $4B
-    eor     $44
-    brk
-    ora     $4F4D
-    lsr     $49,x
-    lsr     $2047
-    lsr     $49
-    jmp     L2045
-    brk
-    ora     $4320
-    eor     ($4E,x)
-    lsr     $544F
-    jsr     L4552
-    eor     ($44,x)
-    and     $4544
-    jmp     L5445
-    eor     $20
-    lsr     $49
-    jmp     L2045
-    brk
-    ora     $4320
-    eor     ($4E,x)
-    lsr     $544F
-    jsr     L5257
-    eor     #$54
-    eor     $20
-    lsr     $5745
-    jsr     L4E49
-    !byte   $44
-    eor     $58
-    and     L4552
-    lsr     $4F
-    !byte   $52
-    eor     $5441
-    jsr     L4944
-    !byte   $53
-    !byte   $4B
-    ora     L2020
-    jsr     L2020
-    jsr     L2020
-    jsr     L4C41
-    jmp     L4420
-    eor     ($54,x)
-    eor     ($20,x)
-    eor     #$53
-    jsr     L4F4C
-    !byte   $53
-    !byte   $54
-    and     ($00,x)
-    ora     $4320
-    eor     ($4E,x)
-    lsr     $544F
-    jsr     L5257
-    eor     #$54
-    eor     $20
-    lsr     $49
-    jmp     L2045
-    brk
+    !byte $09
+
+    !text $0d,"** DISK COMPRESSION **",$0d
+    !text "   KEYBOARD LOCKED",0
+    !text $0d,"MOVING FILE ",0
+    !text $0d," CANNOT READ-DELETE FILE ",0
+    !text $0d," CANNOT WRITE NEW INDEX-REFORMAT DISK",$0d
+    !text "         ALL DATA IS LOST!",0
+    !text $0d," CANNOT WRITE FILE ",0
 
 start:
     lda #$05
