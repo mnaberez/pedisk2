@@ -55,7 +55,7 @@ start:
     lda #$00
     sta $5F
     sta $61
-    lda #$1C
+    lda #$1C            ;TODO 28 sectors per track?
     sta $60
     jsr L7931
     lda $62
@@ -168,7 +168,7 @@ L7D69:
     sbc $7F99
     bcc L7D95
     sta $5E
-    lda #$1C
+    lda #$1C            ;TODO 28 sectors per track?
     sta $60
     lda #$00
     sta $5F
