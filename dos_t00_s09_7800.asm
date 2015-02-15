@@ -984,7 +984,7 @@ L7E85:  ldx     #$FF
 L7EA5:  jsr     LEEE6
         jmp     L7A05
 
-L7EAB:  cmp     #'L'    ;A-MACROASM/EDIT
+L7EAB:  cmp     #'L'    ;L-LOAD DISK PROGRAM
         beq     L7ED3
         cmp     #'S'    ;S-SAVE A PROGRAM
         beq     L7ED6
