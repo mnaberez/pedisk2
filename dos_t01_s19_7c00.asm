@@ -5,8 +5,8 @@ L7AD1 = $7AD1
 LEC74 = $EC74
 LECE4 = $ECE4
 LED3F = $ED3F
-LEFE7 = $EFE7
-LFFD2 = $FFD2
+puts = $EFE7
+chrout = $FFD2
 
     *=$7c00
 
@@ -17,18 +17,25 @@ L7C03:
 L7C04:
     !byte $09
 
+disk_compression:
     !text $0d,"** DISK COMPRESSION **",$0d
     !text "   KEYBOARD LOCKED",0
+moving_file:
     !text $0d,"MOVING FILE ",0
+cant_read_file:
     !text $0d," CANNOT READ-DELETE FILE ",0
+cant_write_index:
     !text $0d," CANNOT WRITE NEW INDEX-REFORMAT DISK",$0d
     !text "         ALL DATA IS LOST!",0
+cant_write_file
     !text $0d," CANNOT WRITE FILE ",0
 
 start:
-    lda #$05
-    ldy #$7C
-    jsr LEFE7
+    ;Print banner and "KEYBOARD LOCKED"
+    lda #<disk_compression
+    ldy #>disk_compression
+    jsr puts
+
     jsr L7AD1
     sta $7F91
     lda #$60
@@ -167,9 +174,12 @@ L7DB6:
     sta $B8
     jsr LECE4
     beq L7DE2
-    lda #$3E
-    ldy #$7C
-    jsr LEFE7
+
+    ;Print " CANNOT READ-DELETE FILE "
+    lda #<cant_read_file
+    ldy #>cant_read_file
+    jsr puts
+
     jsr L7EA0
     jmp L7E65
 L7DE2:
@@ -187,9 +197,12 @@ L7DEA:
     sta $7F92
     lda L7C04
     sta $7F93
-    lda #$30
-    ldy #$7C
-    jsr LEFE7
+
+    ;Print "MOVING FILE "
+    lda #<moving_file
+    ldy #>moving_file
+    jsr puts
+
     jsr L7EA0
     lda #$00
     sta $B7
@@ -227,9 +240,11 @@ L7E4B:
     bmi L7E4B
     bpl L7E65
 L7E5B:
-    lda #$9B
-    ldy #$7C
-    jsr LEFE7
+    ;Print "CANNOT WRITE FILE "
+    lda #<cant_write_file
+    ldy #>cant_write_file
+    jsr puts
+
     jsr L7EA0
 L7E65:
     lda #$08
@@ -244,9 +259,13 @@ L7E65:
     sty $7F93
     jsr LED3F
     beq L7E8A
-    lda #$59
-    ldy #$7C
-    jsr LEFE7
+
+    ;Print "CANNOT WRITE NEW INDEX-REFORMAT DISK"
+    ;  and "ALL DATA IS LOST!"
+    lda #<cant_write_index
+    ldy #>cant_write_index
+    jsr puts
+
     jmp L7A05
 L7E8A:
     lda #$04
@@ -262,7 +281,7 @@ L7EA0:
     ldy #$00
 L7EA2:
     lda ($4D),y
-    jsr LFFD2
+    jsr chrout
     iny
     cpy #$06
     bmi L7EA2
