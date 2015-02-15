@@ -8,6 +8,21 @@ LED3F  = $ED3F
 LEF7B  = $EF7B
 puts   = $EFE7
 
+latch        = $e900    ;Drive Select Latch
+                        ;  bit function
+                        ;  === ======
+                        ;  7-4 not used
+                        ;  3   motor ??
+                        ;  2   drive 3 select
+                        ;  1   drive 2 select
+                        ;  0   drive 1 select
+
+dos         = $7800     ;Base address for the RAM-resident portion
+drive_sel   = dos+$0791 ;Drive select bit pattern to write to the latch
+track       = dos+$0792 ;Track number to write to WD1793 (0-76 or $00-4c)
+sector      = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
+num_sectors = dos+$0796 ;Number of sectors to read or write
+
     *=$7c00
 
     jmp start
@@ -70,12 +85,12 @@ L7CAE:
 L7CC8:
     jsr L7DCD
     lda $7F97
-    sta $7F91
+    sta drive_sel
     lda #$00
     sta $7F99
-    sta $7F92
+    sta track
     lda #$01
-    sta $7F93
+    sta sector
     lda #$00
     sta $B7
     lda #$7F
@@ -98,13 +113,13 @@ L7CFE:
     jsr puts
 
     lda #$00
-    sta $E900
+    sta latch
     jsr L7DDB
     lda #$00
-    sta $7F92
+    sta track
     lda #$01
-    sta $7F93
-    sta $7F96
+    sta sector
+    sta num_sectors
     lda #$00
     sta $B7
     lda #$7E
@@ -169,10 +184,10 @@ L7D92:
     jmp L7CEE
 L7D95:
     lda #$00
-    sta $7F92
+    sta track
     lda #$01
-    sta $7F93
-    sta $7F96
+    sta sector
+    sta num_sectors
     lda #$00
     sta $B7
     lda #$7E
@@ -207,13 +222,13 @@ L7DDB:
     bne L7DDB
     rts
 L7DE3:
-    sta $7F91
+    sta drive_sel
     lda $7F99
-    sta $7F92
+    sta track
     lda #$01
-    sta $7F93
+    sta sector
     lda $7F9B
-    sta $7F96
+    sta num_sectors
     ldx #$00
     stx $B7
     lda #$04
