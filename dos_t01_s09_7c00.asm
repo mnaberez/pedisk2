@@ -19,67 +19,16 @@ LFFD2 = $FFD2
 
     *=$7c00
 
-    jmp     start
+    jmp start
 
-    ora     $500D
-    eor     $44
-    eor     #$53
-    !byte   $4B
-    jsr     L4949
-    jsr     L4944
-    !byte   $53
-    !byte   $4B
-    jsr     L4F46
-    !byte   $52
-    eor     $5441
-    ora     $2020
-    jsr     L4F44
-    eor     $42,x
-    jmp     L2045
-    !byte   $44
-    eor     $4E
-    !byte   $53
-    eor     #$54
-    eor     L000D,y
-    ora     $5553
-    !byte   $52
-    eor     $3F
-    jsr     L5928
-    and     $4559
-    !byte   $53
-    and     #$00
-    ora     $414E
-    eor     $3F45
-    jsr     L000D
-    ora     $4946
-    lsr     $5349
-    pha
-    eor     $44
-    and     ($00,x)
-    ora     $5250
-    !byte   $4F
-    !byte   $54
-    eor     $43
-    !byte   $54
-    eor     $44
-    jsr     L4944
-    !byte   $53
-    !byte   $4B
-    and     ($21,x)
-    ora     $2000
-    eor     $52
-    !byte   $52
-    !byte   $4F
-    !byte   $52
-    and     ($00,x)
-    ora     L4F46
-    !byte   $52
-    eor     $5441
-    jsr     L5254
-    eor     ($43,x)
-    !byte   $4B
-    !byte   $20
-    brk
+    !text $0d,$0d,"PEDISK II DISK FORMAT"
+    !text $0d,"   DOUBLE DENSITY",$0d,0
+    !text $0d,"SURE? (Y-YES)",0
+    !text $0d,"NAME? ",$0d,0
+    !text $0d,"FINISHED!",0
+    !text $0d,"PROTECTED DISK!!",$0d,0
+    !text " ERROR!",0
+    !text $0d,"FORMAT TRACK ",0
 
 start:
     lda #$03
@@ -400,35 +349,6 @@ L7ED6:
     jsr LECCC
     rts
 
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
+filler:
+    !byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+    !byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
