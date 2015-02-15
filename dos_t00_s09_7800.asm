@@ -414,16 +414,24 @@ L7A53:  tya
         jmp     L7A45
 L7A5B:  stx     L7F8F
         jsr     LEE33
-        bpl     L7A66
+        !byte $10
+
+L7A62:  ;Used as a string
+        !byte $03
         jmp     LEB5E
-L7A66:  pha
+        pha
         jsr     L0076
+
+L7A6A: ;Used as a string
         cmp     #$A2
         bne     L7AD6
         pla
         bne     L7A75
         lda     #$32
-L7A73:  bne     L7ADB
+L7A73:  !byte $d0
+
+L7A74:  ;Used as a string
+        !byte $66
 L7A75:  lda     #$64
         sta     L7FAE
         lda     #$80
@@ -574,12 +582,15 @@ L7BA6:  jsr     L7A0A
         lda     #$07
         jmp     L7B3D
 L7BB1:  jsr     L7B2F
-L7BB4:  lda     L7E80,x
+L7BB4:  ;Used as a string
+        lda     L7E80,x
         sta     L7FA0,y
         dex
         dey
         bpl     L7BB4
         lda     #$00
+
+L7BC0: ;Used as a string
         sta     L7FB5
         rts
 L7BC4:  ldy     #$00
@@ -1039,8 +1050,8 @@ L7F0E:  sta     L7FA0,y
         jsr     LEE9E
         rts
 
-        lda     #$62
-        ldy     #$7A
+        lda     #<L7A62
+        ldy     #>L7A62
         jsr     puts
 
         ldy     #$00
@@ -1061,9 +1072,11 @@ L7F47:  jsr     LFFCF
         jsr     L7ADB
         sta     L7FB1
         rts
-L7F51:  lda     #$6A
-        ldy     #$7A
+
+L7F51:  lda     #<L7A6A
+        ldy     #>L7A6A
         jsr     puts
+
         jsr     l_ef59  ;Get a character and test for {STOP}
         cmp     #'0'
         bmi     L7F51
@@ -1148,9 +1161,11 @@ L7FBD:  sta     L7FA9
 L7FE0:  ldx     $A97F
         brk
         sta     L7FAF
-        lda     #$74
-        ldy     #$7A
+
+        lda     #<L7A74
+        ldy     #>L7A74
         jsr     puts
+
         jsr     LEF08
         lda     #$0D
         jsr     LFFD2
@@ -1170,9 +1185,11 @@ L7FE0:  ldx     $A97F
 
 L800F:  sei
 L8010:  jmp     L7A05
-        lda     #$B4
-        ldy     #$7B
+
+        lda     #<L7BB4
+        ldy     #>L7BB4
         jsr     puts
+
         jsr     L7AA3
         jsr     LEE33
         tax
@@ -1189,8 +1206,8 @@ L8031:  jmp     L7A25
 
         !text $0d,"DUPLICATE FILE NAME-CANNOT SAVE",$0d,0
 
-L8062:  lda     #$C0
-        ldy     #$7B
+L8062:  lda     #<L7BC0
+        ldy     #>L7BC0
         jsr     puts
 
         jmp     L7A05
