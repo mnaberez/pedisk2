@@ -81,7 +81,6 @@ LEE33 = $EE33
 LEE9E = $EE9E
 LEEE6 = $EEE6
 LEF08 = $EF08
-LEF59 = $EF59
 LEF83 = $EF83
 LFFCF = $FFCF
 LFFD2 = $FFD2
@@ -975,31 +974,35 @@ L7E85:  ldx     #$FF
         jsr     LFFD2
         lda     #$3E
         jsr     LFFD2
-        jsr     LEF59
-        cmp     #$41
+
+        jsr     l_ef59  ;Get a character and test for {STOP}
+        cmp     #'A'
         bcc     L7EA5
-        cmp     #$5B
+        cmp     #'Z'+1
         bcc     L7EAB
+
 L7EA5:  jsr     LEEE6
         jmp     L7A05
-L7EAB:  cmp     #$4C
+
+L7EAB:  cmp     #'L'    ;A-MACROASM/EDIT
         beq     L7ED3
-        cmp     #$53
+        cmp     #'S'    ;S-SAVE A PROGRAM
         beq     L7ED6
-        cmp     #$4D
+        cmp     #'M'    ;M-MEMORY ALTER
         beq     L7ED9
-        cmp     #$52
+        cmp     #'R'    ;R-RE-ENTER BASIC
         beq     L7EFD
-        cmp     #$47
+        cmp     #'G'    ;G-GO TO MEMORY
         beq     L7EDC
-        cmp     #$58
+        cmp     #'X'    ;X-EXECUTE DISK FILE
         beq     L7EDF
-        cmp     #$4B
+        cmp     #'K'    ;K-KILL A FILE
         beq     L7ED0
         jsr     L7A89
         txa
         bne     L7E85
         jmp     L7C00
+
 L7ED0:  jmp     L7B93
 L7ED3:  jmp     L7AEA
 L7ED6:  jmp     L7B2B
@@ -1061,10 +1064,10 @@ L7F47:  jsr     LFFCF
 L7F51:  lda     #$6A
         ldy     #$7A
         jsr     puts
-        jsr     LEF59
-        cmp     #$30
+        jsr     l_ef59  ;Get a character and test for {STOP}
+        cmp     #'0'
         bmi     L7F51
-        cmp     #$33
+        cmp     #'3'
         bpl     L7F51
         and     #$03
         tax
