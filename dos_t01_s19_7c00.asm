@@ -27,7 +27,7 @@ cant_read_file:
 cant_write_index:
     !text $0d," CANNOT WRITE NEW INDEX-REFORMAT DISK",$0d
     !text "         ALL DATA IS LOST!",0
-cant_write_file
+cant_write_file:
     !text $0d," CANNOT WRITE FILE ",0
 
 start:
@@ -129,10 +129,10 @@ L7D45:
     lda L7C04
     clc
     adc $59
-    cmp #$1D
+    cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
     bmi L7D7B
     sec
-    sbc #$1C
+    sbc #$1C            ;TODO 28 sectors per track?
     inc L7C03
 L7D7B:
     sta L7C04
