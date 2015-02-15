@@ -22,70 +22,13 @@ LEFE7  = $EFE7
 
     jmp start
 
-    ora     $4550
-    !byte   $44
-    eor     #$53
-    !byte   $4B
-    jsr     L4949
-    jsr     L4F43
-    bvc     L7C6B
-    jsr     L5455
-    eor     #$4C
-    eor     #$54
-    eor     $430D,y
-    !byte   $4F
-    bvc     L7C78
-    jsr     L5246
-    !byte   $4F
-    eor     $4420
-    !byte   $52
-    eor     #$56
-    eor     $20
-    !byte   $23
-    brk
-    ora     L4F43
-    bvc     L7C8B
-    jsr     L4F54
-    jsr     L5244
-    eor     #$56
-    eor     $20
-    !byte   $23
-    brk
-    ora     $5550
-    !byte   $54
-    jsr     L524F
-    eor     #$47
-    eor     #$4E
-    eor     ($4C,x)
-    brk
-    ora     $5550
-    !byte   $54
-    jsr     L4F43
-    bvc     L7CAE
-    jsr     L4E49
-    jsr     L5244
-    eor     #$56
-    eor     $0D
-    pha
-    eor     #$54
-    jsr     L2052
-    !byte   $4B
-    eor     $59
-    brk
-    !byte   $0D
-    rol     ;a
-L7C6B:
-    jsr     L5257
-    !byte   $4F
-    lsr     $2047
-    !byte   $44
-    eor     #$53
-    !byte   $4B
-    !byte   $20
-    rol     ;a
-L7C78:
-    !byte   $0D
-    brk
+    !text $0d,"PEDISK II COPY UTILITY",$0d
+    !text "COPY FROM DRIVE #",0
+    !text $0d,"COPY TO DRIVE #",0
+    !text $0d,"PUT ORIGINAL",0
+    !text $0d,"PUT COPY IN DRIVE"
+    !text $0d,"HIT R KEY",0
+    !text $0d,"* WRONG DISK *",$0d,0
 
 start:
     ldy #$7C
