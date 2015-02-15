@@ -90,7 +90,7 @@ L7CD1:
     ldx $7F92
     jsr LCF83
     inc $7F92
-    lda #$28
+    lda #$28            ;TODO 40/41 tracks?
     cmp $7F92
     bpl L7CD1
     lda #$00
@@ -341,7 +341,7 @@ L7EA6:
     beq L7EA6
     lda #$F7
     sta $E983
-    ldx #$1C
+    ldx #$1C            ;TODO 28 sectors per track?
 L7EB2:
     lda #$E6
 L7EB4:
@@ -357,7 +357,7 @@ L7EC3:
     bne L7EC3
     lda #$4E
     sta $E983
-    cpy #$1D
+    cpy #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
     bpl L7ED4
     jmp L7DEA
 L7ED4:
