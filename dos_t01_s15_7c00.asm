@@ -61,7 +61,7 @@ start:
     lda $62
     sta $7F9D
     sta $7F9B
-    lda #$28
+    lda #$28            ;TODO 40/41 tracks?
     sec
     sbc $7F9C
     sta $7F9E
@@ -163,7 +163,7 @@ L7D56:
 L7D69:
     cmp $7F9E
     bmi L7D8A
-    lda #$28
+    lda #$28            ;TODO 40/41 tracks?
     sec
     sbc $7F99
     bcc L7D95
