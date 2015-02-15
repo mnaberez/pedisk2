@@ -1,13 +1,3 @@
-L2052  = $2052
-L4949  = $4949
-L4E49  = $4E49
-L4F43  = $4F43
-L4F54  = $4F54
-L5244  = $5244
-L5246  = $5246
-L524F  = $524F
-L5257  = $5257
-L5455  = $5455
 L7931  = $7931
 L7A05  = $7A05
 L7AD1  = $7AD1
@@ -16,24 +6,34 @@ LECE4  = $ECE4
 LED3A  = $ED3A
 LED3F  = $ED3F
 LEF7B  = $EF7B
-LEFE7  = $EFE7
+puts   = $EFE7
 
     *=$7c00
 
     jmp start
 
+copy_from:
     !text $0d,"PEDISK II COPY UTILITY",$0d
     !text "COPY FROM DRIVE #",0
+copy_to:
     !text $0d,"COPY TO DRIVE #",0
+put_original:
     !text $0d,"PUT ORIGINAL",0
-    !text $0d,"PUT COPY IN DRIVE"
+put_copy:
+    !text $0d,"PUT COPY"
+in_drive:
+    !text " IN DRIVE"
+hit_r_key:
     !text $0d,"HIT R KEY",0
+wrong_disk:
     !text $0d,"* WRONG DISK *",$0d,0
 
 start:
-    ldy #$7C
-    lda #$03
-    jsr LEFE7
+    ;Print banner and "COPY FROM DRIVE #"
+    ldy #>copy_from
+    lda #<copy_from
+    jsr puts
+
     lda #$08
     sta $7F9C
     sta $5E
@@ -57,9 +57,12 @@ L7C8B:
     jsr L7AD1
 L7CAE:
     sta $7F97
-    ldy #$7C
-    lda #$2D
-    jsr LEFE7
+
+    ;Print "COPY TO DRIVE #"
+    ldy #>copy_to
+    lda #<copy_to
+    jsr puts
+
     jsr L7AD1
     sta $7F98
     cmp $7F97
@@ -91,9 +94,11 @@ L7CEE:
     bit $7F9A
     bpl L7D4D
 L7CFE:
-    ldy #$7C
-    lda #$4C
-    jsr LEFE7
+    ;Print "PUT COPY"
+    ldy #>put_copy
+    lda #<put_copy
+    jsr puts
+
     lda #$00
     sta $E900
     jsr L7DDB
@@ -122,9 +127,12 @@ L7D3C:
     lda $7E0F
     cmp #$FF
     beq L7D4D
-    lda #$69
-    ldy #$7C
-    jsr LEFE7
+
+    ;Print "* WRONG DISK *"
+    lda #<wrong_disk
+    ldy #>wrong_disk
+    jsr puts
+
     jmp L7CFE
 L7D4D:
     lda $7F98
@@ -186,12 +194,15 @@ L7D95:
     sta $0402
     jmp L7A05
 L7DCD:
-    ldy #$7C
-    lda #$3E
-    jsr LEFE7
-    lda #$55
-    ldy #$7C
-    jsr LEFE7
+    ;Print "PUT ORIGINAL"
+    ldy #>put_original
+    lda #<put_original
+    jsr puts
+
+    ;Print "IN DRIVE"
+    lda #<in_drive
+    ldy #>in_drive
+    jsr puts
 L7DDB:
     jsr LEF7B
     cmp #$52
