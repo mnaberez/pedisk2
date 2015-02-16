@@ -12,6 +12,7 @@ latch        = $e900    ;Drive Select Latch
 
 valtyp      = $07       ;Data type of value: 0=numeric, $ff=string
 dir_ptr     = $22       ;Pointer: PEDISK directory **
+hex_save_a  = $26       ;PEDISK temporarily saves A during hex conversion **
 edit_pos    = $27       ;PEDISK memory editor position on current line **
 txttab      = $28       ;Pointer: Start of BASIC text
 vartab      = $2a       ;Pointer: Start of BASIC variables
@@ -1271,12 +1272,12 @@ L7FBD:
     php
     sec
     sbc L7FA8
-    sta $26
+    sta hex_save_a
     lda $67
     sbc L7FA9
     plp
     adc #$00
-    asl $26
+    asl hex_save_a
     rol ;a
     !byte $8D
 L7FE0:
