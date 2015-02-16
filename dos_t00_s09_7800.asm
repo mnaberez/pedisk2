@@ -723,9 +723,9 @@ L7C56:
     lda L7FBB
     sta L7F93
     lda #$00
-    sta $B7
+    sta target_ptr
     lda #$7F
-    sta $B8
+    sta target_ptr+1
     lda L7FB1
     sta L7F91
     rts
