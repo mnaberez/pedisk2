@@ -7,29 +7,6 @@ latch        = $e900    ;Drive Select Latch
                         ;  1   drive 2 select
                         ;  0   drive 1 select
 
-chrget = $70 ;Subroutine: Get Next Byte of BASIC Text
-L0076 = $0076
-L3400 = $3400
-LC873 = $C873
-LCF6D = $CF6D
-check_colon = $EA44
-deselect = $EB0B
-restore = $EB5E
-put_spc = $EB7A
-put_spc_hex = $EB7F
-put_hex_byte = $EB84
-disk_error = $EC96
-read_a_sector = $ECDF
-read_sectors = $ECE4
-write_a_sector = $ED3A
-write_sectors = $ED3F
-find_file = $EE33
-load_file = $EE9E
-l_ef59 = $EF59 ;Get a character and test for {STOP}
-puts = $EFE7
-chrin = $FFCF
-chrout = $FFD2
-
 ;In the zero page locations below, ** indicates the PEDISK destroys
 ;a location that is used for some other purpose by CBM BASIC 4.
 
@@ -41,6 +18,8 @@ vartab      = $2a       ;Pointer: Start of BASIC variables
 varpnt      = $44       ;Pointer: Current BASIC variable
 open_track  = $56       ;Next track open for a new file **
 open_sector = $57       ;Next sector open for a new file **
+chrget      = $70       ;Subroutine: Get Next Byte of BASIC Text
+L0076       = $0076
 txtptr      = $77       ;Pointer: Current Byte of BASIC Text
 target_ptr  = $b7       ;Pointer: PEDISK target address for memory ops **
 
@@ -61,31 +40,35 @@ filename    = dos+$07a0 ;6 byte buffer used to store filename
 wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
 drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename
 
-L0070 = $70
-L0076 = $76
-L0D00 = $0D00
+L3400 = $3400
 LB8F6 = $B8F6
 LC12B = $C12B
-LEA44 = $EA44
-LEB0B = $EB0B
-LEB5E = $EB5E
-LEB7A = $EB7A
-LEB7F = $EB7F
-LEB84 = $EB84
-LEC0D = $EC0D
-LEC96 = $EC96
-LECDF = $ECDF
-LECE4 = $ECE4
-LED3A = $ED3A
-LED3F = $ED3F
-LEE33 = $EE33
-LEE9E = $EE9E
-LEEE6 = $EEE6
-LEF08 = $EF08
-LEF83 = $EF83
+LC873 = $C873
+LCF6D = $CF6D
+
+check_colon    = $EA44
+deselect       = $EB0B
+restore        = $EB5E
+put_spc        = $EB7A
+put_spc_hex    = $EB7F
+put_hex_byte   = $EB84
+disk_error     = $EC96
+l_ec0d         = $EC0D
+read_a_sector  = $ECDF
+read_sectors   = $ECE4
+write_a_sector = $ED3A
+write_sectors  = $ED3F
+find_file      = $EE33
+load_file      = $EE9E
+not_found      = $EEE6
+l_ef08         = $EF08
+l_ef59         = $EF59
+edit_memory    = $EF83
+puts           = $EFE7
+chrin          = $FFCF
+chrout         = $FFD2
 
         *=dos
-
 
 dos_save:
         jmp     _dos_save
@@ -366,7 +349,7 @@ L7A01:  eor     #$25
 _dos_save:  !byte   $20
 L7A05:  clc
         sei
-        jmp     LEB5E
+        jmp     restore
 L7A0A:  ldx     #$03
         lda     #$7E
         sta     $23
@@ -412,12 +395,12 @@ L7A53:  tya
         tay
         jmp     L7A45
 L7A5B:  stx     L7F8F
-        jsr     LEE33
+        jsr     find_file
         !byte $10
 
 L7A62:  ;Used as a string
         !byte $03
-        jmp     LEB5E
+        jmp     restore
         pha
         jsr     L0076
 
@@ -444,10 +427,10 @@ L7A89:  !byte   $7F
         sta     L7FAA
         sta     L7FAB
         sta     L7FAF
-        jsr     L0070
+        jsr     chrget
         cmp     #$C3
         bne     L7AAC
-        jsr     L0070
+        jsr     chrget
         bcs     L7AB3
         jsr     LB8F6
         !byte   $A5
@@ -516,7 +499,7 @@ L7B22:  lda     L7FA0,y
         dey
         !byte   $10
 L7B2B:  !byte   $F6
-L7B2C:  jmp     LEB5E
+L7B2C:  jmp     restore
 L7B2F:  lda     L7F8F
         asl     ;a
         asl     ;a
@@ -534,7 +517,7 @@ L7B44:  cmp     #$00
         beq     L7B52
         cmp     #$3A
         beq     L7B52
-        jsr     L0070
+        jsr     chrget
         jmp     L7B44
 L7B52:  jmp     L7B00
 L7B55:  lda     #$49
@@ -561,11 +544,11 @@ _dos_close:  jsr     L7BA6
         lda     ($77),y
         cmp     #$80
         bne     L7B91
-        jsr     L0070
+        jsr     chrget
         jsr     L7C22
         lda     #$FF
         sta     L7F00
-        jsr     LED3A
+        jsr     write_a_sector
         bne     L7BA3
 L7B91:  lda     #$FF
 L7B93:  sta     L7FA0
@@ -574,7 +557,7 @@ L7B93:  sta     L7FA0
         sta     $E900
         lda     #$FF
         jmp     L7B00
-L7BA3:  jmp     LEB5E
+L7BA3:  jmp     restore
 L7BA6:  jsr     L7A0A
         inx
         bne     L7BB1
@@ -596,7 +579,7 @@ L7BC4:  ldy     #$00
         lda     ($77),y
         cmp     #$B9
         bne     L7C22
-        jsr     L0070
+        jsr     chrget
         jsr     L7B55
         ldy     #$00
         lda     ($44),y
@@ -666,7 +649,7 @@ L7C56:  lda     L7FBB
 
 _dos_input:  jsr     L7BA6
         jsr     L7BC4
-        jsr     LECDF
+        jsr     read_a_sector
         bne     L7CA2
         jsr     LC12B
         bit     $07
@@ -689,7 +672,7 @@ L7C91:  ldy     #$00
         lda     #$7F
         sta     ($44),y
         jmp     L7B00
-L7CA2:  jmp     LEB5E
+L7CA2:  jmp     restore
 
 _dos_print:  jsr     L7BA6
         jsr     L7BC4
@@ -716,11 +699,11 @@ L7CD2:  lda     ($22),y
         sta     L7F01,y
         dey
         bpl     L7CD2
-        jsr     LED3A
+        jsr     write_a_sector
         bne     L7CA2
         jmp     L7B00
 
-_dos_run:  jsr     LEE9E
+_dos_run:  jsr     load_file
         txa
         bne     L7D10
         lda     #$0C
@@ -739,12 +722,12 @@ L7CF3:  lda     L7FE0,x
         ldy     L7F8A
         ldx     L7F89
         lda     #$8A
-        jmp     LEA44
+        jmp     check_colon
         txa
         brk
         brk
         brk
-L7D10:  jmp     LEB5E
+L7D10:  jmp     restore
 
 _dos_list:
         ;Print "DEVICE?"
@@ -991,7 +974,7 @@ L7E85:  ldx     #$FF
         cmp     #'Z'+1
         bcc     L7EAB
 
-L7EA5:  jsr     LEEE6
+L7EA5:  jsr     not_found
         jmp     L7A05
 
 L7EAB:  cmp     #'L'    ;L-LOAD DISK PROGRAM
@@ -1016,7 +999,7 @@ L7EAB:  cmp     #'L'    ;L-LOAD DISK PROGRAM
 L7ED0:  jmp     L7B93
 L7ED3:  jmp     L7AEA
 L7ED6:  jmp     L7B2B
-L7ED9:  jmp     LEF83
+L7ED9:  jmp     edit_memory
 L7EDC:  jmp     L7B1A
 L7EDF:  jmp     L7B12
 
@@ -1026,7 +1009,7 @@ L7EDF:  jmp     L7B12
 
         !text $0d,"ENTRY? ",0
 
-L7EFD:  jsr     L0070
+L7EFD:  jsr     chrget
 L7F00:  !byte   $A9
 L7F01:  !byte   $EB
         pha
@@ -1046,7 +1029,7 @@ L7F0E:  sta     L7FA0,y
         sta     L7FA5
         ldy     #$01
         sty     L7FB1
-        jsr     LEE9E
+        jsr     load_file
         rts
 
         lda     #<L7A62
@@ -1088,7 +1071,7 @@ L7F51:  lda     #<L7A6A
         jsr     L7AF0
         jmp     L7A05
         jsr     L7AA3
-        jsr     LEE9E
+        jsr     load_file
         txa
         bne     L7F91
         ldy     #$0A
@@ -1142,7 +1125,7 @@ L7FBC:  !byte   $67
 L7FBD:  sta     L7FA9
         lda     #$2D
         jsr     chrout
-        jsr     LEF08
+        jsr     l_ef08
         lda     $66
         clc
         adc     #$7F
@@ -1165,7 +1148,7 @@ L7FE0:  ldx     $A97F
         ldy     #>L7A74
         jsr     puts
 
-        jsr     LEF08
+        jsr     l_ef08
         lda     #$0D
         jsr     chrout
         lda     $66
@@ -1174,7 +1157,7 @@ L7FE0:  ldx     $A97F
         sta     L7FA7
         lda     #$05
         sta     L7FAA
-        jsr     LEE33
+        jsr     find_file
 
         bmi     L8010
         tax
@@ -1190,14 +1173,14 @@ L8010:  jmp     L7A05
         jsr     puts
 
         jsr     L7AA3
-        jsr     LEE33
+        jsr     find_file
         tax
         bmi     L802E
         bne     L8031
         lda     #$FF
         ldy     #$05
         sta     ($22),y
-        jsr     LED3A
+        jsr     write_a_sector
 L802E:  jmp     L7A05
 L8031:  jmp     L7A25
 
@@ -1214,7 +1197,7 @@ L8062:  lda     #<L7BC0
         bne     L8072
         rts
 L8072:  lda     #$03
-        jsr     LEC0D
+        jsr     l_ec0d
         dec     L7F8C
         bne     $8053
         lda     #$10
