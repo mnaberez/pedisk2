@@ -572,7 +572,7 @@ L7B2F:
 L7B3D:
     sta L7FB5
     ldy #$00
-    lda ($77),y
+    lda (txtptr),y
 L7B44:
     cmp #$00
     beq L7B52
@@ -589,25 +589,25 @@ L7B59:
     lda #$43
 L7B5B:
     sta L7A01
-    lda $77
+    lda txtptr
     pha
-    lda $78
+    lda txtptr+1
     pha
     lda #$00
-    sta $77
+    sta txtptr
     lda #$7A
-    sta $78
+    sta txtptr+1
     jsr LC12B
     pla
-    sta $78
+    sta txtptr+1
     pla
-    sta $77
+    sta txtptr
     rts
 
 _dos_close:
     jsr L7BA6
     ldy #$00
-    lda ($77),y
+    lda (txtptr),y
     cmp #$80
     bne L7B91
     jsr chrget
@@ -650,7 +650,7 @@ L7BC0:
     rts
 L7BC4:
     ldy #$00
-    lda ($77),y
+    lda (txtptr),y
     cmp #$B9
     bne L7C22
     jsr chrget
@@ -800,9 +800,9 @@ _dos_run:
     txa
     bne L7D10
     lda #$0C
-    sta $77
+    sta txtptr
     lda #$7D
-    sta $78
+    sta txtptr+1
     ldx #$1F
     sei
 L7CF3:
