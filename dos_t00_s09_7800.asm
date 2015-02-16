@@ -375,19 +375,19 @@ L7A05:
 L7A0A:
     ldx #$03
     lda #$7E
-    sta $23
+    sta dir_ptr+1
     lda #$E0
 L7A12:
-    sta $22
+    sta dir_ptr
     ldy #$05
 L7A16:
-    lda ($22),y
+    lda (dir_ptr),y
     cmp L7FA0,y
     bne L7A2D
     dey
     bpl L7A16
     ldy #$11
-    lda ($22),y
+    lda (dir_ptr),y
     !byte   $CD
 L7A25:
     lda ($7F),y
@@ -398,7 +398,7 @@ L7A29:
 L7A2D:
     dex
     bmi L7A29
-    lda $22
+    lda dir_ptr
     sec
     sbc #$20
     bne L7A12
@@ -512,7 +512,7 @@ L7ADB:
 L7ADE:
     ldy #$0F
 L7AE0:
-    lda ($22),y
+    lda (dir_ptr),y
     sta L7FA0,y
     dey
     bpl L7AE0
@@ -782,13 +782,13 @@ L7CC3:
     sta L7F00
     iny
     lda (varpnt),y
-    sta $22
+    sta dir_ptr
     iny
     lda (varpnt),y
-    sta $23
+    sta dir_ptr+1
     ldy #$7E
 L7CD2:
-    lda ($22),y
+    lda (dir_ptr),y
     sta L7F01,y
     dey
     bpl L7CD2
@@ -1201,13 +1201,13 @@ L7F51:
     txa
     bne L7F91
     ldy #$0A
-    lda ($22),y
+    lda (dir_ptr),y
     cmp #$05
     beq L7F84
     jmp L7A25
 L7F84:
-    ldy     #$06
-    lda     ($22),y
+    ldy #$06
+    lda (dir_ptr),y
     !byte   $85
 L7F89:
     !byte   $66
@@ -1321,7 +1321,7 @@ L8010:
     bne L8031
     lda #$FF
     ldy #$05
-    sta ($22),y
+    sta (dir_ptr),y
     jsr write_a_sector
 L802E:
     jmp L7A05
