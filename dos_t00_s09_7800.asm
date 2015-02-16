@@ -18,6 +18,7 @@ vartab      = $2a       ;Pointer: Start of BASIC variables
 varpnt      = $44       ;Pointer: Current BASIC variable
 open_track  = $56       ;Next track open for a new file **
 open_sector = $57       ;Next sector open for a new file **
+edit_ptr    = $66       ;Pointer: PEDISK current address of memory editor **
 chrget      = $70       ;Subroutine: Get Next Byte of BASIC Text
 L0076       = $0076
 txtptr      = $77       ;Pointer: Current Byte of BASIC Text
@@ -1290,9 +1291,9 @@ L7FE0:
     jsr l_ef08
     lda #$0D
     jsr chrout
-    lda $66
+    lda edit_ptr
     sta L7FA6
-    lda $67
+    lda edit_ptr+1
     sta L7FA7
     lda #$05
     sta L7FAA
