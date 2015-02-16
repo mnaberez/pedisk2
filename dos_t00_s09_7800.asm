@@ -496,10 +496,10 @@ L7AC2:
     bne L7ADB
 L7AC6:
     ldy #$00
-    lda ($44),y
+    lda (varpnt),y
     sta L7FAF
     iny
-    lda ($44),y
+    lda (varpnt),y
     sta L7FAE
     jmp L7AAC
 L7AD6:
@@ -531,22 +531,22 @@ L7B00:
     jsr L7B55
     ldy #$00
     lda L7FB3
-    sta ($44),y
+    sta (varpnt),y
     iny
     lda L7FB2
-    sta ($44),y
+    sta (varpnt),y
     !byte $20
     !byte $59
 L7B12:
     !byte $7B
     ldy #$00
     lda #$00
-    sta ($44),y
+    sta (varpnt),y
     !byte $AD
 L7B1A:
     lda $7F,x
     iny
-    sta ($44),y
+    sta (varpnt),y
     jsr L7B2F
 L7B22:
     lda L7FA0,y
@@ -656,10 +656,10 @@ L7BC4:
     jsr chrget
     jsr L7B55
     ldy #$00
-    lda ($44),y
+    lda (varpnt),y
     sta L7FB3
     iny
-    lda ($44),y
+    lda (varpnt),y
     sta L7FB2
     ora L7FB3
     bne L7BE9
