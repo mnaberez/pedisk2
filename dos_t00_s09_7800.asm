@@ -198,9 +198,9 @@ L78F1:
     lda $7FAD           ;sector
     clc
     adc $59
-    cmp #29
+    cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
     bmi L7902
-    sbc #28
+    sbc #$1C            ;TODO 28 sectors per track?
     inc $58
 L7902:
     sta $59
@@ -217,7 +217,7 @@ L790D:
     lda $7FAF
     sbc #$00
     sta $5F
-    lda #$1C
+    lda #$1C            ;TODO 28 sectors per track?
     sta $60
     lda #$00
     sta $61
@@ -687,10 +687,10 @@ L7C00:
     adc L7FAC
     sta L7FBA
     pla
-    cmp #$1D
+    cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
     bcc L7C1C
     inc L7FBA
-    sbc #$1C
+    sbc #$1C            ;TODO 28 sectors per track?
 L7C1C:
     sta L7FBB
     jmp L7C3C
@@ -701,7 +701,7 @@ L7C22:
 L7C2A:
     inc L7FBB
     lda L7FBB
-    cmp #$1D
+    cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
     bcc L7C3C
     inc L7FBA
     lda #$01
