@@ -750,13 +750,13 @@ L7C82:
     bne L7C7F
 L7C91:
     ldy #$00
-    sta ($44),y
+    sta (varpnt),y
     iny
     lda #$01
-    sta ($44),y
+    sta (varpnt),y
     iny
     lda #$7F
-    sta ($44),y
+    sta (varpnt),y
     jmp L7B00
 L7CA2:
     jmp restore
@@ -772,7 +772,7 @@ L7CB4:
     jmp L7B3D
 L7CB7:
     ldy #$00
-    lda ($44),y
+    lda (varpnt),y
     cmp #$80
     bcc L7CC3
     lda #$0A
@@ -780,10 +780,10 @@ L7CB7:
 L7CC3:
     sta L7F00
     iny
-    lda ($44),y
+    lda (varpnt),y
     sta $22
     iny
-    lda ($44),y
+    lda (varpnt),y
     sta $23
     ldy #$7E
 L7CD2:
