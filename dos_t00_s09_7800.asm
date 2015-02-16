@@ -27,6 +27,7 @@ find_file = $EE33
 load_file = $EE9E
 l_ef59 = $EF59 ;Get a character and test for {STOP}
 puts = $EFE7
+chrin = $FFCF
 chrout = $FFD2
 
 ;In the zero page locations below, ** indicates the PEDISK destroys
@@ -82,8 +83,6 @@ LEE9E = $EE9E
 LEEE6 = $EEE6
 LEF08 = $EF08
 LEF83 = $EF83
-LFFCF = $FFCF
-LFFD2 = $FFD2
 
         *=dos
 
@@ -975,16 +974,16 @@ L7E6E:  txa
         !byte   $B2
         and     $B506,y
 L7E80:  lda     #$93
-        jsr     LFFD2
+        jsr     chrout
 L7E85:  ldx     #$FF
         txs
         lda     #$00
         sta     $E900
         lda     #$0D
-        jsr     LFFD2
-        jsr     LFFD2
+        jsr     chrout
+        jsr     chrout
         lda     #$3E
-        jsr     LFFD2
+        jsr     chrout
 
         jsr     l_ef59  ;Get a character and test for {STOP}
         cmp     #'A'
@@ -1055,7 +1054,7 @@ L7F0E:  sta     L7FA0,y
         jsr     puts
 
         ldy     #$00
-L7F2C:  jsr     LFFCF
+L7F2C:  jsr     chrin
         cmp     #$3A
         beq     L7F3B
         sta     L7FA0,y
@@ -1068,7 +1067,7 @@ L7F3D:  cpy     #$06
         sta     L7FA0,y
         iny
         bne     L7F3D
-L7F47:  jsr     LFFCF
+L7F47:  jsr     chrin
         jsr     L7ADB
         sta     L7FB1
         rts
@@ -1113,7 +1112,7 @@ L7F93:  beq     L800F
 L7F96:  asl     $224C
         !byte   $7B
         lda     #$0D
-        jsr     LFFD2
+        jsr     chrout
         !byte   $20
 L7FA0:  !byte   $FB
         inc     $2820
@@ -1142,7 +1141,7 @@ L7FBB:  !byte   $A5
 L7FBC:  !byte   $67
 L7FBD:  sta     L7FA9
         lda     #$2D
-        jsr     LFFD2
+        jsr     chrout
         jsr     LEF08
         lda     $66
         clc
@@ -1168,7 +1167,7 @@ L7FE0:  ldx     $A97F
 
         jsr     LEF08
         lda     #$0D
-        jsr     LFFD2
+        jsr     chrout
         lda     $66
         sta     L7FA6
         lda     $67
