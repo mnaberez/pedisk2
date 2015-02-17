@@ -79,51 +79,13 @@ L7CC5:
 L7CCD:
     lda #<not_in_dir
     jmp L7CC5
+
 L7CD2:
-    brk
-    brk
-    brk
-    brk
-    brk
-    brk
+    !byte 0,0,0,0,0,0
 L7CD8:
-    brk
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
-    !byte $FF
+    !byte 0
+
+filler:
+    !byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+    !byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+    !byte $FF,$FF,$FF,$FF,$FF,$FF,$FF
