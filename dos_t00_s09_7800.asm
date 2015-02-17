@@ -361,6 +361,7 @@ L79F3:
     rti
     jsr L3400
     !byte $01
+
 L7A00:
     !byte $46
 L7A01:
@@ -812,11 +813,11 @@ L7CF3:
     sta $01E0,x
     dex
     bpl L7CF3
-    ldx L7F8B
+    ldx wedge_sp
     txs
     cli
-    ldy L7F8A
-    ldx L7F89
+    ldy wedge_y
+    ldx wedge_x
     lda #$8A
     jmp check_colon
     txa
