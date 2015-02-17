@@ -1,12 +1,26 @@
+fdc          = $e980    ;WD1793 Floppy Disk Controller
+fdc_cmdst    = fdc+0    ;  Command/status register
+fdc_track    = fdc+1    ;  Track register
+fdc_sector   = fdc+2    ;  Sector register
+fdc_data     = fdc+3    ;  Data register
+
 L000D = $0D
+hex_save_a = $26
+target_ptr = $b7
 L7A05 = $7A05
 L7AD1 = $7AD1
+dir_sector  = $7f00
+status_mask = $7f90
+drive_sel = $7f91
+track = $7f92
+sector = $7f93
+status = $7f94
 LCF83 = $CF83
-LEBA0 = $EBA0
-LEC0D = $EC0D
+select_drive = $EBA0
+l_ec0d = $EC0D
 LECCC = $ECCC
-LED3A = $ED3A
-LEF7B = $EF7B
+write_a_sector = $ED3A
+l_ef7b = $EF7B
 puts = $EFE7
 chrout = $FFD2
 
@@ -37,24 +51,25 @@ start:
     jsr puts
 
     jsr L7AD1
-    sta $7F91
+    sta drive_sel
 
     ;Print "SURE? (Y-YES)"
     lda #<are_you_sure
     ldy #>are_you_sure
     jsr puts
 
-    jsr LEF7B
-    cmp #$59
+    jsr l_ef7b
+    cmp #'Y'
     bne L7CB5
-    jsr LEBA0
+
+    jsr select_drive
     bne L7CB5
     lda #$03
-    jsr LEC0D
-    lda $E980
+    jsr l_ec0d
+    lda fdc_cmdst
     and #$40
     bne L7CB8
-    lda $E980
+    lda fdc_cmdst
     and #$9D
     cmp #$04
     beq L7CC5
@@ -74,10 +89,10 @@ L7CB8:
     jmp L7D6C
 L7CC5:
     ldx #$00
-    stx $7F92
+    stx track
     inx
-    stx $7F93
-    stx $E982
+    stx sector
+    stx fdc_sector
 L7CD1:
     jsr L7D7D
 
@@ -87,43 +102,43 @@ L7CD1:
     jsr puts
 
     lda #$00
-    ldx $7F92
+    ldx track
     jsr LCF83
-    inc $7F92
+    inc track
     lda #$28            ;TODO 40/41 tracks?
-    cmp $7F92
+    cmp track
     bpl L7CD1
-    lda #$00
-    sta $B7
-    lda #$7F
-    sta $B8
+    lda #<dir_sector
+    sta target_ptr
+    lda #>dir_sector
+    sta target_ptr+1
     ldy #$7F
     lda #$FF
 L7CF9:
-    sta ($B7),y
+    sta (target_ptr),y
     dey
     bpl L7CF9
     ldx #$00
-    stx $7F92
+    stx track
     inx
     inx
-    stx $7F93
+    stx sector
 L7D08:
-    jsr LED3A
+    jsr write_a_sector
 L7D0B:
     bne L7CB5
-    lda $7F94
+    lda status
     beq L7D17
     lda #$F1
     jmp L7D6C
 L7D17:
-    ldx $7F93
+    ldx sector
     inx
-    stx $7F93
+    stx sector
     cpx #$09
     bmi L7D08
     lda #$01
-    sta $7F93
+    sta sector
 
     ;PRINT "NAME? "
     lda #<enter_name
@@ -132,25 +147,25 @@ L7D17:
 
     ldx #$00
 L7D30:
-    stx $26
-    jsr LEF7B
-    ldx $26
-    sta $7F00,x
+    stx hex_save_a
+    jsr l_ef7b
+    ldx hex_save_a
+    sta dir_sector,x
     inx
     cpx #$08
     bcc L7D30
     lda #$00
-    sta $7F08
-    sta $7F09
+    sta dir_sector+$08
+    sta dir_sector+$09
     lda #$09
-    sta $7F0A
+    sta dir_sector+$0a
     lda #$20
-    sta $7F0B
-    sta $7F0C
-    sta $7F0D
-    sta $7F0E
-    sta $7F0F
-    jsr LED3A
+    sta dir_sector+$0b
+    sta dir_sector+$0c
+    sta dir_sector+$0d
+    sta dir_sector+$0e
+    sta dir_sector+$0f
+    jsr write_a_sector
     bne L7D0B
 
     ;Print "FINISHED!"
@@ -161,7 +176,7 @@ L7D30:
     jmp L7A05
 L7D6C:
     pha
-    lda L000D
+    lda L000D           ;TODO XXX is this a bug? should it be #$0d?
     jsr chrout
     pla
 
@@ -172,16 +187,16 @@ L7D6C:
 
     jmp L7A05
 L7D7D:
-    lda $7F92
-    sta $E983
+    lda track
+    sta fdc_data
     lda #$13
-    jsr LEC0D
+    jsr l_ec0d
     lda #$00
-    sta $7F90
+    sta status_mask
     ldy #$01
     sei
     lda #$F4
-    sta $E980
+    sta fdc_cmdst
     ldx #$06
 L7D97:
     dex
@@ -190,46 +205,46 @@ L7D97:
 L7D9C:
     lda #$E6
 L7D9E:
-    bit $E980
+    bit fdc_cmdst
     beq L7D9E
     lda #$4E
-    sta $E983
+    sta fdc_data
     dex
     bne L7D9C
     ldx #$08
 L7DAD:
     lda #$E6
 L7DAF:
-    bit $E980
+    bit fdc_cmdst
     beq L7DAF
     lda #$00
-    sta $E983
+    sta fdc_data
     dex
     bne L7DAD
     ldx #$03
 L7DBE:
     lda #$E6
 L7DC0:
-    bit $E980
+    bit fdc_cmdst
     beq L7DC0
     lda #$F6
-    sta $E983
+    sta fdc_data
     dex
     bne L7DBE
     lda #$E6
 L7DCF:
-    bit $E980
+    bit fdc_cmdst
     beq L7DCF
     lda #$FC
-    sta $E983
+    sta fdc_data
     ldx #$20
 L7DDB:
     lda #$E6
 L7DDD:
-    bit $E980
+    bit fdc_cmdst
     beq L7DDD
     lda #$4E
-    sta $E983
+    sta fdc_data
     dex
     bne L7DDB
 L7DEA:
@@ -237,136 +252,136 @@ L7DEA:
 L7DEC:
     lda #$E6
 L7DEE:
-    bit $E980
+    bit fdc_cmdst
     beq L7DEE
     lda #$00
-    sta $E983
+    sta fdc_data
     dex
     bne L7DEC
     ldx #$03
 L7DFD:
     lda #$E6
 L7DFF:
-    bit $E980
+    bit fdc_cmdst
     beq L7DFF
     lda #$F5
-    sta $E983
+    sta fdc_data
     dex
     bne L7DFD
     lda #$E6
 L7E0E:
-    bit $E980
+    bit fdc_cmdst
     beq L7E0E
     lda #$FE
-    sta $E983
+    sta fdc_data
     lda #$E6
 L7E1A:
-    bit $E980
+    bit fdc_cmdst
     beq L7E1A
-    lda $7F92
-    sta $E983
+    lda track
+    sta fdc_data
     lda #$E6
 L7E27:
-    bit $E980
+    bit fdc_cmdst
     beq L7E27
     lda #$00
-    sta $E983
+    sta fdc_data
     lda #$E6
 L7E33:
-    bit $E980
+    bit fdc_cmdst
     beq L7E33
-    sty $E983
+    sty fdc_data
     iny
     lda #$E6
 L7E3E:
-    bit $E980
+    bit fdc_cmdst
     beq L7E3E
     lda #$00
-    sta $E983
+    sta fdc_data
     lda #$E6
 L7E4A:
-    bit $E980
+    bit fdc_cmdst
     beq L7E4A
     lda #$F7
-    sta $E983
+    sta fdc_data
     ldx #$16
 L7E56:
     lda #$E6
 L7E58:
-    bit $E980
+    bit fdc_cmdst
     beq L7E58
     lda #$4E
-    sta $E983
+    sta fdc_data
     dex
     bne L7E56
     ldx #$0C
 L7E67:
     lda #$E6
 L7E69:
-    bit $E980
+    bit fdc_cmdst
     beq L7E69
     lda #$00
-    sta $E983
+    sta fdc_data
     dex
     bne L7E67
     ldx #$03
 L7E78:
     lda #$E6
 L7E7A:
-    bit $E980
+    bit fdc_cmdst
     beq L7E7A
     lda #$F5
-    sta $E983
+    sta fdc_data
     dex
     bne L7E78
     lda #$E6
 L7E89:
-    bit $E980
+    bit fdc_cmdst
     beq L7E89
     lda #$FB
-    sta $E983
+    sta fdc_data
     ldx #$80
 L7E95:
     lda #$E6
 L7E97:
-    bit $E980
+    bit fdc_cmdst
     beq L7E97
     lda #$E5
-    sta $E983
+    sta fdc_data
     dex
     bne L7E95
     lda #$E6
 L7EA6:
-    bit $E980
+    bit fdc_cmdst
     beq L7EA6
     lda #$F7
-    sta $E983
+    sta fdc_data
     ldx #$1C            ;TODO 28 sectors per track?
 L7EB2:
     lda #$E6
 L7EB4:
-    bit $E980
+    bit fdc_cmdst
     beq L7EB4
     lda #$4E
-    sta $E983
+    sta fdc_data
     dex
     bne L7EB2
     lda #$E6
 L7EC3:
-    bit $E980
+    bit fdc_cmdst
     bne L7EC3
     lda #$4E
-    sta $E983
+    sta fdc_data
     cpy #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
     bpl L7ED4
     jmp L7DEA
 L7ED4:
     lda #$01
 L7ED6:
-    bit $E980
+    bit fdc_cmdst
     bne L7ED6
     cli
-    jsr LECCC
+    jsr LECCC          ;TODO XXX middle of an instruction in the ROM
     rts
 
 filler:
