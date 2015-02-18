@@ -15,7 +15,7 @@ drive_sel = $7f91
 track = $7f92
 sector = $7f93
 status = $7f94
-LCF83 = $CF83
+linprt = $CF83          ;BASIC Print 256*A + X in decimal
 select_drive = $EBA0
 l_ec0d = $EC0D
 LECCC = $ECCC
@@ -110,9 +110,11 @@ track_loop:
     ldy #>finished_track
     jsr puts
 
-    lda #$00
-    ldx track
-    jsr LCF83
+    ;Print the track number in decimal
+    lda #$00            ;High byte of number to print = 0
+    ldx track           ;Low byte of number to print = track
+    jsr linprt          ;Print 256*A + X in decimal
+
     inc track
     lda #$28            ;TODO 40/41 tracks?
     cmp track
