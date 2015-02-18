@@ -35,13 +35,13 @@ are_you_sure:
     !text $0d,"SURE? (Y-YES)",0
 enter_name:
     !text $0d,"NAME? ",$0d,0
-finished:
+finished_disk:
     !text $0d,"FINISHED!",0
 protected_disk:
     !text $0d,"PROTECTED DISK!!",$0d,0
 error:
     !text " ERROR!",0
-format_track:
+finished_track:
     !text $0d,"FORMAT TRACK ",0
 
 start:
@@ -60,24 +60,29 @@ start:
 
     jsr l_ef7b
     cmp #'Y'
-    bne L7CB5
+    bne exit
 
     jsr select_drive
-    bne L7CB5
+    bne exit
     lda #$03
     jsr l_ec0d
     lda fdc_cmdst
     and #$40
-    bne L7CB8
+    bne protected
     lda fdc_cmdst
     and #$9D
     cmp #$04
-    beq L7CC5
+    beq format
     lda #$F0
-    jmp L7D6C
-L7CB5:
+    jmp puts_error_exit
+
+exit:
     jmp L7A05
-L7CB8:
+
+protected:
+;Disk is write protected.  Print "PROTECTED DISK!"
+;and exit.
+;
     nop
 
     ;Print "PROTECTED DISK!!"
@@ -86,19 +91,23 @@ L7CB8:
     jsr puts
 
     lda #$F3
-    jmp L7D6C
-L7CC5:
+    jmp puts_error_exit
+
+format:
+;Start formatting the disk.
+;
     ldx #$00
     stx track
     inx
     stx sector
     stx fdc_sector
-L7CD1:
-    jsr L7D7D
+
+track_loop:
+    jsr format_track
 
     ;Print "FORMAT TRACK "
-    lda #<format_track
-    ldy #>format_track
+    lda #<finished_track
+    ldy #>finished_track
     jsr puts
 
     lda #$00
@@ -107,17 +116,20 @@ L7CD1:
     inc track
     lda #$28            ;TODO 40/41 tracks?
     cmp track
-    bpl L7CD1
+    bpl track_loop
+
     lda #<dir_sector
     sta target_ptr
     lda #>dir_sector
     sta target_ptr+1
+
     ldy #$7F
     lda #$FF
 L7CF9:
     sta (target_ptr),y
     dey
     bpl L7CF9
+
     ldx #$00
     stx track
     inx
@@ -126,11 +138,12 @@ L7CF9:
 L7D08:
     jsr write_a_sector
 L7D0B:
-    bne L7CB5
+    bne exit
     lda status
     beq L7D17
     lda #$F1
-    jmp L7D6C
+    jmp puts_error_exit
+
 L7D17:
     ldx sector
     inx
@@ -148,12 +161,13 @@ L7D17:
     ldx #$00
 L7D30:
     stx hex_save_a
-    jsr l_ef7b
+    jsr l_ef7b          ;Wait for a char, echo it, return it in A
     ldx hex_save_a
     sta dir_sector,x
     inx
     cpx #$08
     bcc L7D30
+
     lda #$00
     sta dir_sector+$08
     sta dir_sector+$09
@@ -169,12 +183,14 @@ L7D30:
     bne L7D0B
 
     ;Print "FINISHED!"
-    lda #<finished
-    ldy #>finished
+    lda #<finished_disk
+    ldy #>finished_disk
     jsr puts
 
     jmp L7A05
-L7D6C:
+
+puts_error_exit:
+;Print ?? followed by " ERROR!" and exit
     pha
     lda L000D           ;TODO XXX is this a bug? should it be #$0d?
     jsr chrout
@@ -186,7 +202,8 @@ L7D6C:
     jsr puts
 
     jmp L7A05
-L7D7D:
+
+format_track:
     lda track
     sta fdc_data
     lda #$13
