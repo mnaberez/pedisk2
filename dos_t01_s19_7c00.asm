@@ -2,9 +2,9 @@ L790D = $790D
 L7A05 = $7A05
 L7A47 = $7A47
 L7AD1 = $7AD1
-LEC74 = $EC74
-LECE4 = $ECE4
-LED3F = $ED3F
+next_incr = $EC74
+read_sectors = $ECE4
+write_sectors = $ED3F
 puts = $EFE7
 chrout = $FFD2
 
@@ -54,7 +54,7 @@ start:
     sta $B8
     sta $4C
     sta $4E
-    jsr LECE4
+    jsr read_sectors
     beq L7CE8
     jmp L7A05
 
@@ -172,7 +172,7 @@ L7DB6:
     sta $B7
     lda #$08
     sta $B8
-    jsr LECE4
+    jsr read_sectors
     beq L7DE2
 
     ;Print " CANNOT READ-DELETE FILE "
@@ -183,7 +183,7 @@ L7DB6:
     jsr L7EA0
     jmp L7E65
 L7DE2:
-    jsr LEC74
+    jsr next_incr
     bcc L7DEA
     jmp L7E65
 L7DEA:
@@ -208,9 +208,9 @@ L7DEA:
     sta $B7
     lda #$08
     sta $B8
-    jsr LED3F
+    jsr write_sectors
     bne L7E5B
-    jsr LEC74
+    jsr next_incr
     bcc L7E27
     jmp L7E65
 L7E27:
@@ -257,7 +257,7 @@ L7E65:
     sty $7F92
     iny
     sty $7F93
-    jsr LED3F
+    jsr write_sectors
     beq L7E8A
 
     ;Print "CANNOT WRITE NEW INDEX-REFORMAT DISK"

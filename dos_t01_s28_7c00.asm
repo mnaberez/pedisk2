@@ -1,7 +1,7 @@
 L7A05 = $7A05
 L7AA3 = $7AA3
-LED3A = $ED3A
-LEE33 = $EE33
+write_a_sector = $ED3A
+find_file = $EE33
 puts = $EFE7
 
     *=$7c00
@@ -40,7 +40,7 @@ L7C7B:
     jsr puts
 
     jsr L7AA3
-    jsr LEE33
+    jsr find_file
     tax
     bmi L7CAF
     beq L7CC3
@@ -52,7 +52,7 @@ L7C9E:
     sta $7FA0,x
     dex
     bpl L7C9E
-    jsr LEE33
+    jsr find_file
     tax
 L7CAF:
     bmi L7CC0
@@ -64,7 +64,7 @@ L7CB5:
     iny
     cpy #$06
     bmi L7CB5
-    jsr LED3A
+    jsr write_a_sector
 L7CC0:
     jmp L7A05
 

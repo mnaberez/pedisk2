@@ -1,12 +1,12 @@
 L7A05 = $7A05
 L7AD1 = $7AD1
-LECE4 = $ECE4
-LED3F = $ED3F
-LEEFB = $EEFB
-LEF1B = $EF1B
-LEF59 = $EF59
-LEFE7 = $EFE7
-LFFD2 = $FFD2
+read_sectors = $ECE4
+write_sectors = $ED3F
+l_eefb = $EEFB
+l_ef1b = $EF1B
+l_ef59 = $EF59
+puts = $EFE7
+chrout = $FFD2
 
     *=$7c00
 
@@ -27,9 +27,9 @@ start:
     ;and "READ OR WRITE (HIT R OR W KEY)?"
     lda #<read_or_write
     ldy #>read_or_write
-    jsr LEFE7
+    jsr puts
 
-    jsr LEF59
+    jsr l_ef59
     sta $7F97
     cmp #'R'
     beq ask_trk_sec
@@ -39,7 +39,7 @@ start:
 ask_trk_sec:
     ;Print newline
     lda #$0D
-    jsr LFFD2
+    jsr chrout
 
     jsr L7AD1
     sta $7F91
@@ -47,27 +47,27 @@ ask_trk_sec:
     ;Print "TRACK? "
     lda #<enter_track
     ldy #>enter_track
-    jsr LEFE7
+    jsr puts
 
-    jsr LEF1B
+    jsr l_ef1b
     sta $7F92
 
     ;Print "SECTOR? "
     lda #<enter_sector
     ldy #>enter_sector
-    jsr LEFE7
+    jsr puts
 
-    jsr LEF1B
+    jsr l_ef1b
     sta $7F93
 
     ;Print "# SECTORS?"
     lda #<enter_count
     ldy #>enter_count
-    jsr LEFE7
+    jsr puts
 
-    jsr LEF1B
+    jsr l_ef1b
     sta $7F96
-    jsr LEEFB
+    jsr l_eefb
 
     lda $66
     sta $B7
@@ -78,11 +78,11 @@ ask_trk_sec:
     cmp #'W'
     bne do_read
 
-    jsr LED3F
+    jsr write_sectors
     jmp L7A05
 
 do_read:
-    jsr LECE4
+    jsr read_sectors
     jmp L7A05
 
 filler:

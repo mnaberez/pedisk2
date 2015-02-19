@@ -1,12 +1,12 @@
-L7931  = $7931
-L7A05  = $7A05
-L7AD1  = $7AD1
-LECDF  = $ECDF
-LECE4  = $ECE4
-LED3A  = $ED3A
-LED3F  = $ED3F
-LEF7B  = $EF7B
-puts   = $EFE7
+L7931 = $7931
+L7A05 = $7A05
+L7AD1 = $7AD1
+read_a_sector = $ECDF
+read_sectors = $ECE4
+write_a_sector = $ED3A
+write_sectors = $ED3F
+l_ef7b = $EF7B
+puts = $EFE7
 
 latch        = $e900    ;Drive Select Latch
                         ;  bit function
@@ -95,14 +95,14 @@ L7CC8:
     sta $B7
     lda #$7F
     sta $B8
-    jsr LECDF
+    jsr read_a_sector
     beq L7CEE
 L7CEB:
     jmp L7A05
 L7CEE:
     lda $7F97
     jsr L7DE3
-    jsr LECE4
+    jsr read_sectors
     bne L7CEB
     bit $7F9A
     bpl L7D4D
@@ -124,7 +124,7 @@ L7CFE:
     sta $B7
     lda #$7E
     sta $B8
-    jsr LECDF
+    jsr read_a_sector
     bne L7CEB
     lda $7F99
     bne L7D3C
@@ -150,7 +150,7 @@ L7D3C:
 L7D4D:
     lda $7F98
     jsr L7DE3
-    jsr LED3F
+    jsr write_sectors
 L7D56:
     bne L7CEB
     lda $7F99
@@ -192,11 +192,11 @@ L7D95:
     sta $B7
     lda #$7E
     sta $B8
-    jsr LECDF
+    jsr read_a_sector
     bne L7D56
     lda #$20
     sta $7E0F
-    jsr LED3A
+    jsr write_a_sector
     bne L7D56
     lda #$04
     sta $2A
@@ -217,7 +217,7 @@ L7DCD:
     ldy #>in_drive
     jsr puts
 L7DDB:
-    jsr LEF7B
+    jsr l_ef7b
     cmp #$52
     bne L7DDB
     rts

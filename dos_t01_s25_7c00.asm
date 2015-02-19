@@ -1,11 +1,11 @@
 L7A05 = $7A05
 L7AD1 = $7AD1
-LEB84 = $EB84
-LECDF = $ECDF
-LEEFB = $EEFB
-LEF1B = $EF1B
-LEF59 = $EF59
-LEFE7 = $EFE7
+put_hex_byte = $EB84
+read_a_sector = $ECDF
+l_eefb = $EEFB
+l_ef1b = $EF1B
+l_ef59 = $EF59
+puts = $EFE7
 chrout = $ffd2 ;KERNAL Send a char to the current output device
 LFFE4 = $FFE4
 
@@ -27,11 +27,11 @@ L7C52:
     ;Print banner and "DISK OR MEMORY ( D OR M )?"
     lda #<disk_or_mem
     ldy #>disk_or_mem
-    jsr LEFE7
+    jsr puts
 
     lda #$0A
     sta $27
-    jsr LEF59
+    jsr l_ef59
 
     ;Save A, print a newline, restore A
     pha
@@ -43,7 +43,7 @@ L7C52:
     beq L7C94
     cmp #'M'
     bne L7C52
-    jsr LEEFB
+    jsr l_eefb
 
     ;Print a newline
     lda #$0D
@@ -51,9 +51,9 @@ L7C52:
 
 L7C77:
     lda $67
-    jsr LEB84
+    jsr put_hex_byte
     lda $66
-    jsr LEB84
+    jsr put_hex_byte
     ldx #$01
     jsr L7CF1
     lda $66
@@ -71,17 +71,17 @@ L7C94:
     ;Print "TRACK? "
     lda #<enter_track
     ldy #>enter_track
-    jsr LEFE7
+    jsr puts
 
-    jsr LEF1B
+    jsr l_ef1b
     sta $7F92
 
     ;Print "SECTOR? "
     lda #<enter_sector
     ldy #>enter_sector
-    jsr LEFE7
+    jsr puts
 
-    jsr LEF1B
+    jsr l_ef1b
     sta $7F93
 
     lda #$00
@@ -91,7 +91,7 @@ L7C94:
     sta $B8
     sta $67
 L7CC0:
-    jsr LECDF
+    jsr read_a_sector
     bne L7CEE
 
     ;Print a newline
@@ -99,9 +99,9 @@ L7CC0:
     jsr chrout
 
     lda $7F92
-    jsr LEB84
+    jsr put_hex_byte
     lda $7F93
-    jsr LEB84
+    jsr put_hex_byte
     clc
     adc #$01
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
@@ -132,7 +132,7 @@ L7CFB:
 
 L7D02:
     lda ($66),y
-    jsr LEB84
+    jsr put_hex_byte
     iny
     dex
     bne L7D02
@@ -187,11 +187,11 @@ L7D4D:
     ;Print "MORE.."
     lda #<more
     ldy #>more
-    jsr LEFE7
+    jsr puts
 
     pla
     tay
-    jsr LEF59
+    jsr l_ef59
     lda #$0D
     jsr chrout
     lda #$0A
