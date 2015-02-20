@@ -40,19 +40,19 @@ L7A25:
     jsr LEEE6
     jmp L7A05
 L7A2B:
-    cmp #$4C
+    cmp #'L'            ;L-LOAD DISK PROGRAM
     beq L7A53
-    cmp #$53
+    cmp #'S'            ;S-SAVE A PROGRAM
     beq L7A56
-    cmp #$4D
+    cmp #'M'            ;M-MEMORY ALTER
     beq L7A59
-    cmp #$52
+    cmp #'R'            ;R-RE-ENTER BASIC
     beq L7A7D
-    cmp #$47
+    cmp #'G'            ;G-GO TO MEMORY
     beq L7A5C
-    cmp #$58
+    cmp #'X'            ;X-EXECUTE DISK FILE
     beq L7A5F
-    cmp #$4B
+    cmp #'K'            ;K-KILL A FILE
     beq L7A50
     jsr L7A89
     txa
