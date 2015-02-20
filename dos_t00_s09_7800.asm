@@ -384,7 +384,7 @@ L7A12:
     ldy #$05
 L7A16:
     lda (dir_ptr),y
-    cmp L7FA0,y
+    cmp $7FA0,y
     bne L7A2D
     dey
     bpl L7A16
@@ -395,7 +395,7 @@ L7A25:
     lda ($7F),y
     bne L7A2D
 L7A29:
-    stx L7F8F
+    stx $7F8F
     rts
 L7A2D:
     dex
@@ -415,7 +415,7 @@ L7A41:
     ldx #$03
     ldy #$60
 L7A45:
-    lda L7E80,y
+    lda $7E80,y
     cmp #$FF
     beq L7A5B
     dex
@@ -429,7 +429,7 @@ L7A53:
     tay
     jmp L7A45
 L7A5B:
-    stx L7F8F
+    stx $7F8F
     jsr find_file
     !byte $10
 
@@ -457,19 +457,19 @@ L7A74:
 
 L7A75:
     lda #$64
-    sta L7FAE
+    sta $7FAE
     lda #$80
-    sta L7FA6
-    sta L7FA8
+    sta $7FA6
+    sta $7FA8
     lda #$00
-    sta L7FA7
+    sta $7FA7
     !byte $8D
     !byte $A9
 L7A89:
     !byte $7F
-    sta L7FAA
-    sta L7FAB
-    sta L7FAF
+    sta $7FAA
+    sta $7FAB
+    sta $7FAF
     jsr chrget
     cmp #$C3
     bne L7AAC
@@ -481,7 +481,7 @@ L7AA3:
     ora ($8D),y
     ldx $A57F
     !byte $12
-    sta L7FAF
+    sta $7FAF
 L7AAC:
     jsr L78A2
     bne L7B2C
@@ -500,10 +500,10 @@ L7AC2:
 L7AC6:
     ldy #$00
     lda (varpnt),y
-    sta L7FAF
+    sta $7FAF
     iny
     lda (varpnt),y
-    sta L7FAE
+    sta $7FAE
     jmp L7AAC
 L7AD6:
     pla
@@ -515,28 +515,28 @@ L7ADE:
     ldy #$0F
 L7AE0:
     lda (dir_ptr),y
-    sta L7FA0,y
+    sta $7FA0,y
     dey
     bpl L7AE0
 L7AE8:
     lda #$00
 L7AEA:
-    sta L7FB2
-    sta L7FB3
+    sta $7FB2
+    sta $7FB3
 L7AF0:
-    sta L7FB5
-    lda L7FAC
-    sta L7FBA
-    ldx L7FAD
+    sta $7FB5
+    lda $7FAC
+    sta $7FBA
+    ldx $7FAD
     dex
-    stx L7FBB
+    stx $7FBB
 L7B00:
     jsr L7B55
     ldy #$00
-    lda L7FB3
+    lda $7FB3
     sta (varpnt),y
     iny
-    lda L7FB2
+    lda $7FB2
     sta (varpnt),y
     !byte $20
     !byte $59
@@ -552,8 +552,8 @@ L7B1A:
     sta (varpnt),y
     jsr L7B2F
 L7B22:
-    lda L7FA0,y
-    sta L7E80,x
+    lda $7FA0,y
+    sta $7E80,x
     dex
     dey
     !byte $10
@@ -562,7 +562,7 @@ L7B2B:
 L7B2C:
     jmp restore
 L7B2F:
-    lda L7F8F
+    lda $7F8F
     asl ;a
     asl ;a
     asl ;a
@@ -573,7 +573,7 @@ L7B2F:
     ldy #$1F
     rts
 L7B3D:
-    sta L7FB5
+    sta $7FB5
     ldy #$00
     lda (txtptr),y
 L7B44:
@@ -616,14 +616,14 @@ _dos_close:
     jsr chrget
     jsr L7C22
     lda #$FF
-    sta L7F00
+    sta $7F00
     jsr write_a_sector
     bne L7BA3
 L7B91:
     lda #$FF
 L7B93:
-    sta L7FA0
-    sta L7FB5
+    sta $7FA0
+    sta $7FB5
     lda #$00
     sta $E900
     lda #$FF
@@ -640,8 +640,8 @@ L7BB1:
     jsr L7B2F
 L7BB4:
     ;Used as a string
-    lda L7E80,x
-    sta L7FA0,y
+    lda $7E80,x
+    sta $7FA0,y
     dex
     dey
     bpl L7BB4
@@ -649,7 +649,7 @@ L7BB4:
 
 L7BC0:
     ;Used as a string
-    sta     L7FB5
+    sta $7FB5
     rts
 L7BC4:
     ldy #$00
@@ -660,20 +660,20 @@ L7BC4:
     jsr L7B55
     ldy #$00
     lda (varpnt),y
-    sta L7FB3
+    sta $7FB3
     iny
     lda (varpnt),y
-    sta L7FB2
-    ora L7FB3
-    bne L7BE9
+    sta $7FB2
+    ora $7FB3
+    bne $7BE9
     lda #$08
     jmp L7B3D
 L7BE9:
-    lda L7FB2
+    lda $7FB2
     sec
     sbc #$01
     sta $5E
-    lda L7FB3
+    lda $7FB3
     sbc #$00
     sta $5F
     lda #$1C
@@ -684,52 +684,52 @@ L7C00:
     jsr L797B
     lda $5E
     clc
-    adc L7FAD
+    adc $7FAD
     pha
     lda $62
-    adc L7FAC
-    sta L7FBA
+    adc $7FAC
+    sta $7FBA
     pla
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
     bcc L7C1C
-    inc L7FBA
+    inc $7FBA
     sbc #$1C            ;TODO 28 sectors per track?
 L7C1C:
-    sta L7FBB
+    sta $7FBB
     jmp L7C3C
 L7C22:
-    inc L7FB2
+    inc $7FB2
     bne L7C2A
-    inc L7FB3
+    inc $7FB3
 L7C2A:
-    inc L7FBB
-    lda L7FBB
+    inc $7FBB
+    lda $7FBB
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
     bcc L7C3C
-    inc L7FBA
+    inc $7FBA
     lda #$01
-    sta L7FBB
+    sta $7FBB
 L7C3C:
-    lda L7FBA
-    sta L7F92
-    cmp L7FBC
+    lda $7FBA
+    sta $7F92
+    cmp $7FBC
     bcc L7C56
     bne L7C51
-    lda L7FBB
-    cmp L7FBD
+    lda $7FBB
+    cmp $7FBD
     bcc L7C56
 L7C51:
     lda #$08
     jmp L7B3D
 L7C56:
-    lda L7FBB
-    sta L7F93
+    lda $7FBB
+    sta $7F93
     lda #$00
     sta target_ptr
     lda #$7F
     sta target_ptr+1
-    lda L7FB1
-    sta L7F91
+    lda $7FB1
+    sta $7F91
     rts
 
 _dos_input:
@@ -744,7 +744,7 @@ _dos_input:
 L7C7F:
     jmp L7B3D
 L7C82:
-    lda L7F00
+    lda $7F00
     cmp #$FF
     beq L7C7F
     cmp #$80
@@ -781,7 +781,7 @@ L7CB7:
     lda #$0A
     bne L7CB4
 L7CC3:
-    sta L7F00
+    sta $7F00
     iny
     lda (varpnt),y
     sta dir_ptr
@@ -791,7 +791,7 @@ L7CC3:
     ldy #$7E
 L7CD2:
     lda (dir_ptr),y
-    sta L7F01,y
+    sta $7F01,y
     dey
     bpl L7CD2
     jsr write_a_sector
@@ -809,7 +809,7 @@ _dos_run:
     ldx #$1F
     sei
 L7CF3:
-    lda L7FE0,x
+    lda $7FE0,x
     sta $01E0,x
     dex
     bpl L7CF3
@@ -1068,287 +1068,3 @@ L7E6E:
     !byte $12
     !byte $B2
     and $B506,y
-L7E80:
-    lda #$93
-    jsr chrout
-L7E85:
-    ldx #$FF
-    txs
-    lda #$00
-    sta $E900
-    lda #$0D
-    jsr chrout
-    jsr chrout
-    lda #$3E
-    jsr chrout
-
-    jsr l_ef59  ;Get a character and test for {STOP}
-    cmp #'A'
-    bcc L7EA5
-    cmp #'Z'+1
-    bcc L7EAB
-
-L7EA5:
-    jsr not_found
-    jmp L7A05
-
-L7EAB:
-    cmp #'L'    ;L-LOAD DISK PROGRAM
-    beq L7ED3
-    cmp #'S'    ;S-SAVE A PROGRAM
-    beq L7ED6
-    cmp #'M'    ;M-MEMORY ALTER
-    beq L7ED9
-    cmp #'R'    ;R-RE-ENTER BASIC
-    beq L7EFD
-    cmp #'G'    ;G-GO TO MEMORY
-    beq L7EDC
-    cmp #'X'    ;X-EXECUTE DISK FILE
-    beq L7EDF
-    cmp #'K'    ;K-KILL A FILE
-    beq L7ED0
-    jsr L7A89
-    txa
-    bne L7E85
-    jmp L7C00
-
-L7ED0: jmp L7B93
-L7ED3: jmp L7AEA
-L7ED6: jmp L7B2B
-L7ED9: jmp edit_memory
-L7EDC: jmp L7B1A
-L7EDF: jmp L7B12
-
-    !text $0d,"FILE? ",0
-
-    !text $0d,"DEVICE? ",0
-
-    !text $0d,"ENTRY? ",0
-
-L7EFD:
-    jsr chrget
-L7F00:
-    !byte $A9
-L7F01:
-    !byte $EB
-    pha
-    lda #$5D
-    pha
-    !byte $4C
-    !byte $D1
-L7F08:
-    nop
-L7F09:
-    pha
-L7F0A:
-    lda #$2A
-    ldy #$00
-L7F0E:
-    sta L7FA0,y
-    iny
-    cpy #$05
-    bmi L7F0E
-    pla
-    sta L7FA5
-    ldy #$01
-    sty L7FB1
-    jsr load_file
-    rts
-
-    lda #<L7A62
-    ldy #>L7A62
-    jsr puts
-
-    ldy #$00
-L7F2C:
-    jsr chrin
-    cmp #$3A
-    beq L7F3B
-    sta L7FA0,y
-    iny
-    cpy #$07
-    bmi L7F2C
-L7F3B:
-    lda #$20
-L7F3D:
-    cpy #$06
-    bpl L7F47
-    sta L7FA0,y
-    iny
-    bne L7F3D
-L7F47:
-    jsr chrin
-    jsr L7ADB
-    sta L7FB1
-    rts
-
-L7F51:
-    lda #<L7A6A
-    ldy #>L7A6A
-    jsr puts
-
-    jsr l_ef59  ;Get a character and test for {STOP}
-    cmp #'0'
-    bmi L7F51
-    cmp #'3'
-    bpl L7F51
-    and #$03
-    tax
-    lda $EA2F,x
-    rts
-    jsr L7AF0
-    jmp L7A05
-    jsr L7AA3
-    jsr load_file
-    txa
-    bne L7F91
-    ldy #$0A
-    lda (dir_ptr),y
-    cmp #$05
-    beq L7F84
-    jmp L7A25
-L7F84:
-    ldy #$06
-    lda (dir_ptr),y
-    !byte   $85
-L7F89:
-    !byte   $66
-L7F8A:
-    iny
-L7F8B:
-    !byte   $B1
-L7F8C:
-    !byte   $22
-    sta     $67
-L7F8F:
-    lda     #$00
-L7F91:
-    rts
-L7F92:
-    !byte   $20
-L7F93:
-    beq     L800F
-    !byte   $D0
-L7F96:
-    asl     $224C
-    !byte   $7B
-    lda     #$0D
-    jsr     chrout
-    !byte   $20
-L7FA0:
-    !byte   $FB
-    inc     $2820
-    !byte   $7B
-L7FA5: !byte   $4C
-L7FA6: !byte   $05
-L7FA7: !byte   $7A
-L7FA8: !byte   $6C
-L7FA9: !byte   $66
-L7FAA: brk
-L7FAB: !byte   $20
-L7FAC: !byte   $A3
-L7FAD: !byte   $7A
-L7FAE: !byte   $A9
-L7FAF: !byte   $0D
-       !byte   $20
-L7FB1: !byte   $D2
-L7FB2: !byte   $FF
-L7FB3: !byte   $20
-       !byte   $FB
-L7FB5:
-    inc $66A5
-    !byte $8D
-    tay
-L7FBA: !byte   $7F
-L7FBB:  !byte   $A5
-L7FBC:  !byte   $67
-L7FBD:
-    sta L7FA9
-    lda #$2D
-    jsr chrout
-    jsr l_ef08
-    lda $66
-    clc
-    adc #$7F
-    php
-    sec
-    sbc L7FA8
-    sta hex_save_a
-    lda $67
-    sbc L7FA9
-    plp
-    adc #$00
-    asl hex_save_a
-    rol ;a
-    !byte $8D
-L7FE0:
-    ldx $A97F
-    brk
-    sta L7FAF
-
-    lda #<L7A74
-    ldy #>L7A74
-    jsr puts
-
-    jsr l_ef08
-    lda #$0D
-    jsr chrout
-    lda edit_ptr
-    sta L7FA6
-    lda edit_ptr+1
-    sta L7FA7
-    lda #$05
-    sta L7FAA
-    jsr find_file
-
-    bmi L8010
-    tax
-    beq L8062
-    !byte $20
-    !byte $57
-
-L800F:
-    sei
-L8010:
-    jmp L7A05
-
-    lda #<L7BB4
-    ldy #>L7BB4
-    jsr puts
-
-    jsr L7AA3
-    jsr find_file
-    tax
-    bmi L802E
-    bne L8031
-    lda #$FF
-    ldy #$05
-    sta (dir_ptr),y
-    jsr write_a_sector
-L802E:
-    jmp L7A05
-L8031:
-    jmp L7A25
-
-    !text $0d,"** DELETE-",0
-
-    !text $0d,"DUPLICATE FILE NAME-CANNOT SAVE",$0d,0
-
-L8062:
-    lda #<L7BC0
-    ldy #>L7BC0
-    jsr puts
-
-    jmp L7A05
-    cmp $E981
-    bne L8072
-    rts
-
-L8072:
-    lda #$03
-    jsr l_ec0d
-    dec L7F8C
-    bne $8053
-    lda #$10
-    !byte $2C
-    !byte $A9
