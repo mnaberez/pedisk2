@@ -11,6 +11,7 @@ import sys
 import tempfile
 
 FILES = {'dos_t00_s09_7800.asm': 'dos_t00_s09_7800.bin',
+         'dos_t00_s22_7a00.asm': 'dos_t00_s22_7a00.bin',
          'dos_t00_s26_7c00.asm': 'dos_t00_s26_7c00.bin',
          'dos_t01_s01_7c00.asm': 'dos_t01_s01_7c00.bin',
          'dos_t01_s05_7c00.asm': 'dos_t01_s05_7c00.bin',
