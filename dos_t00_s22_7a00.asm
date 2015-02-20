@@ -1,11 +1,5 @@
 L0066 = $66
 L0070 = $70
-L0D00 = $0D00
-L2045 = $2045
-L3F45 = $3F45
-L4153 = $4153
-L4544 = $4544
-L5445 = $5445
 L7857 = $7857
 L7C00 = $7C00
 L7C11 = $7C11
@@ -19,24 +13,24 @@ LEEFB = $EEFB
 LEF08 = $EF08
 LEF59 = $EF59
 LEF83 = $EF83
-LEFE7 = $EFE7
-LFFCF = $FFCF
-LFFD2 = $FFD2
+puts = $EFE7
+chrin = $FFCF
+chrout = $FFD2
 
         *=$7a00
 
     lda #$93
-    jsr LFFD2
+    jsr chrout
 L7A05:
     ldx #$FF
     txs
     lda #$00
     sta $E900
     lda #$0D
-    jsr LFFD2
-    jsr LFFD2
+    jsr chrout
+    jsr chrout
     lda #$3E
-    jsr LFFD2
+    jsr chrout
     jsr LEF59
     cmp #$41
     bcc L7A25
@@ -76,19 +70,14 @@ L7A5C:
     jmp L7B1A
 L7A5F:
     jmp L7B12
-    ora $4946
-    jmp L3F45
-    jsr L0D00
-    !byte $44
-    eor $56
-    eor #$43
-    eor $3F
-    jsr L0D00
-    eor $4E
-    !byte $54
-    !byte $52
-    eor $203F,y
-    brk
+
+L7A62:
+    !text $0d,"FILE? ",0
+L7A6A:
+    !text $0d,"DEVICE? ",0
+L7A74:
+    !text $0d,"ENTRY? ",0
+
 L7A7D:
     jsr L0070
     lda #$EB
@@ -112,12 +101,12 @@ L7A8E:
     jsr LEE9E
     rts
 L7AA3:
-    lda #$62
-    ldy #$7A
-    jsr LEFE7
+    lda #<L7A62
+    ldy #>L7A62
+    jsr puts
     ldy #$00
 L7AAC:
-    jsr LFFCF
+    jsr chrin
     cmp #$3A
     beq L7ABB
     sta $7FA0,y
@@ -133,14 +122,14 @@ L7ABD:
     iny
     bne L7ABD
 L7AC7:
-    jsr LFFCF
+    jsr chrin
     jsr L7ADB
     sta $7FB1
     rts
 L7AD1:
-    lda #$6A
-    ldy #$7A
-    jsr LEFE7
+    lda #<L7A6A
+    ldy #>L7A6A
+    jsr puts
     jsr LEF59
 L7ADB:
     cmp #$30
@@ -180,7 +169,7 @@ L7B12:
     jmp L7B22
 L7B1A:
     lda #$0D
-    jsr LFFD2
+    jsr chrout
     jsr LEEFB
 L7B22:
     jsr L7B28
@@ -191,14 +180,14 @@ L7B28:
 L7B2B:
     jsr L7AA3
     lda #$0D
-    jsr LFFD2
+    jsr chrout
     jsr LEEFB
     lda L0066
     sta $7FA8
     lda $67
     sta $7FA9
     lda #$2D
-    jsr LFFD2
+    jsr chrout
     jsr LEF08
     lda L0066
     clc
@@ -216,12 +205,12 @@ L7B2B:
     sta $7FAE
     lda #$00
     sta $7FAF
-    lda #$74
-    ldy #$7A
-    jsr LEFE7
+    lda #<L7A74
+    ldy #>L7A74
+    jsr puts
     jsr LEF08
     lda #$0D
-    jsr LFFD2
+    jsr chrout
     lda L0066
     sta $7FA6
     lda $67
@@ -236,9 +225,9 @@ L7B2B:
 L7B90:
     jmp L7A05
 L7B93:
-    lda #$B4
-    ldy #$7B
-    jsr LEFE7
+    lda #<L7BB4
+    ldy #>L7BB4
+    jsr puts
     jsr L7AA3
     jsr LEE33
     tax
@@ -252,32 +241,16 @@ L7BAE:
     jmp L7A05
 L7BB1:
     jmp L7A25
-    ora $2A2A
-    jsr L4544
-    jmp L5445
-    eor $2D
-    brk
-    ora $5544
-    bvc L7C11
-    eor #$43
-    eor ($54,x)
-    eor $20
-    lsr $49
-    jmp L2045
-    lsr $4D41
-L7BD3:
-    eor $2D
-    !byte $43
-    eor ($4E,x)
-    lsr $544F
-    jsr L4153
-    lsr $45,x
-    !byte $0D
-    brk
+
+L7BB4:
+    !text $0d,"** DELETE-",0
+L7BC0:
+    !text $0d,"DUPLICATE FILE NAME-CANNOT SAVE",$0d,0
+
 L7BE2:
-    lda #$C0
-    ldy #$7B
-    jsr LEFE7
+    lda #<L7BC0
+    ldy #>L7BC0
+    jsr puts
     jmp L7A05
     cmp $E981
     bne L7BF2
@@ -286,7 +259,7 @@ L7BF2:
     lda #$03
     jsr LEC0D
     dec $7F8C
-    bne L7BD3
+    bne $7BD3
     lda #$10
     !byte $2C
     !byte $A9
