@@ -1,23 +1,27 @@
-L0066 = $66
-L0070 = $70
+dir_ptr = $22
+hex_save_a = $26
+edit_ptr = $66
+chrget = $70
 L7857 = $7857
 L7C00 = $7C00
 L7C11 = $7C11
+filename = $7fa0
+latch = $e900
 LEAD1 = $EAD1
-LEC0D = $EC0D
-LED3A = $ED3A
-LEE33 = $EE33
-LEE9E = $EE9E
-LEEE6 = $EEE6
-LEEFB = $EEFB
-LEF08 = $EF08
-LEF59 = $EF59
-LEF83 = $EF83
+l_ec0d = $EC0D
+write_a_sector = $ED3A
+find_file = $EE33
+load_file = $EE9E
+not_found = $EEE6
+l_eefb = $EEFB
+l_ef08 = $EF08
+l_ef59 = $EF59
+edit_memory = $EF83
 puts = $EFE7
 chrin = $FFCF
 chrout = $FFD2
 
-        *=$7a00
+    *=$7a00
 
     lda #$93
     jsr chrout
@@ -25,19 +29,19 @@ L7A05:
     ldx #$FF
     txs
     lda #$00
-    sta $E900
+    sta latch
     lda #$0D
     jsr chrout
     jsr chrout
-    lda #$3E
+    lda #'>'
     jsr chrout
-    jsr LEF59
-    cmp #$41
+    jsr l_ef59
+    cmp #'A'
     bcc L7A25
-    cmp #$5B
+    cmp #'Z'+1
     bcc L7A2B
 L7A25:
-    jsr LEEE6
+    jsr not_found
     jmp L7A05
 L7A2B:
     cmp #'L'            ;L-LOAD DISK PROGRAM
@@ -65,7 +69,7 @@ L7A53:
 L7A56:
     jmp L7B2B
 L7A59:
-    jmp LEF83
+    jmp edit_memory
 L7A5C:
     jmp L7B1A
 L7A5F:
@@ -79,7 +83,7 @@ L7A74:
     !text $0d,"ENTRY? ",0
 
 L7A7D:
-    jsr L0070
+    jsr chrget
     lda #$EB
     pha
     lda #$5D
@@ -87,18 +91,18 @@ L7A7D:
     jmp LEAD1
 L7A89:
     pha
-    lda #$2A
+    lda #'*'
     ldy #$00
 L7A8E:
-    sta $7FA0,y
+    sta filename,y
     iny
     cpy #$05
     bmi L7A8E
     pla
-    sta $7FA5
+    sta filename+$05
     ldy #$01
     sty $7FB1
-    jsr LEE9E
+    jsr load_file
     rts
 L7AA3:
     lda #<L7A62
@@ -107,18 +111,18 @@ L7AA3:
     ldy #$00
 L7AAC:
     jsr chrin
-    cmp #$3A
+    cmp #':'
     beq L7ABB
-    sta $7FA0,y
+    sta filename,y
     iny
     cpy #$07
     bmi L7AAC
 L7ABB:
-    lda #$20
+    lda #' '
 L7ABD:
     cpy #$06
     bpl L7AC7
-    sta $7FA0,y
+    sta filename,y
     iny
     bne L7ABD
 L7AC7:
@@ -130,7 +134,7 @@ L7AD1:
     lda #<L7A6A
     ldy #>L7A6A
     jsr puts
-    jsr LEF59
+    jsr l_ef59
 L7ADB:
     cmp #$30
     bmi L7AD1
@@ -145,21 +149,21 @@ L7AEA:
     jmp L7A05
 L7AF0:
     jsr L7AA3
-    jsr LEE9E
+    jsr load_file
     txa
     bne L7B11
     ldy #$0A
-    lda ($22),y
+    lda (dir_ptr),y
     cmp #$05
     beq L7B04
     jmp L7A25
 L7B04:
     ldy #$06
-    lda ($22),y
-    sta L0066
+    lda (dir_ptr),y
+    sta edit_ptr
     iny
-    lda ($22),y
-    sta $67
+    lda (dir_ptr),y
+    sta edit_ptr+1
     lda #$00
 L7B11:
     rts
@@ -170,54 +174,54 @@ L7B12:
 L7B1A:
     lda #$0D
     jsr chrout
-    jsr LEEFB
+    jsr l_eefb
 L7B22:
     jsr L7B28
 L7B25:
     jmp L7A05
 L7B28:
-    jmp (L0066)
+    jmp (edit_ptr)
 L7B2B:
     jsr L7AA3
     lda #$0D
     jsr chrout
-    jsr LEEFB
-    lda L0066
-    sta $7FA8
-    lda $67
-    sta $7FA9
-    lda #$2D
+    jsr l_eefb
+    lda edit_ptr
+    sta filename+$08
+    lda edit_ptr+1
+    sta filename+$09
+    lda #'-'
     jsr chrout
-    jsr LEF08
-    lda L0066
+    jsr l_ef08
+    lda edit_ptr
     clc
     adc #$7F
     php
     sec
-    sbc $7FA8
-    sta $26
-    lda $67
-    sbc $7FA9
+    sbc filename+$08
+    sta hex_save_a
+    lda edit_ptr+1
+    sbc filename+$09
     plp
     adc #$00
-    asl $26
+    asl hex_save_a
     rol ;a
-    sta $7FAE
+    sta filename+$0e
     lda #$00
-    sta $7FAF
+    sta filename+$0f
     lda #<L7A74
     ldy #>L7A74
     jsr puts
-    jsr LEF08
+    jsr l_ef08
     lda #$0D
     jsr chrout
-    lda L0066
-    sta $7FA6
-    lda $67
-    sta $7FA7
+    lda edit_ptr
+    sta filename+$06
+    lda edit_ptr+1
+    sta filename+$07
     lda #$05
-    sta $7FAA
-    jsr LEE33
+    sta filename+$0a
+    jsr find_file
     bmi L7B90
     tax
     beq L7BE2
@@ -229,14 +233,14 @@ L7B93:
     ldy #>L7BB4
     jsr puts
     jsr L7AA3
-    jsr LEE33
+    jsr find_file
     tax
     bmi L7BAE
     bne L7BB1
     lda #$FF
     ldy #$05
-    sta ($22),y
-    jsr LED3A
+    sta (dir_ptr),y
+    jsr write_a_sector
 L7BAE:
     jmp L7A05
 L7BB1:
@@ -257,7 +261,7 @@ L7BE2:
     rts
 L7BF2:
     lda #$03
-    jsr LEC0D
+    jsr l_ec0d
     dec $7F8C
     bne $7BD3
     lda #$10
