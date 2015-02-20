@@ -1,7 +1,13 @@
+vartab = $2a
+target_ptr = $b7
 L790D = $790D
 L7A05 = $7A05
 L7A47 = $7A47
 L7AD1 = $7AD1
+drive_sel = $7f91
+track = $7f92
+sector = $7f93
+num_sectors = $7f96
 next_incr = $EC74
 read_sectors = $ECE4
 write_sectors = $ED3F
@@ -37,21 +43,21 @@ start:
     jsr puts
 
     jsr L7AD1
-    sta $7F91
+    sta drive_sel
     lda #$60
     sta $7F9A
     ldx #$00
-    stx $7F92
+    stx track
     inx
-    stx $7F93
+    stx sector
     lda #$08
-    sta $7F96
+    sta num_sectors
     lda #$00
-    sta $B7
+    sta target_ptr
     sta $4B
     sta $4D
     lda #$04
-    sta $B8
+    sta target_ptr+1
     sta $4C
     sta $4E
     jsr read_sectors
@@ -147,7 +153,7 @@ L7D8A:
     ora $7F9C
     beq L7D87
     lda $7F9B
-    sta $7F96
+    sta num_sectors
     sec
     sbc $7F9A
     sta $7F9B
@@ -160,18 +166,18 @@ L7D8A:
     beq L7DB6
 L7DB0:
     lda $7F9A
-    sta $7F96
+    sta num_sectors
 L7DB6:
-    lda $7F96
+    lda num_sectors
     sta $7F97
     lda $7F98
-    sta $7F92
+    sta track
     lda $7F99
-    sta $7F93
+    sta sector
     lda #$00
-    sta $B7
+    sta target_ptr
     lda #$08
-    sta $B8
+    sta target_ptr+1
     jsr read_sectors
     beq L7DE2
 
@@ -187,16 +193,16 @@ L7DE2:
     bcc L7DEA
     jmp L7E65
 L7DEA:
-    lda $7F92
+    lda track
     sta $7F98
-    lda $7F93
+    lda sector
     sta $7F99
     lda $7F97
-    sta $7F96
+    sta num_sectors
     lda L7C03
-    sta $7F92
+    sta track
     lda L7C04
-    sta $7F93
+    sta sector
 
     ;Print "MOVING FILE "
     lda #<moving_file
@@ -205,18 +211,18 @@ L7DEA:
 
     jsr L7EA0
     lda #$00
-    sta $B7
+    sta target_ptr
     lda #$08
-    sta $B8
+    sta target_ptr+1
     jsr write_sectors
     bne L7E5B
     jsr next_incr
     bcc L7E27
     jmp L7E65
 L7E27:
-    lda $7F92
+    lda track
     sta L7C03
-    lda $7F93
+    lda sector
     sta L7C04
     jmp L7D8A
 L7E36:
@@ -248,15 +254,15 @@ L7E5B:
     jsr L7EA0
 L7E65:
     lda #$08
-    sta $7F96
+    sta num_sectors
     lda #$00
-    sta $B7
+    sta target_ptr
     lda #$04
-    sta $B8
+    sta target_ptr+1
     ldy #$00
-    sty $7F92
+    sty track
     iny
-    sty $7F93
+    sty sector
     jsr write_sectors
     beq L7E8A
 
@@ -269,8 +275,8 @@ L7E65:
     jmp L7A05
 L7E8A:
     lda #$04
-    sta $2A
-    sta $2B
+    sta vartab
+    sta vartab+1
     lda #$00
     sta $0400
     sta $0401

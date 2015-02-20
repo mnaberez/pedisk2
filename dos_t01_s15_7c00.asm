@@ -1,3 +1,5 @@
+vartab = $2a
+target_ptr = $b7
 L7931 = $7931
 L7A05 = $7A05
 L7AD1 = $7AD1
@@ -92,9 +94,9 @@ L7CC8:
     lda #$01
     sta sector
     lda #$00
-    sta $B7
+    sta target_ptr
     lda #$7F
-    sta $B8
+    sta target_ptr+1
     jsr read_a_sector
     beq L7CEE
 L7CEB:
@@ -121,9 +123,9 @@ L7CFE:
     sta sector
     sta num_sectors
     lda #$00
-    sta $B7
+    sta target_ptr
     lda #$7E
-    sta $B8
+    sta target_ptr+1
     jsr read_a_sector
     bne L7CEB
     lda $7F99
@@ -189,9 +191,9 @@ L7D95:
     sta sector
     sta num_sectors
     lda #$00
-    sta $B7
+    sta target_ptr
     lda #$7E
-    sta $B8
+    sta target_ptr+1
     jsr read_a_sector
     bne L7D56
     lda #$20
@@ -199,8 +201,8 @@ L7D95:
     jsr write_a_sector
     bne L7D56
     lda #$04
-    sta $2A
-    sta $2B
+    sta vartab
+    sta vartab+1
     lda #$00
     sta $0400
     sta $0401
@@ -230,7 +232,7 @@ L7DE3:
     lda $7F9B
     sta num_sectors
     ldx #$00
-    stx $B7
+    stx target_ptr
     lda #$04
-    sta $B8
+    sta target_ptr+1
     rts

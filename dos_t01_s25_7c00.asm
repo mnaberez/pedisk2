@@ -1,5 +1,11 @@
+edit_pos = $27
+target_ptr = $b7
 L7A05 = $7A05
 L7AD1 = $7AD1
+dir_sector = $7f00
+drive_sel = $7f91
+track = $7f92
+sector = $7f93
 put_hex_byte = $EB84
 read_a_sector = $ECDF
 l_eefb = $EEFB
@@ -30,7 +36,7 @@ L7C52:
     jsr puts
 
     lda #$0A
-    sta $27
+    sta edit_pos
     jsr l_ef59
 
     ;Save A, print a newline, restore A
@@ -66,7 +72,7 @@ L7C77:
     rts
 L7C94:
     jsr L7AD1
-    sta $7F91
+    sta drive_sel
 
     ;Print "TRACK? "
     lda #<enter_track
@@ -74,7 +80,7 @@ L7C94:
     jsr puts
 
     jsr l_ef1b
-    sta $7F92
+    sta track
 
     ;Print "SECTOR? "
     lda #<enter_sector
@@ -82,13 +88,13 @@ L7C94:
     jsr puts
 
     jsr l_ef1b
-    sta $7F93
+    sta sector
 
-    lda #$00
-    sta $B7
+    lda #<dir_sector
+    sta target_ptr
     sta $66
-    lda #$7F
-    sta $B8
+    lda #>dir_sector
+    sta target_ptr+1
     sta $67
 L7CC0:
     jsr read_a_sector
@@ -98,9 +104,9 @@ L7CC0:
     lda #$0D
     jsr chrout
 
-    lda $7F92
+    lda track
     jsr put_hex_byte
-    lda $7F93
+    lda sector
     jsr put_hex_byte
     clc
     adc #$01
@@ -108,9 +114,9 @@ L7CC0:
     bmi L7CE3
     sec
     sbc #$1C            ;TODO 28 sectors per track?
-    inc $7F92
+    inc track
 L7CE3:
-    sta $7F93
+    sta sector
     ldx #$08
     jsr L7CF1
     jmp L7CC0
@@ -179,7 +185,7 @@ L7D3C:
     bne L7D4D
     jmp L7A05
 L7D4D:
-    dec $27
+    dec edit_pos
     bpl L7D68
     tya
     pha
@@ -195,7 +201,7 @@ L7D4D:
     lda #$0D
     jsr chrout
     lda #$0A
-    sta $27
+    sta edit_pos
 L7D68:
     dec $22
     beq L7D7D

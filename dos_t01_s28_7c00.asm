@@ -1,5 +1,8 @@
+dir_ptr = $22
 L7A05 = $7A05
 L7AA3 = $7AA3
+filename = $7fa0
+drive_sel_f = $7fb1
 write_a_sector = $ED3A
 find_file = $EE33
 puts = $EFE7
@@ -27,11 +30,11 @@ L7C6F:
     jsr L7AA3
     ldx #$05
 L7C7B:
-    lda $7FA0,x
+    lda filename,x
     sta L7CD2,x
     dex
     bpl L7C7B
-    lda $7FB1
+    lda drive_sel_f
     sta L7CD8
 
     ;Print "NEW FILE-"
@@ -46,10 +49,10 @@ L7C7B:
     beq L7CC3
     ldx #$05
 L7C9E:
-    lda $7FA0,x
+    lda filename,x
     pha
     lda L7CD2,x
-    sta $7FA0,x
+    sta filename,x
     dex
     bpl L7C9E
     jsr find_file
@@ -60,7 +63,7 @@ L7CAF:
     ldy #$00
 L7CB5:
     pla
-    sta ($22),y
+    sta (dir_ptr),y
     iny
     cpy #$06
     bmi L7CB5
