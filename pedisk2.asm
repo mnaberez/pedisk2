@@ -1429,7 +1429,8 @@ addr_prompt:
 
 
 input_hex_addr:
-;get a hex address into edit_ptr
+;Display "ADDR?" prompt, and input two bytes from the user
+;in hex, evaluate and return the word in edit_ptr.
 ;
     pha                 ;save A
     tya                 ;copy Y
@@ -1442,21 +1443,26 @@ input_hex_addr:
     pla                 ;pull Y
     tay                 ;restore Y
     pla                 ;restore A
-l_ef08:
-    jsr input_hex_byte  ;get and evaluate a hex byte
-    bcs l_ef08          ;if error get another byte
 
+input_hex_word:
+;Input two bytes from the user in hex, evaluate and return
+;the word in edit_ptr. (No prompt will be shown)
+;
+    jsr input_hex_byte  ;get and evaluate a hex byte
+    bcs input_hex_word  ;if error get another byte
     sta edit_ptr+1      ;save the address high byte
+
     jsr input_hex_byte  ;get and evaluate a hex byte
     sta edit_ptr        ;save the address low byte
     bcc l_ef2e          ;if no error just exit
 
     jsr l_ef2f          ;output "??" and shift the cursor left
-    bcs l_ef08          ;go get another word
+    bcs input_hex_word  ;go get another word
 
 
 input_hex_byte:
-;get and evaluate a hex byte
+;Input one byte from the user in hex, evaluate and return
+;the byte in A.
 ;
     jsr l_ef41          ;get and evaluate a hex character
 

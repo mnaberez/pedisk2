@@ -15,7 +15,7 @@ find_file = $EE33
 load_file = $EE9E
 not_found = $EEE6
 input_hex_addr = $EEFB
-l_ef08 = $EF08
+input_hex_word = $EF08
 l_ef59 = $EF59
 edit_memory = $EF83
 puts = $EFE7
@@ -253,7 +253,7 @@ save_prog:
     sta filename+$09
     lda #'-'
     jsr chrout
-    jsr l_ef08
+    jsr input_hex_word
     lda edit_ptr
     clc
     adc #$7F
@@ -273,7 +273,7 @@ save_prog:
     lda #<enter_entry
     ldy #>enter_entry
     jsr puts
-    jsr l_ef08
+    jsr input_hex_word
     lda #$0D
     jsr chrout
     lda edit_ptr
