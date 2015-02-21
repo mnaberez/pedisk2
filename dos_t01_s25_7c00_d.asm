@@ -10,7 +10,7 @@ put_hex_byte = $EB84
 read_a_sector = $ECDF
 input_hex_addr = $EEFB
 input_hex_byte = $EF1B
-l_ef59 = $EF59
+get_char_w_stop = $EF59
 puts = $EFE7
 chrout = $ffd2 ;KERNAL Send a char to the current output device
 LFFE4 = $FFE4
@@ -37,7 +37,7 @@ L7C52:
 
     lda #$0A
     sta edit_pos
-    jsr l_ef59
+    jsr get_char_w_stop
 
     ;Save A, print a newline, restore A
     pha
@@ -197,7 +197,7 @@ L7D4D:
 
     pla
     tay
-    jsr l_ef59
+    jsr get_char_w_stop
     lda #$0D
     jsr chrout
     lda #$0A

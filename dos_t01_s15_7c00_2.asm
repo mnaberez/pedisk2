@@ -7,7 +7,7 @@ read_a_sector = $ECDF
 read_sectors = $ECE4
 write_a_sector = $ED3A
 write_sectors = $ED3F
-l_ef7b = $EF7B
+get_char = $EF7B
 puts = $EFE7
 
 latch        = $e900    ;Drive Select Latch
@@ -219,7 +219,7 @@ L7DCD:
     ldy #>in_drive
     jsr puts
 L7DDB:
-    jsr l_ef7b
+    jsr get_char
     cmp #$52
     bne L7DDB
     rts

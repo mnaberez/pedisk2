@@ -64,7 +64,7 @@ find_file      = $EE33
 load_file      = $EE9E
 not_found      = $EEE6
 input_hex_word = $EF08
-l_ef59         = $EF59
+get_char_w_stop= $EF59
 edit_memory    = $EF83
 puts           = $EFE7
 chrin          = $FFCF
@@ -835,7 +835,7 @@ _dos_list:
 
     ;Get a character until it is a valid drive number
 
-    jsr l_ef59          ;Get a character and test for {STOP}
+    jsr get_char_w_stop ;Get a character and test for {STOP}
     cmp #'0'
     bmi _dos_list
     cmp #'4'
@@ -1037,7 +1037,7 @@ L7E49:
     ldy #>more
     jsr puts
 
-    jsr l_ef59          ;Get a character and test for {STOP}
+    jsr get_char_w_stop ;Get a character and test for {STOP}
     jmp L7DC6
 
     ;Print a newline

@@ -20,7 +20,7 @@ select_drive = $EBA0
 l_ec0d = $EC0D
 LECCC = $ECCC
 write_a_sector = $ED3A
-l_ef7b = $EF7B
+get_char = $EF7B
 puts = $EFE7
 chrout = $FFD2
 
@@ -58,7 +58,7 @@ start:
     ldy #>are_you_sure
     jsr puts
 
-    jsr l_ef7b
+    jsr get_char
     cmp #'Y'
     bne exit
 
@@ -163,7 +163,7 @@ L7D17:
     ldx #$00
 L7D30:
     stx hex_save_a
-    jsr l_ef7b          ;Wait for a char, echo it, return it in A
+    jsr get_char        ;Wait for a char, echo it, return it in A
     ldx hex_save_a
     sta dir_sector,x
     inx

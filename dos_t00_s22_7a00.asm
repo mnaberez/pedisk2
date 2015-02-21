@@ -16,7 +16,7 @@ load_file = $EE9E
 not_found = $EEE6
 input_hex_addr = $EEFB
 input_hex_word = $EF08
-l_ef59 = $EF59
+get_char_w_stop = $EF59
 edit_memory = $EF83
 puts = $EFE7
 chrin = $FFCF
@@ -48,7 +48,7 @@ pdos_prompt:
 
     ;Get a key from the keyboard
 
-    jsr l_ef59          ;A = character
+    jsr get_char_w_stop ;A = character
 
     ;Check if key is the range of A-Z
 
@@ -182,7 +182,7 @@ L7AD1:
     lda #<enter_device
     ldy #>enter_device
     jsr puts
-    jsr l_ef59
+    jsr get_char_w_stop
 L7ADB:
     cmp #'0'
     bmi L7AD1

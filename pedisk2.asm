@@ -1508,7 +1508,7 @@ l_ef3f:
 l_ef41:
 ;get and evaluate a hex character
 ;
-    jsr l_ef59          ;get a character and test for {STOP}
+    jsr get_char_w_stop ;get a character and test for {STOP}
 
 
 l_ef44:
@@ -1535,8 +1535,10 @@ l_ef58:
     rts
 
 
-l_ef59:
-;get a character and test for {STOP}
+get_char_w_stop:
+;Show the checker cursor, wait for a character, and display it.
+;If the character is {STOP}, jump out to dos_stop.  Otherwise,
+;return the character in A.
 ;
     txa                 ;copy X
     pha                 ;save X
@@ -1548,7 +1550,7 @@ l_ef59:
     lda #crsr_left      ;set cursor left
     jsr chrout          ;do character out
 
-    jsr l_ef7b          ;wait for and echo a character
+    jsr get_char        ;wait for and echo a character
     sta save_char       ;save the character
 
     pla                 ;pull Y
@@ -1563,11 +1565,12 @@ l_ef59:
     jmp dos_stop        ;else go do {STOP}
 
 
-l_ef7b:
-;wait for and echo a character
+get_char:
+;Wait for and echo a character.  No checker cursor is displayed
+;and no {STOP} testing is done.
 ;
     jsr getin           ;do character in
-    beq l_ef7b          ;if no character just wait
+    beq get_char        ;if no character just wait
 
     jmp chrout          ;do character out
 
@@ -1606,7 +1609,7 @@ l_efa8:
 
 l_efae:
     stx edit_pos        ;save the line index
-    jsr l_ef59          ;get a character and test for {STOP}
+    jsr get_char_w_stop ;get a character and test for {STOP}
     cmp #cr             ;compare the character with [CR]
     beq edit_memory     ;if [CR] go get another hex address
 

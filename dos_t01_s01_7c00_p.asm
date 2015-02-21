@@ -4,7 +4,7 @@ L7AD1 = $7AD1
 put_spc_hex = $EB7F
 put_hex_byte = $EB84
 read_a_sector = $ECDF
-l_ef59 = $EF59 ;Get a character and test for {STOP}
+get_char_w_stop = $EF59 ;Get a character and test for {STOP}
 puts = $EFE7
 chrout = $FFD2
 
@@ -297,7 +297,7 @@ L7DDE:
     ldy #>more
     jsr puts
 
-    jsr l_ef59          ;Get a character and test for {STOP}
+    jsr get_char_w_stop ;Get a character and test for {STOP}
     jmp next_screen
 
 L7DEB:

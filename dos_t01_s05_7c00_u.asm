@@ -1,5 +1,5 @@
 try_extrnl_cmd = $7a47
-l_ef59  = $EF59         ;Get a character and test for {STOP}
+get_char_w_stop = $EF59 ;Get a character and test for {STOP}
 puts    = $EFE7         ;Print null terminated string
 chrout  = $FFD2         ;KERNAL Send a char to the current output device
 
@@ -22,7 +22,7 @@ start:
     jsr puts
 
 get_num:
-    jsr l_ef59
+    jsr get_char_w_stop
 
     ;Validate selection
     cmp #'1'            ;Compare to '1'

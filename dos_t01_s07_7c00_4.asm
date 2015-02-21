@@ -4,7 +4,7 @@ read_sectors = $ECE4
 write_sectors = $ED3F
 input_hex_addr = $EEFB
 input_hex_byte = $EF1B
-l_ef59 = $EF59
+get_char_w_stop = $EF59
 puts = $EFE7
 chrout = $FFD2
 
@@ -29,7 +29,7 @@ start:
     ldy #>read_or_write
     jsr puts
 
-    jsr l_ef59
+    jsr get_char_w_stop
     sta $7F97
     cmp #'R'
     beq ask_trk_sec
