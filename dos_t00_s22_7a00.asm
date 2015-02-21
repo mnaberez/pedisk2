@@ -87,6 +87,7 @@ dispatch_cmd:
 
     ;Not an internal command, try to load it from an overlay file.
 
+try_extrnl_cmd:
     jsr external_cmd    ;Try to load the overlay
     txa                 ;X=0 means overlay loaded successfully
     bne pdos_prompt     ;If load failed, jump to prompt.

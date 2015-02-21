@@ -1,4 +1,4 @@
-L7A47   = $7A47
+try_extrnl_cmd = $7a47
 l_ef59  = $EF59         ;Get a character and test for {STOP}
 puts    = $EFE7         ;Print null terminated string
 chrout  = $FFD2         ;KERNAL Send a char to the current output device
@@ -36,8 +36,8 @@ get_num:
     jsr chrout
     pla
 
-    ;TODO load the overlay?
-    jmp L7A47
+    ;Try to load and run overlay, return to main PDOS prompt if load fails.
+    jmp try_extrnl_cmd
 
 bad_num:
     ;Print '?'
