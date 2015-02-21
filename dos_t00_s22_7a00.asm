@@ -8,6 +8,7 @@ L7C11 = $7C11
 filename = $7fa0
 latch = $e900
 l_ead1 = $EAD1
+restore = $eb5e
 l_ec0d = $EC0D
 write_a_sector = $ED3A
 find_file = $EE33
@@ -85,9 +86,9 @@ L7A74:
 
 reenter_basic:
     jsr chrget
-    lda #$EB
+    lda #>(restore-1)
     pha
-    lda #$5D
+    lda #<(restore-1)
     pha
     jmp l_ead1
 
