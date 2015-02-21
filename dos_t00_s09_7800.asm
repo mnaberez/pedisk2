@@ -83,6 +83,7 @@ dos_list:   jmp _dos_list
 dos_stop:   ;fall through
 
 _dos_stop:
+L7818:
     lda vartab
     sec
     sbc txttab
@@ -369,11 +370,9 @@ L7A01:
     brk
 
 _dos_save:
-    !byte   $20
-L7A05:
-    clc
-    sei
+    jsr L7818
     jmp restore
+
 L7A0A:
     ldx #$03
     lda #$7E
