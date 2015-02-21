@@ -1,6 +1,6 @@
 edit_pos = $27
 target_ptr = $b7
-L7A05 = $7A05
+pdos_prompt = $7A05
 L7AD1 = $7AD1
 dir_sector = $7f00
 drive_sel = $7f91
@@ -121,7 +121,7 @@ L7CE3:
     jsr L7CF1
     jmp L7CC0
 L7CEE:
-    jmp L7A05
+    jmp pdos_prompt
 L7CF1:
     stx $22
     ldy #$00
@@ -183,7 +183,7 @@ L7D3C:
     jsr LFFE4
     cmp #$03
     bne L7D4D
-    jmp L7A05
+    jmp pdos_prompt
 L7D4D:
     dec edit_pos
     bpl L7D68

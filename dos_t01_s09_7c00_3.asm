@@ -7,7 +7,7 @@ fdc_data     = fdc+3    ;  Data register
 L000D = $0D
 hex_save_a = $26
 target_ptr = $b7
-L7A05 = $7A05
+pdos_prompt = $7A05
 L7AD1 = $7AD1
 dir_sector  = $7f00
 status_mask = $7f90
@@ -77,7 +77,7 @@ start:
     jmp puts_error_exit
 
 exit:
-    jmp L7A05
+    jmp pdos_prompt
 
 protected:
 ;Disk is write protected.  Print "PROTECTED DISK!"
@@ -189,7 +189,7 @@ L7D30:
     ldy #>finished_disk
     jsr puts
 
-    jmp L7A05
+    jmp pdos_prompt
 
 puts_error_exit:
 ;Print ?? followed by " ERROR!" and exit
@@ -203,7 +203,7 @@ puts_error_exit:
     ldy #>error
     jsr puts
 
-    jmp L7A05
+    jmp pdos_prompt
 
 format_track:
     lda track

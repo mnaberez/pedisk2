@@ -1,7 +1,7 @@
 vartab = $2a
 target_ptr = $b7
 L7931 = $7931
-L7A05 = $7A05
+pdos_prompt = $7A05
 L7AD1 = $7AD1
 read_a_sector = $ECDF
 read_sectors = $ECE4
@@ -100,7 +100,7 @@ L7CC8:
     jsr read_a_sector
     beq L7CEE
 L7CEB:
-    jmp L7A05
+    jmp pdos_prompt
 L7CEE:
     lda $7F97
     jsr L7DE3
@@ -207,7 +207,7 @@ L7D95:
     sta $0400
     sta $0401
     sta $0402
-    jmp L7A05
+    jmp pdos_prompt
 L7DCD:
     ;Print "PUT ORIGINAL"
     ldy #>put_original

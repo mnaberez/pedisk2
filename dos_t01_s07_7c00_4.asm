@@ -1,4 +1,4 @@
-L7A05 = $7A05
+pdos_prompt = $7A05
 L7AD1 = $7AD1
 read_sectors = $ECE4
 write_sectors = $ED3F
@@ -79,11 +79,11 @@ ask_trk_sec:
     bne do_read
 
     jsr write_sectors
-    jmp L7A05
+    jmp pdos_prompt
 
 do_read:
     jsr read_sectors
-    jmp L7A05
+    jmp pdos_prompt
 
 filler:
 ;The bytes from here to the end of the file are not used by the code

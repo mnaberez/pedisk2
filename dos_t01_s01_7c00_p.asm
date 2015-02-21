@@ -1,5 +1,5 @@
 L7931 = $7931
-L7A05 = $7A05
+pdos_prompt = $7A05
 L7AD1 = $7AD1
 put_spc_hex = $EB7F
 put_hex_byte = $EB84
@@ -67,7 +67,7 @@ L7CB4:
 
     jsr read_a_sector   ;Read the first directory sector
     beq L7CD7           ;If no error occured, branch to start printing
-    jmp L7A05           ;If an error occurred, jump to ?? TODO ??
+    jmp pdos_prompt     ;If an error occurred, jump to the PDOS prompt
 
 L7CD7:
     ;Clear screen and print "PEDISK II DISK DIRECTORY"
@@ -146,7 +146,7 @@ L7D3C:
 
     jsr read_a_sector   ;Read next sector in the directory
     beq L7D4E           ;If no error occurred, branch to continue
-    jmp L7A05           ;If error occured, jump to ?? TODO ??
+    jmp pdos_prompt     ;If error occured, jump to PDOS prompt
 
 L7D4E:
     lda #$00
@@ -308,7 +308,7 @@ L7DEB:
     lda #$00
     sta $E900
 
-    jmp L7A05
+    jmp pdos_prompt
 
     !byte $07
     sta $7FAA

@@ -1,4 +1,4 @@
-L7A05 = $7A05
+pdos_prompt = $7A05
 L7D97 = $7D97
 chrout = $ffd2 ;KERNAL Send a char to the current output device
 
@@ -136,9 +136,7 @@ finish_menu:
     jsr chrout          ;Print a CR to finish the current line
     jsr chrout          ;Print another CR to finish the menu
 
-    jmp L7A05           ;Jump out to ? TODO ?
-                        ;This seems to be the way that $7C00 overlays
-                        ;return control to the $7A00 code.
+    jmp pdos_prompt     ;Jump out to the PDOS prompt
 
 filler:
 ;The bytes from here to the end of the file are not used by the code

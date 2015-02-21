@@ -26,7 +26,12 @@ chrout = $FFD2
 
     lda #$93
     jsr chrout
-L7A05:
+
+pdos_prompt:
+;Show the PDOS prompt, get a command from the user, and dispatch
+;the command.  All commands in this file and in the external $7C00
+;overlay files jump to this routine when they finish.
+;
     ldx #$FF
     txs
     lda #$00
@@ -43,7 +48,7 @@ L7A05:
     bcc L7A2B
 L7A25:
     jsr not_found
-    jmp L7A05
+    jmp pdos_prompt
 L7A2B:
     cmp #'L'            ;L-LOAD DISK PROGRAM
     beq jmp_load_prog
@@ -61,7 +66,7 @@ L7A2B:
     beq jmp_kill_file
     jsr external_cmd
     txa
-    bne L7A05
+    bne pdos_prompt
     jmp L7C00
 
 jmp_kill_file:
@@ -150,7 +155,7 @@ L7ADB:
 
 load_prog:
     jsr L7AF0
-    jmp L7A05
+    jmp pdos_prompt
 
 L7AF0:
     jsr L7AA3
@@ -185,7 +190,7 @@ goto_memory:
 L7B22:
     jsr L7B28
 L7B25:
-    jmp L7A05
+    jmp pdos_prompt
 L7B28:
     jmp (edit_ptr)
 
@@ -235,7 +240,7 @@ save_prog:
     beq L7BE2
     jsr L7857
 L7B90:
-    jmp L7A05
+    jmp pdos_prompt
 
 kill_file:
     lda #<L7BB4
@@ -251,7 +256,7 @@ kill_file:
     sta (dir_ptr),y
     jsr write_a_sector
 L7BAE:
-    jmp L7A05
+    jmp pdos_prompt
 L7BB1:
     jmp L7A25
 
@@ -264,7 +269,7 @@ L7BE2:
     lda #<L7BC0
     ldy #>L7BC0
     jsr puts
-    jmp L7A05
+    jmp pdos_prompt
 
 filler:
 ;The bytes from here to the end of the file are not used by the code

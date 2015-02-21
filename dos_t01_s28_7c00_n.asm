@@ -1,5 +1,5 @@
 dir_ptr = $22
-L7A05 = $7A05
+pdos_prompt = $7A05
 L7AA3 = $7AA3
 filename = $7fa0
 drive_sel_f = $7fb1
@@ -69,7 +69,7 @@ L7CB5:
     bmi L7CB5
     jsr write_a_sector
 L7CC0:
-    jmp L7A05
+    jmp pdos_prompt
 
 L7CC3:
     ;Print "****NAME ALREADY IN FILE****"
@@ -77,7 +77,7 @@ L7CC3:
 L7CC5:
     ldy #>already_in_file
     jsr puts
-    jmp L7A05
+    jmp pdos_prompt
 
 L7CCD:
     ;"****NOT IN DIRECTORY****"

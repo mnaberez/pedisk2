@@ -1,7 +1,7 @@
 vartab = $2a
 target_ptr = $b7
 L790D = $790D
-L7A05 = $7A05
+pdos_prompt = $7A05
 L7A47 = $7A47
 L7AD1 = $7AD1
 drive_sel = $7f91
@@ -62,7 +62,7 @@ start:
     sta $4E
     jsr read_sectors
     beq L7CE8
-    jmp L7A05
+    jmp pdos_prompt
 
 L7CE8:
     lda #$00
@@ -272,7 +272,7 @@ L7E65:
     ldy #>cant_write_index
     jsr puts
 
-    jmp L7A05
+    jmp pdos_prompt
 L7E8A:
     lda #$04
     sta vartab
