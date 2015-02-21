@@ -24,8 +24,8 @@ chrout = $FFD2
 
     *=$7a00
 
-    lda #$93
-    jsr chrout
+    lda #$93            ;A = PETSCII clear screen
+    jsr chrout          ;Print A to clear the screen
 
 pdos_prompt:
 ;Show the PDOS prompt, get a command from the user, and dispatch
@@ -33,23 +33,43 @@ pdos_prompt:
 ;overlay files jump to this routine when they finish.
 ;
     ldx #$FF
-    txs
+    txs                 ;Reset stack pointer
     lda #$00
-    sta latch
-    lda #$0D
-    jsr chrout
-    jsr chrout
-    lda #'>'
-    jsr chrout
-    jsr l_ef59
+    sta latch           ;TODO deselect drives?
+
+    ;Print the PDOS prompt
+
+    lda #$0D            ;A = carriage return
+    jsr chrout          ;Print CR
+    jsr chrout          ;Print another CR
+
+    lda #'>'            ;A = PDOS prompt character
+    jsr chrout          ;Print the prompt
+
+    ;Get a key from the keyboard
+
+    jsr l_ef59          ;A = character
+
+    ;Check if key is the range of A-Z
+
     cmp #'A'
-    bcc L7A25
+    bcc bad_cmd_or_file ;Less than 'A'?  Branch to bad command.
     cmp #'Z'+1
-    bcc L7A2B
-L7A25:
-    jsr not_found
-    jmp pdos_prompt
-L7A2B:
+    bcc dispatch_cmd    ;Less than 'Z'+1?  Branch to good command.
+                        ;Otherwise, fall through to bad command.
+
+bad_cmd_or_file:
+;Bad command or filename was entered.  Print the error
+;message and then jump back to the prompt.
+;
+    jsr not_found       ;Print "??????"
+    jmp pdos_prompt     ;Jump to the prompt
+
+dispatch_cmd:
+;A valid command character (A-Z) has been entered.  Try to dispatch
+;it to one of the internal routines in this file.  If it is not
+;recognized, try to load an external $7C000 overlay for it.
+;
     cmp #'L'            ;L-LOAD DISK PROGRAM
     beq jmp_load_prog
     cmp #'S'            ;S-SAVE A PROGRAM
@@ -64,10 +84,13 @@ L7A2B:
     beq jmp_exec_file
     cmp #'K'            ;K-KILL A FILE
     beq jmp_kill_file
-    jsr external_cmd
-    txa
-    bne pdos_prompt
-    jmp L7C00
+
+    ;Not an internal command, try to load it from an overlay file.
+
+    jsr external_cmd    ;Try to load the overlay
+    txa                 ;X=0 means overlay loaded successfully
+    bne pdos_prompt     ;If load failed, jump to prompt.
+    jmp L7C00           ;If load succeeded, jump to the overlay.
 
 jmp_kill_file:
     jmp kill_file
@@ -82,14 +105,16 @@ jmp_goto_memory:
 jmp_exec_file:
     jmp exec_file
 
-L7A62:
+enter_file:
     !text $0d,"FILE? ",0
-L7A6A:
+enter_device:
     !text $0d,"DEVICE? ",0
-L7A74:
+enter_entry:
     !text $0d,"ENTRY? ",0
 
 reenter_basic:
+;R-RE-ENTER BASIC
+;
     jsr chrget
     lda #>(restore-1)
     pha
@@ -98,23 +123,36 @@ reenter_basic:
     jmp l_ead1
 
 external_cmd:
+;Load an external command.  External commands are files on the disk
+;that are named like "*****X", where the last character is the
+;command.  All commands load into $7C00.
+;
     pha
+
+    ;Fill first 5 chars of filename with "*****"
     lda #'*'
     ldy #$00
-L7A8E:
+ext1:
     sta filename,y
     iny
     cpy #$05
-    bmi L7A8E
+    bmi ext1
+
+    ;Set last char of filename to command character
     pla
     sta filename+$05
+
+    ;Set drive select pattern for drive 0
     ldy #$01
     sty drive_sel_f
+
+    ;Try to load the overlay
     jsr load_file
     rts
-L7AA3:
-    lda #<L7A62
-    ldy #>L7A62
+
+input_filename:
+    lda #<enter_file
+    ldy #>enter_file
     jsr puts
     ldy #$00
 L7AAC:
@@ -138,9 +176,10 @@ L7AC7:
     jsr L7ADB
     sta drive_sel_f
     rts
+
 L7AD1:
-    lda #<L7A6A
-    ldy #>L7A6A
+    lda #<enter_device
+    ldy #>enter_device
     jsr puts
     jsr l_ef59
 L7ADB:
@@ -154,11 +193,13 @@ L7ADB:
     rts
 
 load_prog:
-    jsr L7AF0
+;L-LOAD DISK PROGRAM
+;
+    jsr try_load_file
     jmp pdos_prompt
 
-L7AF0:
-    jsr L7AA3
+try_load_file:
+    jsr input_filename
     jsr load_file
     txa
     bne L7B11
@@ -166,7 +207,7 @@ L7AF0:
     lda (dir_ptr),y
     cmp #$05
     beq L7B04
-    jmp L7A25
+    jmp bad_cmd_or_file
 L7B04:
     ldy #$06
     lda (dir_ptr),y
@@ -179,23 +220,29 @@ L7B11:
     rts
 
 exec_file:
-    jsr L7AF0
-    bne L7B25
-    jmp L7B22
+;X-EXECUTE DISK FILE
+;
+    jsr try_load_file
+    bne jmp_pdos_prompt
+    jmp jsr_edit_ptr
 
 goto_memory:
+;G-GO TO MEMORY
+;
     lda #$0D
     jsr chrout
     jsr l_eefb
-L7B22:
-    jsr L7B28
-L7B25:
+jsr_edit_ptr:
+    jsr jmp_edit_ptr
+jmp_pdos_prompt:
     jmp pdos_prompt
-L7B28:
+jmp_edit_ptr:
     jmp (edit_ptr)
 
 save_prog:
-    jsr L7AA3
+;S-SAVE A PROGRAM
+;
+    jsr input_filename
     lda #$0D
     jsr chrout
     jsr l_eefb
@@ -222,8 +269,8 @@ save_prog:
     sta filename+$0e
     lda #$00
     sta filename+$0f
-    lda #<L7A74
-    ldy #>L7A74
+    lda #<enter_entry
+    ldy #>enter_entry
     jsr puts
     jsr l_ef08
     lda #$0D
@@ -243,14 +290,20 @@ L7B90:
     jmp pdos_prompt
 
 kill_file:
-    lda #<L7BB4
-    ldy #>L7BB4
+;K-KILL A FILE
+;
+    ;Print "** DELETE-" prompt for filename to delete
+    lda #<enter_kill
+    ldy #>enter_kill
     jsr puts
-    jsr L7AA3
+
+    jsr input_filename
+
     jsr find_file
     tax
     bmi L7BAE
     bne L7BB1
+
     lda #$FF
     ldy #$05
     sta (dir_ptr),y
@@ -258,16 +311,16 @@ kill_file:
 L7BAE:
     jmp pdos_prompt
 L7BB1:
-    jmp L7A25
+    jmp bad_cmd_or_file
 
-L7BB4:
+enter_kill:
     !text $0d,"** DELETE-",0
-L7BC0:
+dupe_error:
     !text $0d,"DUPLICATE FILE NAME-CANNOT SAVE",$0d,0
 
 L7BE2:
-    lda #<L7BC0
-    ldy #>L7BC0
+    lda #<dupe_error
+    ldy #>dupe_error
     jsr puts
     jmp pdos_prompt
 
