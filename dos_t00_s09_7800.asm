@@ -389,9 +389,7 @@ L7A16:
     bpl L7A16
     ldy #$11
     lda (dir_ptr),y
-    !byte   $CD
-L7A25:
-    lda ($7F),y
+    cmp $7fb1
     bne L7A2D
 L7A29:
     stx $7F8F
@@ -430,30 +428,18 @@ L7A53:
 L7A5B:
     stx $7F8F
     jsr find_file
-    !byte $10
-
-L7A62:
-    ;Used as a string
-    !byte $03
-    jmp     restore
+    bpl L7A66
+    jmp restore
+L7A66:
     pha
-    jsr     L0076
-
-L7A6A:
-    ;Used as a string
-    cmp     #$A2
-    bne     L7AD6
+    jsr L0076
+    cmp #$A2
+    bne L7AD6
     pla
-    bne     L7A75
-    lda     #$32
-
+    bne L7A75
+    lda #$32
 L7A73:
-    !byte $d0
-
-L7A74:
-    ;Used as a string
-    !byte $66
-
+    bne L7ADB
 L7A75:
     lda #$64
     sta $7FAE
@@ -462,10 +448,7 @@ L7A75:
     sta $7FA8
     lda #$00
     sta $7FA7
-    !byte $8D
-    !byte $A9
-L7A89:
-    !byte $7F
+    sta $7fa9
     sta $7FAA
     sta $7FAB
     sta $7FAF
@@ -475,11 +458,9 @@ L7A89:
     jsr chrget
     bcs L7AB3
     jsr LB8F6
-    !byte $A5
-L7AA3:
-    ora ($8D),y
-    ldx $A57F
-    !byte $12
+    lda $11
+    sta $7fae
+    lda $12
     sta $7FAF
 L7AAC:
     jsr L78A2
@@ -537,16 +518,11 @@ L7B00:
     iny
     lda $7FB2
     sta (varpnt),y
-    !byte $20
-    !byte $59
-L7B12:
-    !byte $7B
+    jsr $7b59
     ldy #$00
     lda #$00
     sta (varpnt),y
-    !byte $AD
-L7B1A:
-    lda $7F,x
+    lda $7fb5
     iny
     sta (varpnt),y
     jsr L7B2F
@@ -555,9 +531,7 @@ L7B22:
     sta $7E80,x
     dex
     dey
-    !byte $10
-L7B2B:
-    !byte $F6
+    bpl L7B22
 L7B2C:
     jmp restore
 L7B2F:
