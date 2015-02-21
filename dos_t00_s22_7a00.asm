@@ -6,6 +6,7 @@ L7857 = $7857
 L7C00 = $7C00
 L7C11 = $7C11
 filename = $7fa0
+drive_sel_f = $7fb1
 latch = $e900
 l_ead1 = $EAD1
 restore = $eb5e
@@ -104,7 +105,7 @@ L7A8E:
     pla
     sta filename+$05
     ldy #$01
-    sty $7FB1
+    sty drive_sel_f
     jsr load_file
     rts
 L7AA3:
@@ -131,7 +132,7 @@ L7ABD:
 L7AC7:
     jsr chrin
     jsr L7ADB
-    sta $7FB1
+    sta drive_sel_f
     rts
 L7AD1:
     lda #<L7A6A

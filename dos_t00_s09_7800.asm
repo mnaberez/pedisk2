@@ -727,7 +727,7 @@ L7C56:
     sta target_ptr
     lda #$7F
     sta target_ptr+1
-    lda $7FB1
+    lda drive_sel_f
     sta $7F91
     rts
 
