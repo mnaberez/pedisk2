@@ -10,7 +10,6 @@ drive_sel_f = $7fb1
 latch = $e900
 l_ead1 = $EAD1
 restore = $eb5e
-l_ec0d = $EC0D
 write_a_sector = $ED3A
 find_file = $EE33
 load_file = $EE9E
@@ -267,14 +266,18 @@ L7BE2:
     jsr puts
     jmp L7A05
 
+filler:
+;The bytes from here to the end of the file are not used by the code
+;above.  They are likely part of another program that happened to be
+;in memory when this overlay was saved to disk.
+;
     cmp $E981
-    bne L7BF2
+    bne fill1
     rts
-L7BF2:
+fill1:
     lda #$03
-    jsr l_ec0d
+    jsr $EC0D
     dec $7F8C
     bne $7BD3
     lda #$10
-    !byte $2C
-    !byte $A9
+    !byte $2C, $A9
