@@ -45,35 +45,36 @@ L7A25:
     jmp L7A05
 L7A2B:
     cmp #'L'            ;L-LOAD DISK PROGRAM
-    beq L7A53
+    beq jmp_load_prog
     cmp #'S'            ;S-SAVE A PROGRAM
-    beq L7A56
+    beq jmp_save_prog
     cmp #'M'            ;M-MEMORY ALTER
-    beq L7A59
+    beq jmp_edit_memory
     cmp #'R'            ;R-RE-ENTER BASIC
-    beq L7A7D
+    beq reenter_basic
     cmp #'G'            ;G-GO TO MEMORY
-    beq L7A5C
+    beq jmp_goto_memory
     cmp #'X'            ;X-EXECUTE DISK FILE
-    beq L7A5F
+    beq jmp_exec_file
     cmp #'K'            ;K-KILL A FILE
-    beq L7A50
-    jsr L7A89
+    beq jmp_kill_file
+    jsr external_cmd
     txa
     bne L7A05
     jmp L7C00
-L7A50:
-    jmp L7B93
-L7A53:
-    jmp L7AEA
-L7A56:
-    jmp L7B2B
-L7A59:
+
+jmp_kill_file:
+    jmp kill_file
+jmp_load_prog:
+    jmp load_prog
+jmp_save_prog:
+    jmp save_prog
+jmp_edit_memory:
     jmp edit_memory
-L7A5C:
-    jmp L7B1A
-L7A5F:
-    jmp L7B12
+jmp_goto_memory:
+    jmp goto_memory
+jmp_exec_file:
+    jmp exec_file
 
 L7A62:
     !text $0d,"FILE? ",0
@@ -82,14 +83,15 @@ L7A6A:
 L7A74:
     !text $0d,"ENTRY? ",0
 
-L7A7D:
+reenter_basic:
     jsr chrget
     lda #$EB
     pha
     lda #$5D
     pha
     jmp LEAD1
-L7A89:
+
+external_cmd:
     pha
     lda #'*'
     ldy #$00
@@ -136,17 +138,19 @@ L7AD1:
     jsr puts
     jsr l_ef59
 L7ADB:
-    cmp #$30
+    cmp #'0'
     bmi L7AD1
-    cmp #$33
+    cmp #'3'
     bpl L7AD1
     and #$03
     tax
     lda $EA2F,x
     rts
-L7AEA:
+
+load_prog:
     jsr L7AF0
     jmp L7A05
+
 L7AF0:
     jsr L7AA3
     jsr load_file
@@ -167,11 +171,13 @@ L7B04:
     lda #$00
 L7B11:
     rts
-L7B12:
+
+exec_file:
     jsr L7AF0
     bne L7B25
     jmp L7B22
-L7B1A:
+
+goto_memory:
     lda #$0D
     jsr chrout
     jsr l_eefb
@@ -181,7 +187,8 @@ L7B25:
     jmp L7A05
 L7B28:
     jmp (edit_ptr)
-L7B2B:
+
+save_prog:
     jsr L7AA3
     lda #$0D
     jsr chrout
@@ -228,7 +235,8 @@ L7B2B:
     jsr L7857
 L7B90:
     jmp L7A05
-L7B93:
+
+kill_file:
     lda #<L7BB4
     ldy #>L7BB4
     jsr puts
@@ -256,6 +264,7 @@ L7BE2:
     ldy #>L7BC0
     jsr puts
     jmp L7A05
+
     cmp $E981
     bne L7BF2
     rts
