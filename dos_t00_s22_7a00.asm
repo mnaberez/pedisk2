@@ -7,7 +7,7 @@ L7C00 = $7C00
 L7C11 = $7C11
 filename = $7fa0
 latch = $e900
-LEAD1 = $EAD1
+l_ead1 = $EAD1
 l_ec0d = $EC0D
 write_a_sector = $ED3A
 find_file = $EE33
@@ -89,7 +89,7 @@ reenter_basic:
     pha
     lda #$5D
     pha
-    jmp LEAD1
+    jmp l_ead1
 
 external_cmd:
     pha
