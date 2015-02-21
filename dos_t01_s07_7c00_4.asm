@@ -2,8 +2,8 @@ pdos_prompt = $7A05
 L7AD1 = $7AD1
 read_sectors = $ECE4
 write_sectors = $ED3F
-l_eefb = $EEFB
-l_ef1b = $EF1B
+input_hex_addr = $EEFB
+input_hex_byte = $EF1B
 l_ef59 = $EF59
 puts = $EFE7
 chrout = $FFD2
@@ -49,7 +49,7 @@ ask_trk_sec:
     ldy #>enter_track
     jsr puts
 
-    jsr l_ef1b
+    jsr input_hex_byte
     sta $7F92
 
     ;Print "SECTOR? "
@@ -57,7 +57,7 @@ ask_trk_sec:
     ldy #>enter_sector
     jsr puts
 
-    jsr l_ef1b
+    jsr input_hex_byte
     sta $7F93
 
     ;Print "# SECTORS?"
@@ -65,9 +65,9 @@ ask_trk_sec:
     ldy #>enter_count
     jsr puts
 
-    jsr l_ef1b
+    jsr input_hex_byte
     sta $7F96
-    jsr l_eefb
+    jsr input_hex_addr
 
     lda $66
     sta $B7

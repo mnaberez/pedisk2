@@ -8,8 +8,8 @@ track = $7f92
 sector = $7f93
 put_hex_byte = $EB84
 read_a_sector = $ECDF
-l_eefb = $EEFB
-l_ef1b = $EF1B
+input_hex_addr = $EEFB
+input_hex_byte = $EF1B
 l_ef59 = $EF59
 puts = $EFE7
 chrout = $ffd2 ;KERNAL Send a char to the current output device
@@ -49,7 +49,7 @@ L7C52:
     beq L7C94
     cmp #'M'
     bne L7C52
-    jsr l_eefb
+    jsr input_hex_addr
 
     ;Print a newline
     lda #$0D
@@ -79,7 +79,7 @@ L7C94:
     ldy #>enter_track
     jsr puts
 
-    jsr l_ef1b
+    jsr input_hex_byte
     sta track
 
     ;Print "SECTOR? "
@@ -87,7 +87,7 @@ L7C94:
     ldy #>enter_sector
     jsr puts
 
-    jsr l_ef1b
+    jsr input_hex_byte
     sta sector
 
     lda #<dir_sector

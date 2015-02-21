@@ -14,7 +14,7 @@ write_a_sector = $ED3A
 find_file = $EE33
 load_file = $EE9E
 not_found = $EEE6
-l_eefb = $EEFB
+input_hex_addr = $EEFB
 l_ef08 = $EF08
 l_ef59 = $EF59
 edit_memory = $EF83
@@ -232,7 +232,7 @@ goto_memory:
 ;
     lda #$0D
     jsr chrout
-    jsr l_eefb
+    jsr input_hex_addr
 jsr_edit_ptr:
     jsr jmp_edit_ptr
 jmp_pdos_prompt:
@@ -246,7 +246,7 @@ save_prog:
     jsr input_filename
     lda #$0D
     jsr chrout
-    jsr l_eefb
+    jsr input_hex_addr
     lda edit_ptr
     sta filename+$08
     lda edit_ptr+1

@@ -1428,7 +1428,7 @@ addr_prompt:
     !text cr,"ADDR?",0
 
 
-l_eefb:
+input_hex_addr:
 ;get a hex address into edit_ptr
 ;
     pha                 ;save A
@@ -1443,11 +1443,11 @@ l_eefb:
     tay                 ;restore Y
     pla                 ;restore A
 l_ef08:
-    jsr l_ef1b          ;get and evaluate a hex byte
+    jsr input_hex_byte  ;get and evaluate a hex byte
     bcs l_ef08          ;if error get another byte
 
     sta edit_ptr+1      ;save the address high byte
-    jsr l_ef1b          ;get and evaluate a hex byte
+    jsr input_hex_byte  ;get and evaluate a hex byte
     sta edit_ptr        ;save the address low byte
     bcc l_ef2e          ;if no error just exit
 
@@ -1455,7 +1455,7 @@ l_ef08:
     bcs l_ef08          ;go get another word
 
 
-l_ef1b:
+input_hex_byte:
 ;get and evaluate a hex byte
 ;
     jsr l_ef41          ;get and evaluate a hex character
@@ -1569,7 +1569,7 @@ l_ef7b:
 edit_memory:
 ;display/edit memory
 ;
-    jsr l_eefb          ;get a hex address into edit_ptr
+    jsr input_hex_addr  ;get a hex address into edit_ptr
 l_ef86:
     lda #cr             ;set [CR]
     jsr chrout          ;do character out
