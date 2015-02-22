@@ -1,5 +1,5 @@
 pdos_prompt = $7A05
-L7AD1 = $7AD1
+input_device = $7AD1
 read_sectors = $ECE4
 write_sectors = $ED3F
 input_hex_addr = $EEFB
@@ -41,7 +41,7 @@ ask_trk_sec:
     lda #$0D
     jsr chrout
 
-    jsr L7AD1
+    jsr input_device
     sta $7F91
 
     ;Print "TRACK? "

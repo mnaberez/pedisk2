@@ -3,7 +3,7 @@ target_ptr = $b7
 L790D = $790D
 pdos_prompt = $7A05
 try_extrnl_cmd = $7A47
-L7AD1 = $7AD1
+input_device = $7AD1
 drive_sel = $7f91
 track = $7f92
 sector = $7f93
@@ -42,7 +42,7 @@ start:
     ldy #>disk_compression
     jsr puts
 
-    jsr L7AD1
+    jsr input_device
     sta drive_sel
     lda #$60
     sta $7F9A

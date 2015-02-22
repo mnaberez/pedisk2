@@ -178,16 +178,16 @@ L7AC7:
     sta drive_sel_f
     rts
 
-L7AD1:
+input_device:
     lda #<enter_device
     ldy #>enter_device
     jsr puts
     jsr get_char_w_stop
 L7ADB:
     cmp #'0'
-    bmi L7AD1
+    bmi input_device
     cmp #'3'
-    bpl L7AD1
+    bpl input_device
     and #$03
     tax
     lda $EA2F,x

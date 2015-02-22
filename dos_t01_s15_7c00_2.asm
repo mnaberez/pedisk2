@@ -2,7 +2,7 @@ vartab = $2a
 target_ptr = $b7
 L7931 = $7931
 pdos_prompt = $7A05
-L7AD1 = $7AD1
+input_device = $7AD1
 read_a_sector = $ECDF
 read_sectors = $ECE4
 write_a_sector = $ED3A
@@ -69,7 +69,7 @@ start:
     sta $7F9E
     lda #$00
     sta $7F9A
-    jsr L7AD1
+    jsr input_device
 L7CAE:
     sta $7F97
 
@@ -78,7 +78,7 @@ L7CAE:
     lda #<copy_to
     jsr puts
 
-    jsr L7AD1
+    jsr input_device
     sta $7F98
     cmp $7F97
     bne L7CC8

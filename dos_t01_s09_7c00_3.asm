@@ -8,7 +8,7 @@ L000D = $0D
 hex_save_a = $26
 target_ptr = $b7
 pdos_prompt = $7A05
-L7AD1 = $7AD1
+input_device = $7AD1
 dir_sector  = $7f00
 status_mask = $7f90
 drive_sel = $7f91
@@ -50,7 +50,7 @@ start:
     ldy #>disk_format
     jsr puts
 
-    jsr L7AD1
+    jsr input_device
     sta drive_sel
 
     ;Print "SURE? (Y-YES)"

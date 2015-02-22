@@ -1,7 +1,7 @@
 edit_pos = $27
 target_ptr = $b7
 pdos_prompt = $7A05
-L7AD1 = $7AD1
+input_device = $7AD1
 dir_sector = $7f00
 drive_sel = $7f91
 track = $7f92
@@ -71,7 +71,7 @@ L7C77:
     bne L7C77
     rts
 L7C94:
-    jsr L7AD1
+    jsr input_device
     sta drive_sel
 
     ;Print "TRACK? "

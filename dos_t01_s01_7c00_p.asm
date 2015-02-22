@@ -1,6 +1,6 @@
 L7931 = $7931
 pdos_prompt = $7A05
-L7AD1 = $7AD1
+input_device = $7AD1
 put_spc_hex = $EB7F
 put_hex_byte = $EB84
 read_a_sector = $ECDF
@@ -48,7 +48,7 @@ filetypes:
     !text " OBJCT ",0
 
 L7CB4:
-    jsr L7AD1
+    jsr input_device
     sta drive_sel
 
     ldx #dir_track      ;set track 0 (first track)
