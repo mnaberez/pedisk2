@@ -409,7 +409,7 @@ L7A41:
     ldx #$03
     ldy #$60
 L7A45:
-    lda $7E80,y
+    lda buf_1,y
     cmp #$FF
     beq L7A5B
     dex
@@ -525,7 +525,7 @@ L7B00:
     jsr L7B2F
 L7B22:
     lda $7FA0,y
-    sta $7E80,x
+    sta buf_1,x
     dex
     dey
     bpl L7B22
@@ -609,16 +609,13 @@ L7BA6:
 L7BB1:
     jsr L7B2F
 L7BB4:
-    ;Used as a string
-    lda $7E80,x
+    lda buf_1,x
     sta $7FA0,y
     dex
     dey
     bpl L7BB4
     lda #$00
-
 L7BC0:
-    ;Used as a string
     sta $7FB5
     rts
 L7BC4:
