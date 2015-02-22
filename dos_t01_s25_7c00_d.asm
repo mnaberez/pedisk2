@@ -1,5 +1,6 @@
 hex_save_a = $26
 edit_pos = $27
+edit_ptr = $66
 target_ptr = $b7
 pdos_prompt = $7A05
 input_device = $7AD1
@@ -57,18 +58,18 @@ L7C52:
     jsr chrout
 
 L7C77:
-    lda $67
+    lda edit_ptr+1
     jsr put_hex_byte
-    lda $66
+    lda edit_ptr
     jsr put_hex_byte
     ldx #$01
     jsr L7CF1
-    lda $66
+    lda edit_ptr
     clc
     adc #$10
-    sta $66
+    sta edit_ptr
     bcc L7C77
-    inc $67
+    inc edit_ptr+1
     bne L7C77
     rts
 L7C94:
@@ -93,10 +94,10 @@ L7C94:
 
     lda #<dir_sector
     sta target_ptr
-    sta $66
+    sta edit_ptr
     lda #>dir_sector
     sta target_ptr+1
-    sta $67
+    sta edit_ptr+1
 L7CC0:
     jsr read_a_sector
     bne L7CEE
@@ -138,7 +139,7 @@ L7CFB:
     jsr chrout
 
 L7D02:
-    lda ($66),y
+    lda (edit_ptr),y
     jsr put_hex_byte
     iny
     dex
@@ -169,7 +170,7 @@ L7D2B:
     lda #' '
     jsr chrout
 
-    lda ($66),y
+    lda (edit_ptr),y
     cmp #' '
     bmi L7D3A
     cmp #$80
