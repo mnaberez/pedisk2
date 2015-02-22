@@ -595,7 +595,7 @@ L7B93:
     sta filename
     sta $7FB5
     lda #$00
-    sta $E900
+    sta latch
     lda #$FF
     jmp L7B00
 L7BA3:

@@ -1,3 +1,4 @@
+latch = $e900 ;Drive select latch
 L7931 = $7931
 pdos_prompt = $7A05
 input_device = $7AD1
@@ -306,7 +307,7 @@ L7DEB:
     jsr chrout
 
     lda #$00
-    sta $E900
+    sta latch
 
     jmp pdos_prompt
 
