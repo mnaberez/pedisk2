@@ -45,8 +45,6 @@ linget      = $b8f6     ;BASIC Fetch integer (usually a line number)
 ptrget      = $c12b     ;BASIC Find a variable
 
 L3400 = $3400
-LC873 = $C873
-LCF6D = $CF6D
 
 check_colon    = $EA44
 deselect       = $EB0B
