@@ -15,8 +15,8 @@ input_hex_addr = $EEFB
 input_hex_byte = $EF1B
 get_char_w_stop = $EF59
 puts = $EFE7
-chrout = $ffd2 ;KERNAL Send a char to the current output device
-LFFE4 = $FFE4
+chrout = $ffd2
+chrin = $ffe4
 
     *=$7c00
 
@@ -183,7 +183,7 @@ L7D3C:
     iny
     dex
     bne L7D21
-    jsr LFFE4
+    jsr chrin
     cmp #$03
     bne L7D4D
     jmp pdos_prompt
