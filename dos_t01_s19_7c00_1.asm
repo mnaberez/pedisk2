@@ -2,7 +2,7 @@ vartab = $2a
 target_ptr = $b7
 L790D = $790D
 pdos_prompt = $7A05
-L7A47 = $7A47
+try_extrnl_cmd = $7A47
 L7AD1 = $7AD1
 drive_sel = $7f91
 track = $7f92
@@ -282,7 +282,7 @@ L7E8A:
     sta $0401
     sta $0402
     lda #$50
-    jmp L7A47
+    jmp try_extrnl_cmd
 L7EA0:
     ldy #$00
 L7EA2:
