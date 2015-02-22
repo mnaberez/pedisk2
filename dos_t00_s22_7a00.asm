@@ -8,6 +8,7 @@ L7C11 = $7C11
 filename = $7fa0
 drive_sel_f = $7fb1
 latch = $e900
+drive_selects = $ea2f
 l_ead1 = $EAD1
 restore = $eb5e
 write_a_sector = $ED3A
@@ -190,7 +191,7 @@ L7ADB:
     bpl input_device
     and #$03
     tax
-    lda $EA2F,x
+    lda drive_selects,x
     rts
 
 load_prog:
