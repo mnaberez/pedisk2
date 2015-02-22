@@ -372,9 +372,9 @@ _dos_save:
 
 L7A0A:
     ldx #$03
-    lda #$7E
+    lda #>buf_4
     sta dir_ptr+1
-    lda #$E0
+    lda #<buf_4
 L7A12:
     sta dir_ptr
     ldy #$05
