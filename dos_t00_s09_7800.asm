@@ -678,7 +678,7 @@ L7C2A:
     sta $7FBB
 L7C3C:
     lda $7FBA
-    sta $7F92
+    sta track
     cmp $7FBC
     bcc L7C56
     bne L7C51
@@ -690,13 +690,13 @@ L7C51:
     jmp L7B3D
 L7C56:
     lda $7FBB
-    sta $7F93
+    sta sector
     lda #<dir_sector
     sta target_ptr
     lda #>dir_sector
     sta target_ptr+1
     lda drive_sel_f
-    sta $7F91
+    sta drive_sel
     rts
 
 _dos_input:
