@@ -1,5 +1,4 @@
 pdos_prompt = $7A05
-L7D97 = $7D97
 chrout = $ffd2 ;KERNAL Send a char to the current output device
 
 menu_ptr = $54 ;Pointer used to read bytes from the menu
