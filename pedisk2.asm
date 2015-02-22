@@ -600,7 +600,7 @@ l_ebd3:
     sta status_mask     ;save the WD1793 status byte mask
 
     lda #$16            ;set seek command, verify track, 20ms step rate
-    jsr l_ec0d          ;wait for WD1793 not busy and do command A
+    jsr send_fdc_cmd    ;wait for WD1793 not busy and do command A
     bne l_ebf2          ;go handle any returned error
 
     lda track           ;get the requested track number
@@ -612,7 +612,7 @@ l_ebd3:
 
 l_ebf2:
     lda #$02            ;set restore command, 20ms step rate
-    jsr l_ec0d          ;wait for WD1793 not busy and do command A
+    jsr send_fdc_cmd    ;wait for WD1793 not busy and do command A
 
     dec retries         ;decrement the retry count
     bne l_ebd3          ;if not all done go try again
@@ -647,20 +647,20 @@ no_drive_sel:
     jmp disk_error      ;do "DISK ERROR" message and ??
 
 
-l_ec0d:
+send_fdc_cmd:
 ;wait for WD1793 not busy and do command A
 ;
-    jsr l_ec1e          ;wait for WD1793 not busy
+    jsr wait_for_fdc    ;wait for WD1793 not busy
     bcs drv_not_resp    ;if counted out go do disk error $17
 
     sta command         ;Remember this command as the last one written
     sta fdc_cmdst       ;Write to the WD1793 command register
 
     jsr delay_1ms       ;Delay 1ms
-    jmp l_ecd0          ;wait for WD1793 not busy mask the status and return
+    jmp wait_fdc_status ;wait for WD1793 not busy mask the status and return
 
 
-l_ec1e:
+wait_for_fdc:
 ;wait for WD1793 not busy
 ;
     pha                 ;save A
@@ -829,10 +829,10 @@ l_ecca:
     rts
 
 
-l_ecd0:
+wait_fdc_status:
 ;wait for WD1793 not busy and mask the status
 ;
-    jsr l_ec1e          ;wait for WD1793 not busy
+    jsr wait_for_fdc    ;wait for WD1793 not busy
     bcs l_ecbd          ;if counted out go return $FF
 
     lda fdc_cmdst       ;Read the WD1793 status register
@@ -892,7 +892,7 @@ l_ed05:
     dex                 ;decrement the count
     bne l_ed05          ;loop if more to do
 
-    jsr l_ecd0          ;wait for WD1793 not busy and mask the status
+    jsr wait_fdc_status ;wait for WD1793 not busy and mask the status
     bne l_ed2e          ;if any bits set go ??
 
     dec num_sectors     ;decrement the requested sector count
@@ -997,7 +997,7 @@ l_ed7b:
     bne l_ed74          ;loop if more to do
 
 l_ed84:
-    jsr l_ecd0          ;wait for WD1793 not busy and mask the status
+    jsr wait_fdc_status ;wait for WD1793 not busy and mask the status
     bne l_ed9d          ;if any bits set go ??
 
     dec num_sectors     ;decrement the requested sector count

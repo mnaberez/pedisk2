@@ -17,7 +17,7 @@ sector = $7f93
 status = $7f94
 linprt = $CF83          ;BASIC Print 256*A + X in decimal
 select_drive = $EBA0
-l_ec0d = $EC0D
+send_fdc_cmd = $EC0D
 LECCC = $ECCC
 write_a_sector = $ED3A
 get_char = $EF7B
@@ -65,7 +65,7 @@ start:
     jsr select_drive
     bne exit
     lda #$03
-    jsr l_ec0d
+    jsr send_fdc_cmd
     lda fdc_cmdst
     and #$40
     bne protected
@@ -209,7 +209,7 @@ format_track:
     lda track
     sta fdc_data
     lda #$13
-    jsr l_ec0d
+    jsr send_fdc_cmd
     lda #$00
     sta status_mask
     ldy #$01

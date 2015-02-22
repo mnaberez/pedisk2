@@ -53,7 +53,6 @@ put_spc        = $EB7A
 put_spc_hex    = $EB7F
 put_hex_byte   = $EB84
 disk_error     = $EC96
-l_ec0d         = $EC0D
 read_a_sector  = $ECDF
 read_sectors   = $ECE4
 write_a_sector = $ED3A
