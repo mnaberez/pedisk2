@@ -6,9 +6,9 @@ a floppy disk controller for Commodore PET/CBM computers.
 
 ## Files
 
- - `pedisk2.bin` is a binary dump of the EPROM.
+ - `rom_e800.bin` is a binary dump of the EPROM.
 
- - `pedisk2.asm` is a disassembly of it.
+ - `rom_e800.asm` is a disassembly of it.
 
 ## Assemble
 
@@ -22,4 +22,4 @@ It should assemble a binary that is identical to the original.
 
 ## Credits
 
-The initial disassembly was done by Lee Davison.
+The initial ROM disassembly was done by Lee Davison.

@@ -21,7 +21,7 @@ FILES = {'dos_t00_s09_7800.asm':   'bin/dos_t00_s09_7800.bin',
          'dos_t01_s19_7c00_1.asm': 'bin/dos_t01_s19_7c00_1.bin',
          'dos_t01_s25_7c00_d.asm': 'bin/dos_t01_s25_7c00_d.bin',
          'dos_t01_s28_7c00_n.asm': 'bin/dos_t01_s28_7c00_n.bin',
-         'pedisk2.asm':            'bin/pedisk2.bin'
+         'rom_e800.asm':           'bin/rom_e800.bin'
         }
 
 def main():
