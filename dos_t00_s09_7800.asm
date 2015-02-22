@@ -380,13 +380,13 @@ L7A12:
     ldy #$05
 L7A16:
     lda (dir_ptr),y
-    cmp $7FA0,y
+    cmp filename,y
     bne L7A2D
     dey
     bpl L7A16
     ldy #$11
     lda (dir_ptr),y
-    cmp $7fb1
+    cmp drive_sel_f
     bne L7A2D
 L7A29:
     stx $7F8F
@@ -492,7 +492,7 @@ L7ADE:
     ldy #$0F
 L7AE0:
     lda (dir_ptr),y
-    sta $7FA0,y
+    sta filename,y
     dey
     bpl L7AE0
 L7AE8:
@@ -524,7 +524,7 @@ L7B00:
     sta (varpnt),y
     jsr L7B2F
 L7B22:
-    lda $7FA0,y
+    lda filename,y
     sta buf_1,x
     dex
     dey
@@ -592,7 +592,7 @@ _dos_close:
 L7B91:
     lda #$FF
 L7B93:
-    sta $7FA0
+    sta filename
     sta $7FB5
     lda #$00
     sta $E900
@@ -610,7 +610,7 @@ L7BB1:
     jsr L7B2F
 L7BB4:
     lda buf_1,x
-    sta $7FA0,y
+    sta filename,y
     dex
     dey
     bpl L7BB4
