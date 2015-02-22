@@ -41,10 +41,10 @@ num_sectors = dos+$0796 ;Number of sectors to read or write
 filename    = dos+$07a0 ;6 byte buffer used to store filename
 wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
 drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename
+linget      = $b8f6     ;BASIC Fetch integer (usually a line number)
 ptrget      = $c12b     ;BASIC Find a variable
 
 L3400 = $3400
-LB8F6 = $B8F6
 LC873 = $C873
 LCF6D = $CF6D
 
@@ -457,7 +457,7 @@ L7A75:
     bne L7AAC
     jsr chrget
     bcs L7AB3
-    jsr LB8F6
+    jsr linget
     lda $11
     sta $7fae
     lda $12
