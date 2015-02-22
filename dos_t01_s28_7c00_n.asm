@@ -1,6 +1,6 @@
 dir_ptr = $22
 pdos_prompt = $7A05
-L7AA3 = $7AA3
+input_filename = $7AA3
 filename = $7fa0
 drive_sel_f = $7fb1
 write_a_sector = $ED3A
@@ -27,7 +27,7 @@ L7C6F:
     ldy #>old_file
     jsr puts
 
-    jsr L7AA3
+    jsr input_filename
     ldx #$05
 L7C7B:
     lda filename,x
@@ -42,7 +42,7 @@ L7C7B:
     ldy #>new_file
     jsr puts
 
-    jsr L7AA3
+    jsr input_filename
     jsr find_file
     tax
     bmi L7CAF
