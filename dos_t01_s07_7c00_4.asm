@@ -1,5 +1,11 @@
+edit_ptr = $66
+target_ptr = $b7
 pdos_prompt = $7A05
 input_device = $7AD1
+drive_sel = $7f91
+track = $7f92
+sector = $7f93
+num_sectors = $7f96
 read_sectors = $ECE4
 write_sectors = $ED3F
 input_hex_addr = $EEFB
@@ -29,8 +35,11 @@ start:
     ldy #>read_or_write
     jsr puts
 
+    ;Get a character from the user and save it.
     jsr get_char_w_stop
     sta $7F97
+
+    ;Validate char is "R" or "W", ask again until it is.
     cmp #'R'
     beq ask_trk_sec
     cmp #'W'
@@ -41,47 +50,55 @@ ask_trk_sec:
     lda #$0D
     jsr chrout
 
+    ;Print "DEVICE?", input a valid drive number, and save it
     jsr input_device
-    sta $7F91
+    sta drive_sel
 
     ;Print "TRACK? "
     lda #<enter_track
     ldy #>enter_track
     jsr puts
 
+    ;Input track number in hex and save it
     jsr input_hex_byte
-    sta $7F92
+    sta track
 
     ;Print "SECTOR? "
     lda #<enter_sector
     ldy #>enter_sector
     jsr puts
 
+    ;Input sector number in hex and save it
     jsr input_hex_byte
-    sta $7F93
+    sta sector
 
     ;Print "# SECTORS?"
     lda #<enter_count
     ldy #>enter_count
     jsr puts
 
+    ;Input sector count in hex and save it
     jsr input_hex_byte
-    sta $7F96
+    sta num_sectors
+
+    ;Print "ADDR?", input a valid memory address in hex, and save it
     jsr input_hex_addr
+    lda edit_ptr
+    sta target_ptr
+    lda edit_ptr+1
+    sta target_ptr+1
 
-    lda $66
-    sta $B7
-    lda $67
-    sta $B8
-
+    ;Get the "R" or "W" character, branch if it's "R" for read
     lda $7F97
     cmp #'W'
     bne do_read
 
+    ;Write the sectors and return to the PDOS prompt
     jsr write_sectors
     jmp pdos_prompt
 
 do_read:
+    ;Read the sectors and return to the PDOS prompt
     jsr read_sectors
     jmp pdos_prompt
 
