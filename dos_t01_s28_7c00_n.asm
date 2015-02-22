@@ -9,7 +9,7 @@ puts = $EFE7
 
     *=$7c00
 
-    jmp L7C6F
+    jmp start
 
 old_file:
     !text $0d,"PEDISK II FILE RENAME UTILITY",$0d
@@ -21,72 +21,98 @@ already_in_file:
 not_in_dir:
     !text $0d,"****NOT IN DIRECTORY****",0
 
-L7C6F:
+start:
     ;Print banner and "OLD FILE-"
     lda #<old_file
     ldy #>old_file
     jsr puts
 
+    ;Print "FILE?" and get the old filename from user
+    ;  Sets filename and drive_sel_f
     jsr input_filename
+
+    ;Save the old filename in fname
     ldx #$05
-L7C7B:
+copy_old:
     lda filename,x
-    sta L7CD2,x
+    sta fname,x
     dex
-    bpl L7C7B
+    bpl copy_old
+
+    ;Save drive select pattern of old file in drv_sel.  It will
+    ;not actually be used.
     lda drive_sel_f
-    sta L7CD8
+    sta drv_sel
 
     ;Print "NEW FILE-"
     lda #<new_file
     ldy #>new_file
     jsr puts
 
+    ;Print "FILE?" and get the new filename from user
+    ;  Sets filename and drive_sel_f
     jsr input_filename
+
+    ;Check if the new filename already exists in the directory
     jsr find_file
     tax
-    bmi L7CAF
-    beq L7CC3
+    bmi check_error
+    beq file_exists
+
+    ;Move the old filename into filename, and in the process
+    ;push each byte of the new filename onto the stack.
     ldx #$05
-L7C9E:
+recall_old:
     lda filename,x
     pha
-    lda L7CD2,x
+    lda fname,x
     sta filename,x
     dex
-    bpl L7C9E
+    bpl recall_old
+
+    ;Check if the old filename exists in the directory.  If it is found,
+    ;find_file leaves a directory sector in memory at dir_sector and
+    ;sets up dir_ptr pointing to the filename.
     jsr find_file
     tax
-L7CAF:
-    bmi L7CC0
-    bne L7CCD
+
+check_error:
+    bmi exit
+    bne file_not_found
+
+    ;Pop each byte of the new filename off the stack and write it into
+    ;the directory sector buffer, overwriting the old filename.
     ldy #$00
-L7CB5:
+rename_entry:
     pla
     sta (dir_ptr),y
     iny
     cpy #$06
-    bmi L7CB5
+    bmi rename_entry
+
+    ;Write the directory sector back to the disk.
     jsr write_a_sector
-L7CC0:
+
+exit:
+    ;Return to the PDOS prompt.
     jmp pdos_prompt
 
-L7CC3:
-    ;Print "****NAME ALREADY IN FILE****"
+file_exists:
+    ;Print "****NAME ALREADY IN FILE****" and exit
     lda #<already_in_file
-L7CC5:
+puts_exit:
     ldy #>already_in_file
     jsr puts
     jmp pdos_prompt
 
-L7CCD:
-    ;"****NOT IN DIRECTORY****"
+file_not_found:
+    ;Print "****NOT IN DIRECTORY****" and exit
     lda #<not_in_dir
-    jmp L7CC5
+    jmp puts_exit
 
-L7CD2:
+fname:
     !byte 0,0,0,0,0,0
-L7CD8:
+drv_sel:
     !byte 0
 
 filler:
