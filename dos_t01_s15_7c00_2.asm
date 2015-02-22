@@ -3,6 +3,7 @@ target_ptr = $b7
 L7931 = $7931
 pdos_prompt = $7A05
 input_device = $7AD1
+dir_sector = $7f00
 read_a_sector = $ECDF
 read_sectors = $ECE4
 write_a_sector = $ED3A
@@ -159,7 +160,7 @@ L7D56:
     clc
     adc $7F9C
     sta $7F99
-    cmp $7F09
+    cmp dir_sector+$09
     beq L7D69
     bpl L7D95
 L7D69:

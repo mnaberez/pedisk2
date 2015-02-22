@@ -186,11 +186,11 @@ L78C2:
     jsr read_a_sector
     bne L7890
 L78E0:
-    inc $7F08
+    inc dir_sector+$08
     lda $58
-    sta $7F09
+    sta dir_sector+$09
     lda $59
-    sta $7F0A
+    sta dir_sector+$0a
     jsr write_a_sector
     rts
 L78F1:
@@ -586,7 +586,7 @@ _dos_close:
     jsr chrget
     jsr L7C22
     lda #$FF
-    sta $7F00
+    sta dir_sector
     jsr write_a_sector
     bne L7BA3
 L7B91:
@@ -711,7 +711,7 @@ _dos_input:
 L7C7F:
     jmp L7B3D
 L7C82:
-    lda $7F00
+    lda dir_sector
     cmp #$FF
     beq L7C7F
     cmp #$80
@@ -748,7 +748,7 @@ L7CB7:
     lda #$0A
     bne L7CB4
 L7CC3:
-    sta $7F00
+    sta dir_sector
     iny
     lda (varpnt),y
     sta dir_ptr
@@ -758,7 +758,7 @@ L7CC3:
     ldy #$7E
 L7CD2:
     lda (dir_ptr),y
-    sta $7F01,y
+    sta dir_sector+$01,y
     dey
     bpl L7CD2
     jsr write_a_sector

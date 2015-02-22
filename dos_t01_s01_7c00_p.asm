@@ -92,7 +92,7 @@ L7CE2:
 
     ldx #$00
     stx $59
-    lda $7F09
+    lda dir_sector+$09
     sta $5E
     lda #$1C    ;TODO 28 sectors per track?
     sta $60
@@ -100,7 +100,7 @@ L7CE2:
     sta $5F
     sta $61
     jsr L7931
-    lda $7F0A
+    lda dir_sector+$0a
     clc
     adc $62
     sta $62
