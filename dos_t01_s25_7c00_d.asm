@@ -1,3 +1,4 @@
+dir_ptr = $22
 hex_save_a = $26
 edit_pos = $27
 edit_ptr = $66
@@ -125,11 +126,11 @@ L7CE3:
 L7CEE:
     jmp pdos_prompt
 L7CF1:
-    stx $22
+    stx dir_ptr
     ldy #$00
 L7CF5:
     lda #$04
-    sta $23
+    sta dir_ptr+1
     sty hex_save_a
 L7CFB:
     ldx #$04
@@ -144,7 +145,7 @@ L7D02:
     iny
     dex
     bne L7D02
-    dec $23
+    dec dir_ptr+1
     bne L7CFB
 
     ;Print four spaces
@@ -205,7 +206,7 @@ L7D4D:
     lda #$0A
     sta edit_pos
 L7D68:
-    dec $22
+    dec dir_ptr
     beq L7D7D
 
     ;Print four spaces
