@@ -10,18 +10,18 @@ import shutil
 import sys
 import tempfile
 
-FILES = {'dos_t00_s09_7800.asm':   'dos_t00_s09_7800.bin',
-         'dos_t00_s22_7a00.asm':   'dos_t00_s22_7a00.bin',
-         'dos_t00_s26_7c00_h.asm': 'dos_t00_s26_7c00_h.bin',
-         'dos_t01_s01_7c00_p.asm': 'dos_t01_s01_7c00_p.bin',
-         'dos_t01_s05_7c00_u.asm': 'dos_t01_s05_7c00_u.bin',
-         'dos_t01_s07_7c00_4.asm': 'dos_t01_s07_7c00_4.bin',
-         'dos_t01_s09_7c00_3.asm': 'dos_t01_s09_7c00_3.bin',
-         'dos_t01_s15_7c00_2.asm': 'dos_t01_s15_7c00_2.bin',
-         'dos_t01_s19_7c00_1.asm': 'dos_t01_s19_7c00_1.bin',
-         'dos_t01_s25_7c00_d.asm': 'dos_t01_s25_7c00_d.bin',
-         'dos_t01_s28_7c00_n.asm': 'dos_t01_s28_7c00_n.bin',
-         'pedisk2.asm':            'pedisk2.bin'
+FILES = {'dos_t00_s09_7800.asm':   'bin/dos_t00_s09_7800.bin',
+         'dos_t00_s22_7a00.asm':   'bin/dos_t00_s22_7a00.bin',
+         'dos_t00_s26_7c00_h.asm': 'bin/dos_t00_s26_7c00_h.bin',
+         'dos_t01_s01_7c00_p.asm': 'bin/dos_t01_s01_7c00_p.bin',
+         'dos_t01_s05_7c00_u.asm': 'bin/dos_t01_s05_7c00_u.bin',
+         'dos_t01_s07_7c00_4.asm': 'bin/dos_t01_s07_7c00_4.bin',
+         'dos_t01_s09_7c00_3.asm': 'bin/dos_t01_s09_7c00_3.bin',
+         'dos_t01_s15_7c00_2.asm': 'bin/dos_t01_s15_7c00_2.bin',
+         'dos_t01_s19_7c00_1.asm': 'bin/dos_t01_s19_7c00_1.bin',
+         'dos_t01_s25_7c00_d.asm': 'bin/dos_t01_s25_7c00_d.bin',
+         'dos_t01_s28_7c00_n.asm': 'bin/dos_t01_s28_7c00_n.bin',
+         'pedisk2.asm':            'bin/pedisk2.bin'
         }
 
 def main():
