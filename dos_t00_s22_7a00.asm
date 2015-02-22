@@ -248,9 +248,9 @@ save_prog:
     jsr chrout
     jsr input_hex_addr
     lda edit_ptr
-    sta filename+$08
+    sta $7fa8
     lda edit_ptr+1
-    sta filename+$09
+    sta $7fa9
     lda #'-'
     jsr chrout
     jsr input_hex_word
@@ -259,17 +259,17 @@ save_prog:
     adc #$7F
     php
     sec
-    sbc filename+$08
+    sbc $7fa8
     sta hex_save_a
     lda edit_ptr+1
-    sbc filename+$09
+    sbc $7fa9
     plp
     adc #$00
     asl hex_save_a
     rol ;a
-    sta filename+$0e
+    sta $7fae
     lda #$00
-    sta filename+$0f
+    sta $7faf
     lda #<enter_entry
     ldy #>enter_entry
     jsr puts
@@ -277,11 +277,11 @@ save_prog:
     lda #$0D
     jsr chrout
     lda edit_ptr
-    sta filename+$06
+    sta $7fa6
     lda edit_ptr+1
-    sta filename+$07
+    sta $7fa7
     lda #$05
-    sta filename+$0a
+    sta $7faa
     jsr find_file
     bmi L7B90
     tax
