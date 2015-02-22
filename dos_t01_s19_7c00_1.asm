@@ -281,7 +281,7 @@ L7E8A:
     sta $0400
     sta $0401
     sta $0402
-    lda #$50
+    lda #'P'            ;P-PRINT DISK DIRECTORY
     jmp try_extrnl_cmd
 L7EA0:
     ldy #$00
