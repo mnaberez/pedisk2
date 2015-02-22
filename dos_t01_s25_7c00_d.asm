@@ -1,3 +1,4 @@
+hex_save_a = $26
 edit_pos = $27
 target_ptr = $b7
 pdos_prompt = $7A05
@@ -128,7 +129,7 @@ L7CF1:
 L7CF5:
     lda #$04
     sta $23
-    sty $26
+    sty hex_save_a
 L7CFB:
     ldx #$04
 
@@ -152,7 +153,7 @@ L7D02:
     jsr chrout
     jsr chrout
 
-    ldy $26
+    ldy hex_save_a
     ldx #$10
 L7D21:
     txa
