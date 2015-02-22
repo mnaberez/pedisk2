@@ -691,9 +691,9 @@ L7C51:
 L7C56:
     lda $7FBB
     sta $7F93
-    lda #$00
+    lda #<dir_sector
     sta target_ptr
-    lda #$7F
+    lda #>dir_sector
     sta target_ptr+1
     lda drive_sel_f
     sta $7F91
@@ -852,11 +852,11 @@ L7D87:
     stx sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
 
 L7D97:
-    lda #$00            ;Load address low byte
+    lda #<dir_sector
     sta target_ptr
     sta dir_ptr
 
-    lda #$7F            ;Load address high byte
+    lda #>dir_sector
     sta target_ptr+1
     sta dir_ptr+1
 

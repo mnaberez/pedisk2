@@ -94,9 +94,9 @@ L7CC8:
     sta track
     lda #$01
     sta sector
-    lda #$00
+    lda #<dir_sector
     sta target_ptr
-    lda #$7F
+    lda #>dir_sector
     sta target_ptr+1
     jsr read_a_sector
     beq L7CEE
