@@ -225,6 +225,9 @@ cmd_tokens:
 ;PEDISK II commands share the same names as existing Commodore BASIC
 ;commands but are prefixed with an exclamation point for the wedge.
 ;
+;The implementation allows BASIC command shortcuts to be used, e.g.
+;"!LIST" can also be entered as "!L<shift I>".
+;
     !byte $9e           ;CBM BASIC token for SYS
     !byte $93           ;CBM BASIC token for LOAD
     !byte $94           ;CBM BASIC token for SAVE
