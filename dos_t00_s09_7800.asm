@@ -879,8 +879,8 @@ L7DAB:
 
     ;Print first disk name (first 8 bytes of track 0, sector 1)
 
-    ldy     #$00
-    ldx     #$08
+    ldy #$00
+    ldx #$08
 L7DB6:
     lda (dir_ptr),y
     jsr chrout
@@ -890,9 +890,9 @@ L7DB6:
 
     ;Print "NAME  TYPE TRK SCTR #SCTRS"
 
-    lda     #<dirheader
-    ldy     #>dirheader
-    jsr     puts
+    lda #<dirheader
+    ldy #>dirheader
+    jsr puts
 
     ;Set line number countdown until "MORE.." prompt
 
