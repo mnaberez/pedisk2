@@ -111,10 +111,11 @@ L7818:
     bmi L7890
     bne L7857
 
-    lda #$05
+    lda #$05            ;A = 5, TODO error number for ??
 L7852:
-    jsr disk_error
-    bne L7890
+    jsr disk_error      ;Print error msg, FDC restore cmd, deselect drive
+    bne L7890           ;Branch always
+
 L7857:
     lda #$00
     sta $7FAB
@@ -122,13 +123,15 @@ L7857:
     bne L7890
     lda $7FB5
     beq L786A
-    lda #$06
-    bne L7852
+
+    lda #$06            ;A = 6, TODO error number for ??
+    bne L7852           ;Branch always
+
 L786A:
-    lda $7FA8           ;Load address low byte
+    lda $7FA8
     sta target_ptr
 
-    lda $7FA9           ;Load address high byte
+    lda $7FA9
     sta target_ptr+1
 
     lda open_track
@@ -139,6 +142,7 @@ L786A:
 
     lda $7FAE           ;number of sectors?
     sta num_sectors     ;Number of sectors to read or write
+
     jsr write_sectors
     bne L7890
     lda #$00
@@ -146,6 +150,7 @@ L786A:
     lda #$00
 L7890:
     rts
+
 L7891:
     lda $58
     clc
