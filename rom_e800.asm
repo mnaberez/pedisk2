@@ -550,9 +550,14 @@ disk_err_msg:
 
 
 select_drive:
-;Select a drive
+;Select a drive.
 ;
-;Sets the Z flag on success, clears Z on failure.
+;Calling parameters:
+;  drive_sel: Drive select pattern of drive to select
+;
+;Returns:
+;  On success, A=0 and Z flag set.
+;  On failure, A=$FF and Z flag clear (from disk_error).
 ;
     lda #0              ;clear A
     sta status          ;clear the WD1793 status register copy
@@ -578,15 +583,20 @@ select_drive:
 
     lda fdc_cmdst       ;Read the WD1793 status register
     and #%10000000      ;mask x000 0000, drive not ready
-    bne drv_not_rdy     ;if the drive is not ready go do disk error $13,
+    bne drv_not_rdy     ;if the drive is not ready go do disk error $13
 select_done:
     rts
 
 
 seek_track:
-;Seek to track with retries
+;Seek to track with retries.
 ;
-;Sets the Z flag on success, clears Z on failure.
+;Calling parameters:
+;  track: Requested track number
+;
+;Returns:
+;  On success, A=0 and Z flag set
+;  On failure, A=$FF and Z flag clear (from disk_error)
 ;
     lda #$03            ;set the retry count
     sta retries         ;save the retry count
@@ -647,7 +657,7 @@ no_drive_sel:
 ;do disk error $14, no drive selected
 ;
     lda #e_no_drive     ;set error $14
-    jmp disk_error      ;do "DISK ERROR" message and ??
+    jmp disk_error      ;Print "DISK ERROR" with info, deselect drive
 
 
 send_fdc_cmd:
@@ -765,7 +775,7 @@ next_done:
 dsk_err_restore:
 ;do disk error and restore the stack
 ;
-    jsr disk_error      ;do "DISK ERROR" message and stop the disk
+    jsr disk_error      ;Print "DISK ERROR" with info, deselect drive
     jmp restore         ;restore top 32 bytes of stack page and return EOT
 
 
@@ -776,10 +786,15 @@ end_of_disk:
                         ;Fall through into disk_error
 
 disk_error:
-;do "DISK ERROR" message and and stop the disk (??)
+;Print "DISK ERROR" followed by hex bytes with error info,
+;then deselect the drive.
 ;
-;Call with the error code in A.  See the e_* constants at
-;the top of this file for the error codes.
+;Calling parameters:
+;  Error code to display in A.  See the e_* constants at the
+;  top of this file for the error codes.
+;
+;Returns:
+;  Always sets A=$FF and sets carry flag.
 ;
     pha                 ;save A
     tya                 ;copy Y
@@ -918,7 +933,7 @@ read_error:
 ;Read Error
 ;
     lda #e_read_err
-    jmp disk_error      ;do "DISK ERROR" message and ??
+    jmp disk_error      ;Print "DISK ERROR" with info, deselect drive
 
     ;no error exit
 
@@ -1023,7 +1038,7 @@ write_error:
 ;Write Error
 ;
     lda #e_writ_err     ;set disk error $50
-    jmp disk_error      ;do "DISK ERROR" message and ??
+    jmp disk_error      ;Print "DISK ERROR" with info, deselect drive
 
 
 do_protected:
@@ -1176,8 +1191,11 @@ find_file:
 ;            is less than 6 characters, it must be padded with spaces ($20).
 ;
 ;Returns:
-;   A=0 means found, A=nonzero means not found.
-;   dir_ptr: points to the matching directory entry, if one was found
+;   dir_sector: a directory sector with the matching entry, if one was found
+;   dir_ptr: points to the matching entry in dir_sector, if one was found
+;   A=0 means success (found the file)
+;   A=$FF means an error occurred and was printed by disk_error.
+;   A=$7F means the file was not found, nothing will be printed.
 ;
 ;The directory is 8 sectors on track 0: sectors 1 through 8.  This area
 ;is 1024 bytes total (8 sectors * 128 bytes).  The first 16 bytes hold
@@ -1346,18 +1364,18 @@ load_file:
 ;Perform !LOAD.  Load a file from disk.
 ;
 ;Calling parameters:
-;  drive_sel_f: drive select pattern of drive to be searched.
-;  filename: buffer containing a 6 character filename.  If the filename is
-;            is less than 6 characters, it must be padded with spaces ($20).
+;  drive_sel_f and filename, which are passed to find_file.
 ;
 ;Returns:
-;  X=0 means successfully loaded, X=nonzero means load failed.
-;  If loading failed for any reason, "??????" will be printed.
+;  X=0 means success (file loaded).
+;  X=$FF means failure.  If a disk error occurred, an error message will be
+;        printed by disk_error.  If either a disk error occurs or the file
+;        file is not found, "??????" will be printed.
 ;
 ;See an explanation of directory entries and files in find_file.
 ;
     jsr find_file       ;search for filename in the directory
-    tax                 ;copy the returned value
+    tax                 ;copy the returned value to set Z flag
     bne not_found       ;if not found go do "??????" message
 
     ldy #$0a            ;set the index to the file type
