@@ -17,11 +17,13 @@ menu:
     !text $0d,"ENTER SELECTION NUMBER ",0
 
 start:
+    ;Print the menu
     lda #<menu
     ldy #>menu
     jsr puts
 
 get_num:
+    ;Get a character from the user
     jsr get_char_w_stop
 
     ;Validate selection
