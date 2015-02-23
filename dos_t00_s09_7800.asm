@@ -790,7 +790,7 @@ _dos_run:
     ldx #$1F
     sei
 L7CF3:
-    lda $7FE0,x
+    lda wedge_stack,x
     sta $01E0,x
     dex
     bpl L7CF3
