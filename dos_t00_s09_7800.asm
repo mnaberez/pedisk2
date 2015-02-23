@@ -783,9 +783,9 @@ _dos_run:
     jsr load_file
     txa
     bne L7D10
-    lda #$0C
+    lda #<L7D0C
     sta txtptr
-    lda #$7D
+    lda #>L7D0C
     sta txtptr+1
     ldx #$1F
     sei
@@ -801,10 +801,8 @@ L7CF3:
     ldx wedge_x
     lda #$8A
     jmp check_colon
-    txa
-    brk
-    brk
-    brk
+L7D0C:
+    !byte $8a,0,0,0
 L7D10:
     jmp restore
 
