@@ -93,15 +93,15 @@ L7CE2:
 
     ldx #$00
     stx $59
-    lda dir_sector+$09
+    lda dir_sector+$09  ;Next open track
     sta $5E
-    lda #$1C    ;TODO 28 sectors per track?
+    lda #$1C            ;TODO 28 sectors per track?
     sta $60
     lda #$00
     sta $5F
     sta $61
     jsr L7931
-    lda dir_sector+$0a
+    lda dir_sector+$0a  ;Next open sector
     clc
     adc $62
     sta $62
@@ -113,9 +113,11 @@ L7D14:
     sbc $62
     sta $62
     lda #$04
-    sbc $63
+
+    ;Print free sector count in hex
+    sbc $63             ;Free sector count high byte
     jsr put_hex_byte
-    lda $62
+    lda $62             ;Free sector count low byte
     jsr put_hex_byte
 
     ;Print "NAME   TYPE  TRK SCTR #SCTRS LOAD ENTRY"
