@@ -77,34 +77,40 @@ dos_print:  jmp _dos_print
 dos_run:    jmp _dos_run
 dos_sys:    jmp _dos_sys
 dos_list:   jmp _dos_list
-dos_stop:   ;fall through
 
-_dos_stop:
 L7818:
     lda vartab
     sec
     sbc txttab
     sta $7FA6
     sta $58
+
     lda vartab+1
     sbc txttab+1
     sta $59
     sta $7FA7
+
     lda txttab
     sta $7FA8
+
     lda txttab+1
     sta $7FA9
+
     jsr L7891
     lda num_sectors     ;Number of sectors to read or write
     sta $7FAE           ;number of sectors?
+
     lda #$00
     sta $7FAF
+
     lda #$03
     sta $7FAA
+
     jsr find_file
     tax
     bmi L7890
     bne L7857
+
     lda #$05
 L7852:
     jsr disk_error
@@ -347,7 +353,7 @@ _dos_sys:
 
     jsr read_sectors
     bne L79F3
-    jmp L7A00
+    jmp dos_stop
 
 L79F3:
     jmp restore
@@ -360,7 +366,7 @@ L79F3:
     jsr L3400
     !byte $01
 
-L7A00:
+dos_stop:
     !byte $46
 L7A01:
     eor #$25
