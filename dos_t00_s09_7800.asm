@@ -234,6 +234,8 @@ L790D:
     lda $62
     sta $58
     rts
+
+L7931:
     jsr L7948
     ldx #$10
 L7936:
@@ -247,6 +249,7 @@ L793E:
     jmp L7936
 L7947:
     rts
+
 L7948:
     lda #$00
     sta $62
@@ -254,10 +257,12 @@ L7948:
     sta $64
     sta $65
     rts
+
 L7953:
     asl $5E
     rol $5F
     rts
+
 L7958:
     lda $60
     clc
@@ -273,12 +278,14 @@ L7958:
     adc $65
     sta $65
     rts
+
 L7972:
     asl $62
     rol $63
     rol $64
     rol $65
     rts
+
 L797B:
     ldx #$00
     stx $62
@@ -291,6 +298,7 @@ L797B:
     stx $5F
 L798D:
     rts
+
 L798E:
     lda $61
     cmp $5F
