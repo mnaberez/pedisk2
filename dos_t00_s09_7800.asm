@@ -375,10 +375,7 @@ L79F3:
     !byte $01
 
 dos_stop:
-    !byte $46
-L7A01:
-    eor #$25
-    brk
+    !byte $46,$49,$25,0
 
 _dos_save:
     jsr L7818
@@ -575,14 +572,14 @@ L7B55:
 L7B59:
     lda #$43
 L7B5B:
-    sta L7A01
+    sta dos_stop+1
     lda txtptr
     pha
     lda txtptr+1
     pha
-    lda #$00
+    lda #<dos_stop
     sta txtptr
-    lda #$7A
+    lda #>dos_stop
     sta txtptr+1
     jsr ptrget
     pla
