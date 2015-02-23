@@ -342,9 +342,9 @@ L79C8:
     jmp L79AB
 
 _dos_sys:
-    lda #$00            ;Load address low byte
+    lda #<dos_stop      ;Load address low byte
     sta target_ptr
-    lda #$7A            ;Load address high byte
+    lda #>dos_stop      ;Load address high byte
     sta target_ptr+1
 
     ldx #$00            ;Set track 0 (first track)
