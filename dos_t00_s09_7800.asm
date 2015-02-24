@@ -203,11 +203,14 @@ L78C2:
     jsr read_a_sector
     bne L7890           ;Branch if a disk error occurred
 L78E0:
-    inc dir_sector+$08
+    inc dir_sector+$08  ;Increment number of used file entries
+
     lda $58
-    sta dir_sector+$09
+    sta dir_sector+$09  ;Set next open track
+
     lda $59
-    sta dir_sector+$0a
+    sta dir_sector+$0a  ;Set next open sector
+
     jsr write_a_sector
     rts
 L78F1:
