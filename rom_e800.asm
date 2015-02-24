@@ -1223,7 +1223,7 @@ find_file:
 ;disk information:
 ;
 ;  $00-$07   byte  disk name (8 bytes, padded with spaces)
-;  $08       byte  number of active files
+;  $08       byte  number of used file entries (includes deleted files)
 ;  $09       byte  next open track
 ;  $0A       byte  next open sector
 ;  $0B-0F    byte  ??
