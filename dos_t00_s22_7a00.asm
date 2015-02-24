@@ -82,7 +82,7 @@ dispatch_cmd:
     cmp #'G'            ;G-GO TO MEMORY
     beq jmp_goto_memory
     cmp #'X'            ;X-EXECUTE DISK FILE
-    beq jmp_exec_file
+    beq jmp_exec_prog
     cmp #'K'            ;K-KILL A FILE
     beq jmp_kill_file
 
@@ -104,8 +104,8 @@ jmp_edit_memory:
     jmp edit_memory
 jmp_goto_memory:
     jmp goto_memory
-jmp_exec_file:
-    jmp exec_file
+jmp_exec_prog:
+    jmp exec_prog
 
 enter_file:
     !text $0d,"FILE? ",0
@@ -245,7 +245,7 @@ tlf1:
 tlf2:
     rts
 
-exec_file:
+exec_prog:
 ;X-EXECUTE DISK FILE
 ;
 ;Load a machine language program (file type 5) from disk.
