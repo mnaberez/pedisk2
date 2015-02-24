@@ -197,36 +197,65 @@ L7ADB:
 load_prog:
 ;L-LOAD DISK PROGRAM
 ;
-    jsr try_load_file
-    jmp pdos_prompt
+;Load a machine language program (file type 5) from disk.
+;The program will be loaded into memory at the start address specified
+;by the file.  The program is not executed.
+;
+    jsr try_load_file   ;Prompt for a file and load it into memory
+    jmp pdos_prompt     ;Jump to the PDOS prompt
 
 try_load_file:
+;Prompt for a filename, load the file into memory at its start
+;address, and set edit_ptr to its entry address.  The file is
+;loaded regardless of type (TODO is this a bug?) but "??????" is
+;shown if it is not type 5 (machine language program).  Return A=0
+;on success, A=nonzero on any error.
+;
+    ;Print "FILE?" and get a filename from user
+    ;  Sets filename and drive_sel_f
     jsr input_filename
+
+    ;Load the file into memory
     jsr load_file
     txa
-    bne L7B11           ;Branch if load failed
-    ldy #$0A
-    lda (dir_ptr),y
-    cmp #$05
-    beq L7B04
-    jmp bad_cmd_or_file
-L7B04:
-    ldy #$06
-    lda (dir_ptr),y
-    sta edit_ptr
-    iny
-    lda (dir_ptr),y
-    sta edit_ptr+1
-    lda #$00
-L7B11:
+    bne tlf2            ;Branch if load failed
+
+    ;Check that the file is type 5 (machine language program)
+    ;  If it's not, show "??????" and jump back to the prompt because
+    ;  other file types don't have an entry address.
+
+    ldy #$0A            ;Set index to file type byte in directory entry
+    lda (dir_ptr),y     ;Get the file type
+    cmp #$05            ;Is it type 5 (machine language program)?
+    beq tlf1            ;  Yes: branch to continue
+    jmp bad_cmd_or_file ;  No: jump to show "??????" and return to prompt
+
+tlf1:
+    ;File is type 5 (machine language program)
+    ;Copy the entry address from the directory entry into edit_ptr
+
+    ldy #$06            ;Set index to entry addr low byte in dir entry
+    lda (dir_ptr),y     ;Get the entry address low byte
+    sta edit_ptr        ;Save it in edit_ptr low byte
+    iny                 ;Set index to entry addr high byte in dir entry
+    lda (dir_ptr),y     ;Get the entry address high byte
+    sta edit_ptr+1      ;Save it in edit_ptr high byte
+
+    lda #$00            ;A = 0 indicates success
+tlf2:
     rts
 
 exec_file:
 ;X-EXECUTE DISK FILE
 ;
-    jsr try_load_file
-    bne jmp_pdos_prompt
-    jmp jsr_edit_ptr
+;Load a machine language program (file type 5) from disk.
+;The program will be loaded into memory at the start address specified
+;by the file.  The program will be executed by jumping to the
+;entry address specified by the file.
+;
+    jsr try_load_file   ;Prompt for a filename and load it into memory
+    bne jmp_pdos_prompt ;If load failed, jump to the PDOS prompt
+    jmp jsr_edit_ptr    ;If load succeeded, jump to the file's entry address
 
 goto_memory:
 ;G-GO TO MEMORY
