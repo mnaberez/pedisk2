@@ -63,7 +63,7 @@ start:
     sta dir_b_ptr
     lda #$04
     sta target_ptr+1
-    sta $4C
+    sta dir_a_ptr+1
     sta dir_b_ptr+1
     jsr read_sectors
     beq L7CE8           ;Branch if read succeeded
@@ -87,40 +87,40 @@ L7CF8:
     adc #$10
     sta dir_a_ptr
     bcc L7D03
-    inc $4C
+    inc dir_a_ptr+1
 L7D03:
-    ldy #$00
+    ldy #$00            ;Y=$00 index to first byte of filename
     lda (dir_a_ptr),y
     cmp #$FF
     bne L7D0E
     jmp L7E36
 L7D0E:
-    ldy #$05
+    ldy #$05            ;Y=$05 index to last byte of filename
     lda (dir_a_ptr),y
     cmp #$FF
     beq L7CF8
     inc $0408
-    ldy #$0C
+    ldy #$0C            ;Y=$0c index to file track number
     lda (dir_a_ptr),y
     sta $7F98
-    iny
+    iny                 ;Y=$0d index to file sector number
     lda (dir_a_ptr),y
     sta $7F99
-    iny
+    iny                 ;Y=$0e index to file sector count low byte
     lda (dir_a_ptr),y
     sta (dir_b_ptr),y
     sta $7F9B
-    iny
+    iny                 ;Y=$0f index to file sector count high byte
     lda (dir_a_ptr),y
     sta (dir_b_ptr),y
     sta $7F9C
-    ldy #$0C
+    ldy #$0C            ;Y=$0c index to file track number
     lda L7C03
     sta (dir_b_ptr),y
     iny
     lda L7C04
     sta (dir_b_ptr),y
-    ldy #$0B
+    ldy #$0B            ;Y=$0b index to unknown byte
 L7D45:
     lda (dir_a_ptr),y
     sta (dir_b_ptr),y
