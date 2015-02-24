@@ -204,7 +204,7 @@ try_load_file:
     jsr input_filename
     jsr load_file
     txa
-    bne L7B11
+    bne L7B11           ;Branch if load failed
     ldy #$0A
     lda (dir_ptr),y
     cmp #$05
@@ -283,10 +283,12 @@ save_prog:
     sta $7fa7
     lda #$05
     sta $7faa
+
     jsr find_file
-    bmi L7B90
+    bmi L7B90           ;Branch if a disk error occurred
     tax
-    beq L7BE2
+    beq L7BE2           ;Branch if the file was found
+
     jsr L7857
 L7B90:
     jmp pdos_prompt
@@ -303,8 +305,8 @@ kill_file:
 
     jsr find_file
     tax
-    bmi L7BAE
-    bne L7BB1
+    bmi L7BAE           ;Branch if a disk error occurred
+    bne L7BB1           ;Branch if the file was not found
 
     lda #$FF
     ldy #$05

@@ -108,8 +108,8 @@ L7818:
 
     jsr find_file
     tax
-    bmi L7890
-    bne L7857
+    bmi L7890           ;Branch if a disk error occurred
+    bne L7857           ;Branch if the file was not found
 
     lda #$05            ;A = 5, TODO error number for ??
 L7852:
@@ -163,6 +163,7 @@ L789A:
     rol ;a
     sta num_sectors     ;Number of sectors to read or write
     rts
+
 L78A2:
     lda #$00
     sta $7FB5
@@ -180,6 +181,7 @@ L78A2:
     lda #$2B
     sta $7FB5
     rts
+
 L78C0:
     ldy #$0F
 L78C2:
@@ -441,7 +443,7 @@ L7A53:
 L7A5B:
     stx $7F8F
     jsr find_file
-    bpl L7A66
+    bpl L7A66           ;Branch if the file was found
     jmp restore
 L7A66:
     pha
@@ -784,7 +786,7 @@ L7CD2:
 _dos_run:
     jsr load_file
     txa
-    bne L7D10
+    bne L7D10           ;Branch if load failed
     lda #<L7D0C
     sta txtptr
     lda #>L7D0C

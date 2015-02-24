@@ -56,8 +56,8 @@ copy_old:
     ;Check if the new filename already exists in the directory
     jsr find_file
     tax
-    bmi check_error
-    beq file_exists
+    bmi check_error     ;Branch if a disk error occurred
+    beq file_exists     ;Branch if file was found
 
     ;Move the old filename into filename, and in the process
     ;push each byte of the new filename onto the stack.
@@ -77,8 +77,8 @@ recall_old:
     tax
 
 check_error:
-    bmi exit
-    bne file_not_found
+    bmi exit            ;Branch if a disk error occurred
+    bne file_not_found  ;Branch if file was not found
 
     ;Pop each byte of the new filename off the stack and write it into
     ;the directory sector buffer, overwriting the old filename.
