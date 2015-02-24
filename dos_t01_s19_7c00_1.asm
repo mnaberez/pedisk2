@@ -1,6 +1,6 @@
 vartab = $2a
-dir_a_ptr = $4b
-dir_b_ptr = $4d
+old_dir_ptr = $4b
+new_dir_ptr = $4d
 target_ptr = $b7
 L790D = $790D
 pdos_prompt = $7A05
@@ -59,12 +59,12 @@ start:
     sta num_sectors
     lda #$00
     sta target_ptr
-    sta dir_a_ptr
-    sta dir_b_ptr
+    sta old_dir_ptr
+    sta new_dir_ptr
     lda #$04
     sta target_ptr+1
-    sta dir_a_ptr+1
-    sta dir_b_ptr+1
+    sta old_dir_ptr+1
+    sta new_dir_ptr+1
     jsr read_sectors
     beq L7CE8           ;Branch if read succeeded
     jmp pdos_prompt
@@ -73,71 +73,73 @@ L7CE8:
     lda #$00
     sta $0408
 
-L7CED:
-    ;Advance to the next directory entry in dir_b
-    lda dir_b_ptr
+next_new:
+    ;Advance to the next directory entry in the new directory
+    lda new_dir_ptr
     clc
     adc #$10
-    sta dir_b_ptr
-    bcc L7CF8
-    inc dir_b_ptr+1
+    sta new_dir_ptr
+    bcc next_old
+    inc new_dir_ptr+1
 
-L7CF8:
-    ;Advance to the next directory entry in dir_a
-    lda dir_a_ptr
+next_old:
+    ;Advance to the next directory entry in the old directory
+    lda old_dir_ptr
     clc
     adc #$10
-    sta dir_a_ptr
-    bcc L7D03
-    inc dir_a_ptr+1
+    sta old_dir_ptr
+    bcc check_end_dir
+    inc old_dir_ptr+1
 
-L7D03:
+check_end_dir:
     ;Check for end of directory
     ldy #$00            ;Y=$00 index to first byte of filename
-    lda (dir_a_ptr),y   ;Get first byte of filename
+    lda (old_dir_ptr),y ;Get first byte of filename
     cmp #$FF            ;Is it equal to $FF (end of directory)?
-    bne L7D0E           ;  No: branch to handle this entry
+    bne check_deleted   ;  No: branch to handle this entry
     jmp L7E36           ;  Yes: done with all entries, jump to finish up
 
-L7D0E:
+check_deleted:
     ;Check if file was deleted
     ldy #$05            ;Y=$05 index to last byte of filename
-    lda (dir_a_ptr),y   ;Get last byte of filename
+    lda (old_dir_ptr),y ;Get last byte of filename
     cmp #$FF            ;Is it equal to $FF (file deleted)?
-    beq L7CF8
+    beq next_old        ;Yes: advance to the next entry in the old directory
+                        ;     but the new directory stays as it is
+                        ;No: continue to handle the file
 
     inc $0408
 
     ldy #$0C            ;Y=$0c index to file track number
-    lda (dir_a_ptr),y
+    lda (old_dir_ptr),y
     sta $7F98
 
     iny                 ;Y=$0d index to file sector number
-    lda (dir_a_ptr),y
+    lda (old_dir_ptr),y
     sta $7F99
     iny                 ;Y=$0e index to file sector count low byte
 
-    lda (dir_a_ptr),y
-    sta (dir_b_ptr),y
+    lda (old_dir_ptr),y
+    sta (new_dir_ptr),y
     sta $7F9B
     iny                 ;Y=$0f index to file sector count high byte
 
-    lda (dir_a_ptr),y
-    sta (dir_b_ptr),y
+    lda (old_dir_ptr),y
+    sta (new_dir_ptr),y
     sta $7F9C
 
     ldy #$0C            ;Y=$0c index to file track number
     lda L7C03
-    sta (dir_b_ptr),y
+    sta (new_dir_ptr),y
     iny
 
     lda L7C04
-    sta (dir_b_ptr),y
+    sta (new_dir_ptr),y
 
     ldy #$0B            ;Y=$0b index to unknown byte
 L7D45:
-    lda (dir_a_ptr),y
-    sta (dir_b_ptr),y
+    lda (old_dir_ptr),y
+    sta (new_dir_ptr),y
     dey
     bpl L7D45
 
@@ -167,7 +169,7 @@ L7D7B:
     adc $58
     sta L7C03
 L7D87:
-    jmp L7CED
+    jmp next_new
 L7D8A:
     lda $7F9B
     ora $7F9C
@@ -206,8 +208,8 @@ L7DB6:
     ldy #>cant_read_file
     jsr puts
 
-    ;Print the filename at (dir_b_ptr)
-    jsr put_dir_b_file
+    ;Print the filename at (new_dir_ptr)
+    jsr put_filename
 
     jmp L7E65
 L7DE2:
@@ -231,8 +233,8 @@ L7DEA:
     ldy #>moving_file
     jsr puts
 
-    ;Print the filename at (dir_b_ptr)
-    jsr put_dir_b_file
+    ;Print the filename at (new_dir_ptr)
+    jsr put_filename
 
     lda #$00
     sta target_ptr
@@ -254,18 +256,18 @@ L7E36:
     sta $0409
     lda L7C04
     sta $040A
-    lda dir_b_ptr
+    lda new_dir_ptr
     tay
     lda #$00
-    sta dir_b_ptr
+    sta new_dir_ptr
     lda #$FF
 L7E4B:
-    sta (dir_b_ptr),y
+    sta (new_dir_ptr),y
     iny
     bne L7E4B
-    ldx dir_b_ptr+1
+    ldx new_dir_ptr+1
     inx
-    stx dir_b_ptr+1
+    stx new_dir_ptr+1
     cpx #$08
     bmi L7E4B
     bpl L7E65
@@ -275,8 +277,8 @@ L7E5B:
     ldy #>cant_write_file
     jsr puts
 
-    ;Print the filename at (dir_b_ptr)
-    jsr put_dir_b_file
+    ;Print the filename at (new_dir_ptr)
+    jsr put_filename
 
 L7E65:
     lda #$08
@@ -310,12 +312,12 @@ L7E8A:
     lda #'P'            ;P-PRINT DISK DIRECTORY
     jmp try_extrnl_cmd
 
-put_dir_b_file:
-;Print the filename at (dir_b_ptr)
+put_filename:
+;Print the filename at (new_dir_ptr)
 ;
     ldy #$00
 pdbf1:
-    lda (dir_b_ptr),y
+    lda (new_dir_ptr),y
     jsr chrout
     iny
     cpy #$06
