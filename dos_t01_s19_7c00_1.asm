@@ -1,4 +1,6 @@
 vartab = $2a
+dir_a_ptr = $4b
+dir_b_ptr = $4d
 target_ptr = $b7
 L790D = $790D
 pdos_prompt = $7A05
@@ -42,8 +44,11 @@ start:
     ldy #>disk_compression
     jsr puts
 
+    ;Print "DEVICE?" and get a valid drive number from the user
+    ;  Sets drive_sel with the drive select pattern
     jsr input_device
     sta drive_sel
+
     lda #$60
     sta $7F9A
     ldx #$00
@@ -54,12 +59,12 @@ start:
     sta num_sectors
     lda #$00
     sta target_ptr
-    sta $4B
-    sta $4D
+    sta dir_a_ptr
+    sta dir_b_ptr
     lda #$04
     sta target_ptr+1
     sta $4C
-    sta $4E
+    sta dir_b_ptr+1
     jsr read_sectors
     beq L7CE8           ;Branch if read succeeded
     jmp pdos_prompt
@@ -69,56 +74,56 @@ L7CE8:
     sta $0408
 
 L7CED:
-    lda $4D
+    lda dir_b_ptr
     clc
     adc #$10
-    sta $4D
+    sta dir_b_ptr
     bcc L7CF8
-    inc $4E
+    inc dir_b_ptr+1
 
 L7CF8:
-    lda $4B
+    lda dir_a_ptr
     clc
     adc #$10
-    sta $4B
+    sta dir_a_ptr
     bcc L7D03
     inc $4C
 L7D03:
     ldy #$00
-    lda ($4B),y
+    lda (dir_a_ptr),y
     cmp #$FF
     bne L7D0E
     jmp L7E36
 L7D0E:
     ldy #$05
-    lda ($4B),y
+    lda (dir_a_ptr),y
     cmp #$FF
     beq L7CF8
     inc $0408
     ldy #$0C
-    lda ($4B),y
+    lda (dir_a_ptr),y
     sta $7F98
     iny
-    lda ($4B),y
+    lda (dir_a_ptr),y
     sta $7F99
     iny
-    lda ($4B),y
-    sta ($4D),y
+    lda (dir_a_ptr),y
+    sta (dir_b_ptr),y
     sta $7F9B
     iny
-    lda ($4B),y
-    sta ($4D),y
+    lda (dir_a_ptr),y
+    sta (dir_b_ptr),y
     sta $7F9C
     ldy #$0C
     lda L7C03
-    sta ($4D),y
+    sta (dir_b_ptr),y
     iny
     lda L7C04
-    sta ($4D),y
+    sta (dir_b_ptr),y
     ldy #$0B
 L7D45:
-    lda ($4B),y
-    sta ($4D),y
+    lda (dir_a_ptr),y
+    sta (dir_b_ptr),y
     dey
     bpl L7D45
     lda $7F99
@@ -230,18 +235,18 @@ L7E36:
     sta $0409
     lda L7C04
     sta $040A
-    lda $4D
+    lda dir_b_ptr
     tay
     lda #$00
-    sta $4D
+    sta dir_b_ptr
     lda #$FF
 L7E4B:
-    sta ($4D),y
+    sta (dir_b_ptr),y
     iny
     bne L7E4B
-    ldx $4E
+    ldx dir_b_ptr+1
     inx
-    stx $4E
+    stx dir_b_ptr+1
     cpx #$08
     bmi L7E4B
     bpl L7E65
@@ -286,7 +291,7 @@ L7E8A:
 L7EA0:
     ldy #$00
 L7EA2:
-    lda ($4D),y
+    lda (dir_b_ptr),y
     jsr chrout
     iny
     cpy #$06
