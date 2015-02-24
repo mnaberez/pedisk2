@@ -39,6 +39,7 @@ track       = dos+$0792 ;Track number to write to WD1793 (0-76 or $00-4c)
 sector      = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
 num_sectors = dos+$0796 ;Number of sectors to read or write
 filename    = dos+$07a0 ;6 byte buffer used to store filename
+filetype    = dos+$07aa ;File type byte, used when saving a file
 wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
 drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename
 linget      = $b8f6     ;BASIC Fetch integer (usually a line number)
@@ -103,8 +104,8 @@ L7818:
     lda #$00
     sta $7FAF
 
-    lda #$03
-    sta $7FAA
+    lda #$03            ;Type 3 = BASIC program
+    sta filetype
 
     jsr find_file
     tax
@@ -464,7 +465,7 @@ L7A75:
     lda #$00
     sta $7FA7
     sta $7fa9
-    sta $7FAA
+    sta filetype        ;Type 0 = SEQ
     sta $7FAB
     sta $7FAF
     jsr chrget

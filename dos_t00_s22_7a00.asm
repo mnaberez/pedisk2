@@ -6,6 +6,7 @@ L7857 = $7857
 L7C00 = $7C00
 L7C11 = $7C11
 filename = $7fa0
+filetype = $7faa
 drive_sel_f = $7fb1
 latch = $e900
 drive_selects = $ea2f
@@ -264,7 +265,7 @@ goto_memory:
     jsr chrout
     jsr input_hex_addr
 jsr_edit_ptr:
-    jsr jmp_edit_ptr
+    jsr jmp_edit_ptr   ;JSR (edit_ptr)
 jmp_pdos_prompt:
     jmp pdos_prompt
 jmp_edit_ptr:
@@ -273,17 +274,28 @@ jmp_edit_ptr:
 save_prog:
 ;S-SAVE A PROGRAM
 ;
+    ;Print "FILE?" and get a filename from user
+    ;  Sets filename and drive_sel_f
     jsr input_filename
+
+    ;Print a newline
     lda #$0D
     jsr chrout
+
+    ;Print "ADDR?" and get the start address in edit_ptr
+    ;Copy the start address into $7fa8/7fa9
     jsr input_hex_addr
     lda edit_ptr
     sta $7fa8
     lda edit_ptr+1
     sta $7fa9
+
+    ;Print "-" to separate start and end address
+    ;Get the end address in edit_ptr
     lda #'-'
     jsr chrout
     jsr input_hex_word
+
     lda edit_ptr
     clc
     adc #$7F
@@ -300,18 +312,22 @@ save_prog:
     sta $7fae
     lda #$00
     sta $7faf
+
     lda #<enter_entry
     ldy #>enter_entry
     jsr puts
+
     jsr input_hex_word
+
     lda #$0D
     jsr chrout
+
     lda edit_ptr
     sta $7fa6
     lda edit_ptr+1
     sta $7fa7
-    lda #$05
-    sta $7faa
+    lda #$05            ;Type 5 = machine language program
+    sta filetype
 
     jsr find_file
     bmi L7B90           ;Branch if a disk error occurred

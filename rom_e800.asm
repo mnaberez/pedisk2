@@ -114,6 +114,7 @@ status      = dos+$0794 ;Last status byte read from WD1793 (no masking)
 command     = dos+$0795 ;Last command byte written to WD1793
 num_sectors = dos+$0796 ;Number of sectors to read or write
 filename    = dos+$07a0 ;6 byte buffer used to store filename
+filetype    = dos+$07aa ;File type byte, used when saving a file
 drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename
 wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
 ptrget      = $c12b     ;BASIC Find a variable
