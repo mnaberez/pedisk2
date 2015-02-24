@@ -61,7 +61,7 @@ start:
     sta $4C
     sta $4E
     jsr read_sectors
-    beq L7CE8
+    beq L7CE8           ;Branch if read succeeded
     jmp pdos_prompt
 
 L7CE8:
@@ -179,7 +179,7 @@ L7DB6:
     lda #$08
     sta target_ptr+1
     jsr read_sectors
-    beq L7DE2
+    beq L7DE2           ;Branch if read succeeded
 
     ;Print " CANNOT READ-DELETE FILE "
     lda #<cant_read_file

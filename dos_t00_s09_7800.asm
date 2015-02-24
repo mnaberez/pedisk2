@@ -193,11 +193,11 @@ L78C2:
     cmp #$01
     beq L78E0
     jsr write_a_sector
-    bne L7890
+    bne L7890           ;Branch if a disk error occurred
     lda #$01
     sta sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
     jsr read_a_sector
-    bne L7890
+    bne L7890           ;Branch if a disk error occurred
 L78E0:
     inc dir_sector+$08
     lda $58
@@ -606,7 +606,7 @@ _dos_close:
     lda #$FF
     sta dir_sector
     jsr write_a_sector
-    bne L7BA3
+    bne L7BA3           ;Branch if a disk error occurred
 L7B91:
     lda #$FF
 L7B93:
@@ -721,7 +721,7 @@ _dos_input:
     jsr L7BA6
     jsr L7BC4
     jsr read_a_sector
-    bne L7CA2
+    bne L7CA2           ;Branch if a disk error occurred
     jsr ptrget
     bit $07
     bmi L7C82
@@ -780,7 +780,7 @@ L7CD2:
     dey
     bpl L7CD2
     jsr write_a_sector
-    bne L7CA2
+    bne L7CA2           ;Branch if a disk error occurred
     jmp L7B00
 
 _dos_run:
@@ -877,7 +877,7 @@ L7D97:
     sta dir_ptr+1
 
     jsr read_a_sector
-    beq L7DAB
+    beq L7DAB           ;Branch if read succeeded
     jmp restore
 
     ;Print "DISKNAME= "
@@ -922,7 +922,7 @@ L7DCF:
     bpl L7DE3
     inc sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
     jsr read_a_sector
-    beq L7DE1
+    beq L7DE1           ;Branch if read succeeded
     jmp restore
 L7DE1:
     lda #$00

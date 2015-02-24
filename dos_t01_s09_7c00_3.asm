@@ -140,7 +140,7 @@ L7CF9:
 L7D08:
     jsr write_a_sector
 L7D0B:
-    bne exit
+    bne exit            ;Branch if a disk error occurred
     lda status
     beq L7D17
     lda #$F1
@@ -182,7 +182,7 @@ L7D30:
     sta dir_sector+$0e
     sta dir_sector+$0f
     jsr write_a_sector
-    bne L7D0B
+    bne L7D0B           ;Branch if a disk error occurred
 
     ;Print "FINISHED!"
     lda #<finished_disk

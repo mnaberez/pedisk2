@@ -99,7 +99,7 @@ L7CC8:
     lda #>dir_sector
     sta target_ptr+1
     jsr read_a_sector
-    beq L7CEE
+    beq L7CEE           ;Branch if read succeeded
 L7CEB:
     jmp pdos_prompt
 L7CEE:
@@ -200,7 +200,7 @@ L7D95:
     lda #$20
     sta $7E0F
     jsr write_a_sector
-    bne L7D56
+    bne L7D56           ;Branch if a disk error occurred
     lda #$04
     sta vartab
     sta vartab+1

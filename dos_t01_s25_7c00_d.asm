@@ -101,7 +101,7 @@ L7C94:
     sta edit_ptr+1
 L7CC0:
     jsr read_a_sector
-    bne L7CEE
+    bne L7CEE           ;Branch if a disk error occurred
 
     ;Print a newline
     lda #$0D
