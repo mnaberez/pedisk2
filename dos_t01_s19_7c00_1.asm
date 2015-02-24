@@ -74,6 +74,7 @@ L7CE8:
     sta $0408
 
 L7CED:
+    ;Advance to the next directory entry in dir_b
     lda dir_b_ptr
     clc
     adc #$10
@@ -82,50 +83,64 @@ L7CED:
     inc dir_b_ptr+1
 
 L7CF8:
+    ;Advance to the next directory entry in dir_a
     lda dir_a_ptr
     clc
     adc #$10
     sta dir_a_ptr
     bcc L7D03
     inc dir_a_ptr+1
+
 L7D03:
+    ;Check for end of directory
     ldy #$00            ;Y=$00 index to first byte of filename
-    lda (dir_a_ptr),y
-    cmp #$FF
-    bne L7D0E
-    jmp L7E36
+    lda (dir_a_ptr),y   ;Get first byte of filename
+    cmp #$FF            ;Is it equal to $FF (end of directory)?
+    bne L7D0E           ;  No: branch to handle this entry
+    jmp L7E36           ;  Yes: done with all entries, jump to finish up
+
 L7D0E:
+    ;Check if file was deleted
     ldy #$05            ;Y=$05 index to last byte of filename
-    lda (dir_a_ptr),y
-    cmp #$FF
+    lda (dir_a_ptr),y   ;Get last byte of filename
+    cmp #$FF            ;Is it equal to $FF (file deleted)?
     beq L7CF8
+
     inc $0408
+
     ldy #$0C            ;Y=$0c index to file track number
     lda (dir_a_ptr),y
     sta $7F98
+
     iny                 ;Y=$0d index to file sector number
     lda (dir_a_ptr),y
     sta $7F99
     iny                 ;Y=$0e index to file sector count low byte
+
     lda (dir_a_ptr),y
     sta (dir_b_ptr),y
     sta $7F9B
     iny                 ;Y=$0f index to file sector count high byte
+
     lda (dir_a_ptr),y
     sta (dir_b_ptr),y
     sta $7F9C
+
     ldy #$0C            ;Y=$0c index to file track number
     lda L7C03
     sta (dir_b_ptr),y
     iny
+
     lda L7C04
     sta (dir_b_ptr),y
+
     ldy #$0B            ;Y=$0b index to unknown byte
 L7D45:
     lda (dir_a_ptr),y
     sta (dir_b_ptr),y
     dey
     bpl L7D45
+
     lda $7F99
     cmp L7C04
     bne L7D8A
