@@ -191,7 +191,9 @@ L7DB6:
     ldy #>cant_read_file
     jsr puts
 
-    jsr L7EA0
+    ;Print the filename at (dir_b_ptr)
+    jsr put_dir_b_file
+
     jmp L7E65
 L7DE2:
     jsr next_incr
@@ -214,7 +216,9 @@ L7DEA:
     ldy #>moving_file
     jsr puts
 
-    jsr L7EA0
+    ;Print the filename at (dir_b_ptr)
+    jsr put_dir_b_file
+
     lda #$00
     sta target_ptr
     lda #$08
@@ -256,7 +260,9 @@ L7E5B:
     ldy #>cant_write_file
     jsr puts
 
-    jsr L7EA0
+    ;Print the filename at (dir_b_ptr)
+    jsr put_dir_b_file
+
 L7E65:
     lda #$08
     sta num_sectors
@@ -288,14 +294,17 @@ L7E8A:
     sta $0402
     lda #'P'            ;P-PRINT DISK DIRECTORY
     jmp try_extrnl_cmd
-L7EA0:
+
+put_dir_b_file:
+;Print the filename at (dir_b_ptr)
+;
     ldy #$00
-L7EA2:
+pdbf1:
     lda (dir_b_ptr),y
     jsr chrout
     iny
     cpy #$06
-    bmi L7EA2
+    bmi pdbf1
     rts
 
 filler:
