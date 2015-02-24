@@ -215,7 +215,7 @@ L7DEA:
     lda #$08
     sta target_ptr+1
     jsr write_sectors
-    bne L7E5B
+    bne L7E5B           ;Branch if a disk error occurred
     jsr next_incr
     bcc L7E27
     jmp L7E65
@@ -264,7 +264,7 @@ L7E65:
     iny
     sty sector
     jsr write_sectors
-    beq L7E8A
+    beq L7E8A           ;Branch if write succeeded
 
     ;Print "CANNOT WRITE NEW INDEX-REFORMAT DISK"
     ;  and "ALL DATA IS LOST!"

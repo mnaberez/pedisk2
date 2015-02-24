@@ -106,7 +106,7 @@ L7CEE:
     lda $7F97
     jsr L7DE3
     jsr read_sectors
-    bne L7CEB
+    bne L7CEB           ;Branch if a disk error occurred
     bit $7F9A
     bpl L7D4D
 L7CFE:
@@ -128,7 +128,7 @@ L7CFE:
     lda #$7E
     sta target_ptr+1
     jsr read_a_sector
-    bne L7CEB
+    bne L7CEB           ;Branch if a disk error occurred
     lda $7F99
     bne L7D3C
     ldx #$07
@@ -155,7 +155,7 @@ L7D4D:
     jsr L7DE3
     jsr write_sectors
 L7D56:
-    bne L7CEB
+    bne L7CEB           ;Branch if a disk error occurred
     lda $7F99
     clc
     adc $7F9C
@@ -196,7 +196,7 @@ L7D95:
     lda #$7E
     sta target_ptr+1
     jsr read_a_sector
-    bne L7D56
+    bne L7D56           ;Branch if a disk error occurred
     lda #$20
     sta $7E0F
     jsr write_a_sector

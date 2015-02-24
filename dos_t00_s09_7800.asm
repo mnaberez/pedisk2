@@ -144,7 +144,7 @@ L786A:
     sta num_sectors     ;Number of sectors to read or write
 
     jsr write_sectors
-    bne L7890
+    bne L7890           ;Branch if a disk error occurred
     lda #$00
     sta latch           ;Drive Select Latch
     lda #$00
@@ -367,7 +367,7 @@ _dos_sys:
     sta num_sectors     ;Number of sectors to read or write
 
     jsr read_sectors
-    bne L79F3
+    bne L79F3           ;Branch if a disk error occurred
     jmp dos_stop
 
 L79F3:

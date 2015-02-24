@@ -860,21 +860,31 @@ wait_fdc_status:
 
 
 read_a_sector:
-;read one sector to memory ??
+;Read one sector into memory.
 ;
     lda #$01            ;set the sector count
     sta num_sectors     ;save the requested sector count
                         ;Fall through into read_sectors
 
 read_sectors:
-;read <n> sector(s) to memory ??
+;Read multiple sectors into memory.
+;
+;Calling parameters:
+;  track: Requested track number
+;  sector: Requested sector number
+;  num_sectors: Number of sectors to read (may span tracks)
+;  target_ptr: Pointer to where to write the data in memory
+;
+;Returns:
+;  A=0 means success (all sectors read).
+;  A=$FF means an error occurred and was printed by disk_error.
 ;
     jsr select_drive
-    bne l_ed38          ;if there was any error just exit
+    bne l_ed38          ;Branch if a disk error occurred
 
 l_ece9:
-    jsr seek_track      ;seek to track with retries
-    bne l_ed38
+    jsr seek_track
+    bne l_ed38          ;Branch if a disk error occurred
 
 l_ecee:
     lda #$0a
@@ -911,7 +921,7 @@ l_ed05:
     bne l_ed05          ;loop if more to do
 
     jsr wait_fdc_status ;wait for WD1793 not busy and mask the status
-    bne l_ed2e          ;if any bits set go ??
+    bne l_ed2e          ;if any bits set go to retry
 
     dec num_sectors     ;decrement the requested sector count
     beq l_ed38          ;if all done just exit
@@ -943,14 +953,24 @@ l_ed38:
 
 
 write_a_sector:
-;write one sector to disk ??
+;Write one sector to disk.
 ;
     lda #$01            ;set a single sector
     sta num_sectors     ;save the requested sector count
                         ;Fall through into write_sectors
 
 write_sectors:
-;write <n> sector(s) to disk ??
+;Read multiple sectors to disk.
+;
+;Calling parameters:
+;  track: Requested track number
+;  sector: Requested sector number
+;  num_sectors: Number of sectors to write (may span tracks)
+;  target_ptr: Pointer to where to read the data from in memory
+;
+;Returns:
+;  A=0 means success (all sectors written).
+;  A=$FF means an error occurred and was printed by disk_error.
 ;
     jsr select_drive
     bne l_ed38
@@ -1016,7 +1036,7 @@ l_ed7b:
 
 l_ed84:
     jsr wait_fdc_status ;wait for WD1793 not busy and mask the status
-    bne l_ed9d          ;if any bits set go ??
+    bne l_ed9d          ;if any bits set go to retry
 
     dec num_sectors     ;decrement the requested sector count
     beq l_ed38          ;if all done just exit
@@ -1048,7 +1068,7 @@ do_protected:
     ldy #>protected     ;set the message pointer high byte
     jsr puts            ;message out
     clc
-    bcc write_error   ;do disk error $50, branch always
+    bcc write_error     ;do disk error $50, branch always
 
 
 protected:
@@ -1162,15 +1182,15 @@ l_ee0f:
     plp                 ;restore the open quote compare status
     bne l_ee32          ;if it wasn't an immediate string just exit
 
-;else it was an immediate string so move the get BASIC byte pointer past it
+;else it was an immediate string so move txtptr (the chrget pointer) past it
 
     tya                 ;copy the index
     clc                 ;clear carry for add
-    adc txtptr          ;add the BASIC byte pointer low byte
-    sta txtptr          ;save the BASIC byte pointer low byte
+    adc txtptr          ;add the chrget pointer low byte
+    sta txtptr          ;save the chrget pointer low byte
     bcc l_ee28          ;if no carry skip the high byte increment
 
-    inc txtptr+1        ;else increment the BASIC byte pointer high byte
+    inc txtptr+1        ;else increment the chrget pointer high byte
 l_ee28:
     jsr chrget          ;get the next BASIC byte
     cmp #quote          ;compare it with a close quote character
@@ -1420,7 +1440,7 @@ l_eebe:
     sta num_sectors     ;save the sector count to read
 
     jsr read_sectors    ;read <n> sector(s) to memory
-    bne load_failed     ;if there was an error go flag it and exit
+    bne load_failed     ;Branch if a disk error occurred
 
     ldx #0              ;flag no error
                         ;Fall through into load_done
