@@ -11,6 +11,7 @@ latch        = $e900    ;Drive Select Latch
 ;a location that is used for some other purpose by CBM BASIC 4.
 
 valtyp      = $07       ;Data type of value: 0=numeric, $ff=string
+linnum      = $11       ;2 byte integer (usually a line number) from linget
 dir_ptr     = $22       ;Pointer: PEDISK directory **
 hex_save_a  = $26       ;PEDISK temporarily saves A during hex conversion **
 edit_pos    = $27       ;PEDISK memory editor position on current line **
@@ -21,7 +22,7 @@ open_track  = $56       ;Next track open for a new file **
 open_sector = $57       ;Next sector open for a new file **
 edit_ptr    = $66       ;Pointer: PEDISK current address of memory editor **
 chrget      = $70       ;Subroutine: Get Next Byte of BASIC Text
-L0076       = $0076
+L0076       = $76
 txtptr      = $77       ;Pointer: Current Byte of BASIC Text
 target_ptr  = $b7       ;Pointer: PEDISK target address for memory ops **
 
@@ -476,9 +477,9 @@ L7A75:
     jsr chrget
     bcs L7AB3
     jsr linget
-    lda $11
+    lda linnum
     sta $7fae
-    lda $12
+    lda linnum+1
     sta $7FAF
 L7AAC:
     jsr L78A2
