@@ -41,6 +41,8 @@ num_sectors = dos+$0796 ;Number of sectors to read or write
 filename    = dos+$07a0 ;6 byte buffer used to store filename
 filetype    = dos+$07aa ;File type byte, used when saving a file
 wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
+entry_addr  = dos+$07a6 ;2 byte entry address of a file
+start_addr  = dos+$07a8 ;2 byte start address of a file
 drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename
 linget      = $b8f6     ;BASIC Fetch integer (usually a line number)
 ptrget      = $c12b     ;BASIC Find a variable
@@ -83,19 +85,19 @@ L7818:
     lda vartab
     sec
     sbc txttab
-    sta $7FA6
+    sta entry_addr
     sta $58
 
     lda vartab+1
     sbc txttab+1
     sta $59
-    sta $7FA7
+    sta entry_addr+1
 
     lda txttab
-    sta $7FA8
+    sta start_addr
 
     lda txttab+1
-    sta $7FA9
+    sta start_addr+1
 
     jsr L7891
     lda num_sectors     ;Number of sectors to read or write
@@ -129,10 +131,10 @@ L7857:
     bne L7852           ;Branch always
 
 L786A:
-    lda $7FA8
+    lda start_addr
     sta target_ptr
 
-    lda $7FA9
+    lda start_addr+1
     sta target_ptr+1
 
     lda open_track
@@ -460,11 +462,11 @@ L7A75:
     lda #$64
     sta $7FAE
     lda #$80
-    sta $7FA6
-    sta $7FA8
+    sta entry_addr
+    sta start_addr
     lda #$00
-    sta $7FA7
-    sta $7fa9
+    sta entry_addr+1
+    sta start_addr+1
     sta filetype        ;Type 0 = SEQ
     sta $7FAB
     sta $7FAF

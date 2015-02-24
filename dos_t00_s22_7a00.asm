@@ -6,7 +6,9 @@ L7857 = $7857
 L7C00 = $7C00
 L7C11 = $7C11
 filename = $7fa0
+entry_addr = $7fa6
 filetype = $7faa
+start_addr = $7fa8
 drive_sel_f = $7fb1
 latch = $e900
 drive_selects = $ea2f
@@ -286,9 +288,9 @@ save_prog:
     ;Copy the start address into $7fa8/7fa9
     jsr input_hex_addr
     lda edit_ptr
-    sta $7fa8
+    sta start_addr
     lda edit_ptr+1
-    sta $7fa9
+    sta start_addr+1
 
     ;Print "-" to separate start and end address
     ;Get the end address in edit_ptr
@@ -301,10 +303,10 @@ save_prog:
     adc #$7F
     php
     sec
-    sbc $7fa8
+    sbc start_addr
     sta hex_save_a
     lda edit_ptr+1
-    sbc $7fa9
+    sbc start_addr+1
     plp
     adc #$00
     asl hex_save_a
@@ -323,9 +325,10 @@ save_prog:
     jsr chrout
 
     lda edit_ptr
-    sta $7fa6
+    sta entry_addr
     lda edit_ptr+1
-    sta $7fa7
+    sta entry_addr+1
+
     lda #$05            ;Type 5 = machine language program
     sta filetype
 
