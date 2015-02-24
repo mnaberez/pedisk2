@@ -10,6 +10,9 @@ drive_sel = $7f91
 track = $7f92
 sector = $7f93
 num_sectors = $7f96
+old_track = $7f98  ;Old track number of file
+old_sector = $7f99 ;Old sector number of file
+old_count = $7f9b  ;2 bytes for old file sector count
 next_incr = $EC74
 read_sectors = $ECE4
 write_sectors = $ED3F
@@ -20,10 +23,13 @@ chrout = $FFD2
 
     jmp start
 
-L7C03:
-    !byte 0
-L7C04:
-    !byte $09
+new_track:
+;Temp byte to store a file's new track number
+    !byte 0             ;0 = First track on disk
+
+new_sector:
+;Temp byte to store a file's new sector number
+    !byte $09           ;9 = First sector after the dir on track 0
 
 disk_compression:
     !text $0d,"** DISK COMPRESSION **",$0d
@@ -110,32 +116,40 @@ check_deleted:
 
     inc $0408
 
+    ;Old dir: Get track number of the file
     ldy #$0C            ;Y=$0c index to file track number
     lda (old_dir_ptr),y
-    sta $7F98
+    sta old_track
 
+    ;Old dir: Get sector number of the file
     iny                 ;Y=$0d index to file sector number
     lda (old_dir_ptr),y
-    sta $7F99
+    sta old_sector
+
+    ;Old dir: Get sector count of file (low byte)
     iny                 ;Y=$0e index to file sector count low byte
-
     lda (old_dir_ptr),y
     sta (new_dir_ptr),y
-    sta $7F9B
+    sta old_count
+
+    ;Old dir: Get sector count of file (high byte)
     iny                 ;Y=$0f index to file sector count high byte
-
     lda (old_dir_ptr),y
     sta (new_dir_ptr),y
-    sta $7F9C
+    sta old_count+1
 
+    ;New dir: Set track number of file
     ldy #$0C            ;Y=$0c index to file track number
-    lda L7C03
-    sta (new_dir_ptr),y
-    iny
-
-    lda L7C04
+    lda new_track
     sta (new_dir_ptr),y
 
+    ;New dir: Set sector number of file
+    iny                 ;Y=$0d index to file sector number
+    lda new_sector
+    sta (new_dir_ptr),y
+
+    ;Copy bytes $00-$0B from old dir entry into new entry
+    ;These bytes are the filename, type, size, and load address
     ldy #$0B            ;Y=$0b index to unknown byte
 L7D45:
     lda (old_dir_ptr),y
@@ -143,48 +157,53 @@ L7D45:
     dey
     bpl L7D45
 
-    lda $7F99
-    cmp L7C04
+    lda old_sector
+    cmp new_sector
     bne L7D8A
-    lda $7F98
-    cmp L7C03
+
+    lda old_track
+    cmp new_track
     bne L7D8A
-    lda $7F9B
+
+    lda old_count
     sta $7FAE
-    lda $7F9C
+    lda old_count+1
     sta $7FAF
+
     jsr L790D
-    lda L7C04
+
+    lda new_sector
     clc
     adc $59
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
     bmi L7D7B
     sec
     sbc #$1C            ;TODO 28 sectors per track?
-    inc L7C03
+    inc new_track
 L7D7B:
-    sta L7C04
-    lda L7C03
+    sta new_sector
+    lda new_track
     clc
     adc $58
-    sta L7C03
+    sta new_track
 L7D87:
     jmp next_new
 L7D8A:
-    lda $7F9B
-    ora $7F9C
+    lda old_count
+    ora old_count+1
     beq L7D87
-    lda $7F9B
+
+    lda old_count
     sta num_sectors
     sec
     sbc $7F9A
-    sta $7F9B
+    sta old_count
     bcs L7DB0
-    dec $7F9C
+    dec old_count+1
     bpl L7DB0
     lda #$00
-    sta $7F9B
-    sta $7F9C
+    sta old_count
+    sta old_count+1
     beq L7DB6
 L7DB0:
     lda $7F9A
@@ -192,9 +211,9 @@ L7DB0:
 L7DB6:
     lda num_sectors
     sta $7F97
-    lda $7F98
+    lda old_track
     sta track
-    lda $7F99
+    lda old_sector
     sta sector
     lda #$00
     sta target_ptr
@@ -218,14 +237,14 @@ L7DE2:
     jmp L7E65
 L7DEA:
     lda track
-    sta $7F98
+    sta old_track
     lda sector
-    sta $7F99
+    sta old_sector
     lda $7F97
     sta num_sectors
-    lda L7C03
+    lda new_track
     sta track
-    lda L7C04
+    lda new_sector
     sta sector
 
     ;Print "MOVING FILE "
@@ -247,14 +266,14 @@ L7DEA:
     jmp L7E65
 L7E27:
     lda track
-    sta L7C03
+    sta new_track
     lda sector
-    sta L7C04
+    sta new_sector
     jmp L7D8A
 L7E36:
-    lda L7C03
+    lda new_track
     sta $0409
-    lda L7C04
+    lda new_sector
     sta $040A
     lda new_dir_ptr
     tay
