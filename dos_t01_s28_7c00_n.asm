@@ -59,8 +59,8 @@ copy_old:
     bmi check_error     ;Branch if a disk error occurred
     beq file_exists     ;Branch if file was found
 
-    ;Move the old filename into filename, and in the process
-    ;push each byte of the new filename onto the stack.
+    ;Move the old filename into the filename bytes of dir_entry, and
+    ;in the process push each byte of the new filename onto the stack.
     ldx #$05
 recall_old:
     lda dir_entry,x

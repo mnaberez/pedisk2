@@ -1231,8 +1231,8 @@ find_file:
 ;
 ;Calling parameters:
 ;  drive_sel_f: drive select pattern of drive to be searched.
-;  filename: buffer containing a 6 character filename.  If the filename is
-;            is less than 6 characters, it must be padded with spaces ($20).
+;  dir_entry: first 6 bytes only with the filename to find.  If the filename
+;             is less than 6 bytes, it must be padded with spaces ($20).
 ;
 ;Returns:
 ;   dir_sector: a directory sector with the matching entry, if one was found
@@ -1408,7 +1408,7 @@ load_file:
 ;Perform !LOAD.  Load a file from disk.
 ;
 ;Calling parameters:
-;  drive_sel_f and filename, which are passed to find_file.
+;  drive_sel_f and dir_entry, which are used by find_file.
 ;
 ;Returns:
 ;  X=0 means success (file loaded).
