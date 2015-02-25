@@ -9,7 +9,7 @@ dir_entry = $7fa0
 drive_sel_f = $7fb1
 latch = $e900
 drive_selects = $ea2f
-l_ead1 = $EAD1
+restart_dos = $EAD1
 restore = $eb5e
 write_a_sector = $ED3A
 find_file = $EE33
@@ -122,7 +122,7 @@ reenter_basic:
     pha
     lda #<(restore-1)
     pha
-    jmp l_ead1
+    jmp restart_dos     ;Clear buf_1 - buf_4 and load DOS again
 
 external_cmd:
 ;Load an external command.  External commands are files on the disk

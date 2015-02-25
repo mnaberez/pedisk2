@@ -409,7 +409,7 @@ l_eace:
     dex                 ;loop if more to do, branch never
     bpl l_eac3
 
-l_ead1:
+restart_dos:
     lda #$ff
     sta buf_1
     sta buf_2
