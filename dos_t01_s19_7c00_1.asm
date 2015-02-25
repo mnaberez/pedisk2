@@ -2,7 +2,8 @@ vartab = $2a
 old_dir_ptr = $4b
 new_dir_ptr = $4d
 target_ptr = $b7
-dir_buffer = $0400 ;1024 byte buffer for all directory sectors
+dir_buffer = $0400  ;1024 byte buffer for all directory sectors
+file_buffer = $0800 ;TODO ??? byte buffer for file data
 L790D = $790D
 pdos_prompt = $7A05
 try_extrnl_cmd = $7A47
@@ -217,9 +218,9 @@ L7DB6:
     sta track
     lda old_sector
     sta sector
-    lda #$00
+    lda #<file_buffer
     sta target_ptr
-    lda #$08
+    lda #>file_buffer
     sta target_ptr+1
     jsr read_sectors
     beq L7DE2           ;Branch if read succeeded
@@ -257,9 +258,9 @@ L7DEA:
     ;Print the filename at (new_dir_ptr)
     jsr put_filename
 
-    lda #$00
+    lda #<file_buffer
     sta target_ptr
-    lda #$08
+    lda #>file_buffer
     sta target_ptr+1
     jsr write_sectors
     bne L7E5B           ;Branch if a disk error occurred
@@ -289,7 +290,7 @@ L7E4B:
     ldx new_dir_ptr+1
     inx
     stx new_dir_ptr+1
-    cpx #$08
+    cpx #>(dir_buffer+1024)
     bmi L7E4B
     bpl L7E65
 L7E5B:
@@ -337,9 +338,9 @@ L7E8A:
     sta dir_buffer+$01  ;End of BASIC program first byte
     sta dir_buffer+$02  ;End of BASIC program second byte
 
-    ;Print directory and exit
+    ;Print directory and return to prompt
     lda #'P'            ;P-PRINT DISK DIRECTORY
-    jmp try_extrnl_cmd  ;Load overlay and return to PDOS prompt
+    jmp try_extrnl_cmd  ;Load $7C00 overlay (overwrites this code)
 
 put_filename:
 ;Print the filename at (new_dir_ptr)
