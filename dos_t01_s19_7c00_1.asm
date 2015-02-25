@@ -178,15 +178,15 @@ copy_entry_loop:
     bpl copy_entry_loop
 
     ;If the starting track or sector of the file has changed in the
-    ;new dir entry, branch to move the file data.
+    ;new dir entry, branch to start moving the file data.
 
     lda old_sector
     cmp new_sector
-    bne start_move_file ;Branch if new sector is different
+    bne move_file_loop ;Branch if new sector is different
 
     lda old_track
     cmp new_track
-    bne start_move_file ;Branch if new track is different
+    bne move_file_loop ;Branch if new track is different
 
     ;The file has not moved.
 
@@ -215,8 +215,8 @@ L7D7B:
 jmp_next_new:
     jmp next_new
 
-start_move_file:
-    ;If the file size is 0, jump out because there's nothing to move.
+move_file_loop:
+    ;If no sectors are left to move in the file, branch to do the next entry.
     lda old_count
     ora old_count+1
     beq jmp_next_new
@@ -313,7 +313,7 @@ L7E27:
     sta new_track
     lda sector
     sta new_sector
-    jmp start_move_file
+    jmp move_file_loop
 
 finish_dir:
     ;All entries have been written to the new directory.
