@@ -58,14 +58,24 @@ start:
     jsr input_device
     sta drive_sel
 
+    ;TODO ???
     lda #$60
     sta $7F9A
+
+    ;Set track/sector for read_sectors (beginning of directory)
     ldx #$00
-    stx track
+    stx track           ;Set track 0
     inx
-    stx sector
+    stx sector          ;Set sector 1
+
+    ;Set sector count for read_sectors (entire directory)
     lda #$08
     sta num_sectors
+
+    ;Set all three pointers to dir_buffer:
+    ;  target_ptr: used by read_sectors
+    ;  old_dir_ptr: used to read old directory entries
+    ;  new_dir_ptr: used to write new directory entries
     lda #<dir_buffer
     sta target_ptr
     sta old_dir_ptr
@@ -74,14 +84,18 @@ start:
     sta target_ptr+1
     sta old_dir_ptr+1
     sta new_dir_ptr+1
+
+    ;Read all of the directory sectors into dir_buffer
     jsr read_sectors
     beq L7CE8           ;Branch if read succeeded
+
+    ;Read failed, just return to the prompt
     jmp pdos_prompt
 
 L7CE8:
     ;Set number of used directory entries to 0
     lda #$00
-    sta dir_buffer+$08
+    sta dir_buffer+$08  ;$08 = index to used directory entries count
 
 next_new:
     ;Advance to the next directory entry in the new directory
@@ -119,7 +133,7 @@ check_deleted:
                         ;No: continue to handle the file
 
     ;Increment number of used directory entries
-    inc dir_buffer+$08
+    inc dir_buffer+$08  ;$08 = index to used directory entries count
 
     ;Old dir: Get track number of the file
     ldy #$0C            ;Y=$0c index to file track number
@@ -230,6 +244,8 @@ L7DB6:
     jsr read_sectors
     beq L7DE2           ;Branch if read succeeded
 
+    ;Read file failed, print error and jump to write new dir
+
     ;Print " CANNOT READ-DELETE FILE "
     lda #<cant_read_file
     ldy #>cant_read_file
@@ -238,11 +254,12 @@ L7DB6:
     ;Print the filename at (new_dir_ptr)
     jsr put_filename
 
-    jmp L7E65
+    jmp write_new_dir
+
 L7DE2:
     jsr next_incr
     bcc L7DEA
-    jmp L7E65
+    jmp write_new_dir
 L7DEA:
     lda track
     sta old_track
@@ -271,11 +288,11 @@ L7DEA:
     sta target_ptr+1
 
     jsr write_sectors
-    bne L7E5B           ;Branch if a disk error occurred
+    bne write_file_err           ;Branch if a disk error occurred
 
     jsr next_incr
     bcc L7E27
-    jmp L7E65
+    jmp write_new_dir
 
 L7E27:
     lda track
@@ -305,8 +322,9 @@ L7E4B:
     stx new_dir_ptr+1
     cpx #>(dir_buffer+1024)
     bmi L7E4B
-    bpl L7E65
-L7E5B:
+    bpl write_new_dir
+
+write_file_err:
     ;Print "CANNOT WRITE FILE "
     lda #<cant_write_file
     ldy #>cant_write_file
@@ -315,22 +333,30 @@ L7E5B:
     ;Print the filename at (new_dir_ptr)
     jsr put_filename
 
-L7E65:
+    ;Fall through into write_new_dir
+
+write_new_dir:
+    ;Set sector count for write_sectors (entire directory)
     lda #$08
     sta num_sectors
 
+    ;Set target_ptr for write_sectors
     lda #<dir_buffer
     sta target_ptr
     lda #>dir_buffer
     sta target_ptr+1
 
+    ;Set track/sector for write_sectors (beginning of directory)
     ldy #$00
-    sty track
+    sty track           ;Set track 0
     iny
-    sty sector
+    sty sector          ;Set track 1
 
+    ;Write the new directory to disk
     jsr write_sectors
-    beq L7E8A           ;Branch if write succeeded
+    beq finish_up       ;Branch if write succeeded
+
+    ;Write dir failed, print error message and return to the prompt
 
     ;Print "CANNOT WRITE NEW INDEX-REFORMAT DISK"
     ;  and "ALL DATA IS LOST!"
@@ -340,7 +366,7 @@ L7E65:
 
     jmp pdos_prompt
 
-L7E8A:
+finish_up:
     ;Set start of variables to $0404
     lda #>dir_buffer ;TODO this code must be changed to set low byte and
                      ;     high byte separately if dir_buffer ever moves
