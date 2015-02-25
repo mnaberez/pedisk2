@@ -17,6 +17,7 @@ old_track = $7f98  ;Old track number of file
 old_sector = $7f99 ;Old sector number of file
 tmp_7f9a = $7f9a   ;Temp storage for TODO ??
 old_count = $7f9b  ;2 bytes for old file sector count
+dir_entry = $7fa0
 next_sector = $EC74
 read_sectors = $ECE4
 write_sectors = $ED3F
@@ -191,9 +192,9 @@ copy_entry_loop:
     ;The file has not moved.
 
     lda old_count
-    sta $7FAE
+    sta dir_entry+$0e   ;File sector count low byte
     lda old_count+1
-    sta $7FAF
+    sta dir_entry+$0f   ;File sector count high byte
 
     jsr L790D
 

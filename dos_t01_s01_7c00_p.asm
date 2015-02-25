@@ -313,8 +313,5 @@ L7DEB:
 
     jmp pdos_prompt
 
-    !byte $07
-    sta $7FAA
-    lda #$02
-    !byte $8D
-    !byte $AE
+filler:
+    !byte $07,$8d,$aa,$7f,$a9,$02,$8d,$ae

@@ -1,7 +1,7 @@
 dir_ptr = $22
 pdos_prompt = $7A05
 input_filename = $7AA3
-filename = $7fa0
+dir_entry = $7fa0
 drive_sel_f = $7fb1
 write_a_sector = $ED3A
 find_file = $EE33
@@ -28,13 +28,13 @@ start:
     jsr puts
 
     ;Print "FILE?" and get the old filename from user
-    ;  Sets filename and drive_sel_f
+    ;  Sets filename bytes in dir_entry and drive_sel_f
     jsr input_filename
 
     ;Save the old filename in fname
     ldx #$05
 copy_old:
-    lda filename,x
+    lda dir_entry,x
     sta fname,x
     dex
     bpl copy_old
@@ -50,7 +50,7 @@ copy_old:
     jsr puts
 
     ;Print "FILE?" and get the new filename from user
-    ;  Sets filename and drive_sel_f
+    ;  Sets filename bytes in dir_entry and drive_sel_f
     jsr input_filename
 
     ;Check if the new filename already exists in the directory
@@ -63,10 +63,10 @@ copy_old:
     ;push each byte of the new filename onto the stack.
     ldx #$05
 recall_old:
-    lda filename,x
+    lda dir_entry,x
     pha
     lda fname,x
-    sta filename,x
+    sta dir_entry,x
     dex
     bpl recall_old
 

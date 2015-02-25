@@ -40,8 +40,7 @@ drive_sel   = dos+$0791 ;Drive select bit pattern to write to the latch
 track       = dos+$0792 ;Track number to write to WD1793 (0-76 or $00-4c)
 sector      = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
 num_sectors = dos+$0796 ;Number of sectors to read or write
-filename    = dos+$07a0 ;6 byte buffer used to store filename
-filetype    = dos+$07aa ;File type byte, used when saving a file
+dir_entry   = dos+$07a0 ;16 byte buffer for a directory entry
 wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
 entry_addr  = dos+$07a6 ;2 byte entry address of a file
 start_addr  = dos+$07a8 ;2 byte start address of a file
@@ -102,14 +101,14 @@ L7818:
     sta start_addr+1
 
     jsr L7891
-    lda num_sectors     ;Number of sectors to read or write
-    sta $7FAE           ;number of sectors?
+    lda num_sectors
+    sta dir_entry+$0e   ;File sector count low byte
 
     lda #$00
-    sta $7FAF
+    sta dir_entry+$0f   ;File sector count high byte
 
     lda #$03            ;Type 3 = BASIC program
-    sta filetype
+    sta dir_entry+$0a   ;File type
 
     jsr find_file
     tax
@@ -123,7 +122,7 @@ L7852:
 
 L7857:
     lda #$00
-    sta $7FAB
+    sta dir_entry+$0b   ;TODO ??
     jsr L78A2
     bne L7890
     lda $7FB5
@@ -140,13 +139,13 @@ L786A:
     sta target_ptr+1
 
     lda open_track
-    sta track           ;Track number to write to WD1793 (0-76 or $00-4c)
+    sta track
 
     lda open_sector
-    sta sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
+    sta sector
 
-    lda $7FAE           ;number of sectors?
-    sta num_sectors     ;Number of sectors to read or write
+    lda dir_entry+$0e   ;File sector count low byte
+    sta num_sectors
 
     jsr write_sectors
     bne L7890           ;Branch if a disk error occurred
@@ -166,7 +165,7 @@ L789A:
     asl ;a
     lda $59
     rol ;a
-    sta num_sectors     ;Number of sectors to read or write
+    sta num_sectors
     rts
 
 L78A2:
@@ -174,10 +173,10 @@ L78A2:
     sta $7FB5
 
     lda open_track
-    sta $7FAC           ;track
+    sta dir_entry+$0c   ;File track number
 
     lda open_sector
-    sta $7FAD           ;sector
+    sta dir_entry+$0d   ;File sector number
 
     jsr L78F1
     lda $58
@@ -190,17 +189,17 @@ L78A2:
 L78C0:
     ldy #$0F
 L78C2:
-    lda filename,y
+    lda dir_entry,y
     sta (dir_ptr),y
     dey
     bpl L78C2
-    lda sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
+    lda sector
     cmp #$01
     beq L78E0
     jsr write_a_sector
     bne L7890           ;Branch if a disk error occurred
     lda #$01
-    sta sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
+    sta sector
     jsr read_a_sector
     bne L7890           ;Branch if a disk error occurred
 L78E0:
@@ -216,7 +215,7 @@ L78E0:
     rts
 L78F1:
     jsr L790D
-    lda $7FAD           ;sector
+    lda dir_entry+$0d   ;File sector number
     clc
     adc $59
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
@@ -225,17 +224,17 @@ L78F1:
     inc $58
 L7902:
     sta $59
-    lda $7FAC           ;track
+    lda dir_entry+$0c   ;File track number
     clc
     adc $58
     sta $58
     rts
 L790D:
-    lda $7FAE           ;number of sectors?
+    lda dir_entry+$0e   ;File sector count low byte
     sec
     sbc #$01
     sta $5E
-    lda $7FAF
+    lda dir_entry+$0f   ;File sector count high byte
     sbc #$00
     sta $5F
     lda #$1C            ;TODO 28 sectors per track?
@@ -406,7 +405,7 @@ L7A12:
     ldy #$05
 L7A16:
     lda (dir_ptr),y
-    cmp filename,y
+    cmp dir_entry,y
     bne L7A2D
     dey
     bpl L7A16
@@ -465,16 +464,16 @@ L7A73:
     bne L7ADB
 L7A75:
     lda #$64
-    sta $7FAE
+    sta dir_entry+$0e   ;File sector count low byte
     lda #$80
     sta entry_addr
     sta start_addr
     lda #$00
     sta entry_addr+1
     sta start_addr+1
-    sta filetype        ;Type 0 = SEQ
-    sta $7FAB
-    sta $7FAF
+    sta dir_entry+$0a   ;File type (0=SEQ)
+    sta dir_entry+$0b   ;TODO ??
+    sta dir_entry+$0f   ;File sector count high byte
     jsr chrget
     cmp #$C3
     bne L7AAC
@@ -482,9 +481,9 @@ L7A75:
     bcs L7AB3
     jsr linget
     lda linnum
-    sta $7fae
+    sta dir_entry+$0e   ;File sector count low byte
     lda linnum+1
-    sta $7FAF
+    sta dir_entry+$0f   ;File sector count high byte
 L7AAC:
     jsr L78A2
     bne L7B2C
@@ -503,10 +502,10 @@ L7AC2:
 L7AC6:
     ldy #$00
     lda (varpnt),y
-    sta $7FAF
+    sta dir_entry+$0f   ;File sector count high byte
     iny
     lda (varpnt),y
-    sta $7FAE
+    sta dir_entry+$0e   ;File sector count low byte
     jmp L7AAC
 L7AD6:
     pla
@@ -518,7 +517,7 @@ L7ADE:
     ldy #$0F
 L7AE0:
     lda (dir_ptr),y
-    sta filename,y
+    sta dir_entry,y
     dey
     bpl L7AE0
 L7AE8:
@@ -528,9 +527,9 @@ L7AEA:
     sta $7FB3
 L7AF0:
     sta $7FB5
-    lda $7FAC
+    lda dir_entry+$0c   ;File track number
     sta $7FBA
-    ldx $7FAD
+    ldx dir_entry+$0d   ;File sector number
     dex
     stx $7FBB
 L7B00:
@@ -550,7 +549,7 @@ L7B00:
     sta (varpnt),y
     jsr L7B2F
 L7B22:
-    lda filename,y
+    lda dir_entry,y
     sta buf_1,x
     dex
     dey
@@ -618,7 +617,7 @@ _dos_close:
 L7B91:
     lda #$FF
 L7B93:
-    sta filename
+    sta dir_entry
     sta $7FB5
     lda #$00
     sta latch
@@ -636,7 +635,7 @@ L7BB1:
     jsr L7B2F
 L7BB4:
     lda buf_1,x
-    sta filename,y
+    sta dir_entry,y
     dex
     dey
     bpl L7BB4
@@ -677,10 +676,10 @@ L7C00:
     jsr L797B
     lda $5E
     clc
-    adc $7FAD
+    adc dir_entry+$0d   ;File sector number
     pha
     lda $62
-    adc $7FAC
+    adc dir_entry+$0c   ;File track number
     sta $7FBA
     pla
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"

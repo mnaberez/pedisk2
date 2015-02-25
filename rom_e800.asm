@@ -115,8 +115,7 @@ command     = dos+$0795 ;Last command byte written to WD1793
 num_sectors = dos+$0796 ;Number of sectors to read or write
 tmp_7f97    = dos+$0797 ;Temp byte used by $7c00 overlays for various things
 tmp_7f9a    = dos+$079a ;Temp byte used by $7c00 overlays for various things
-filename    = dos+$07a0 ;6 byte buffer used to store filename
-filetype    = dos+$07aa ;File type byte, used when saving a file
+dir_entry   = dos+$07a0 ;16 byte buffer for a directory entry
 drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename
 wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
 ptrget      = $c12b     ;BASIC Find a variable
@@ -1174,7 +1173,7 @@ bad_filename:
     jmp jmp_dsk_err_res ;do disk error and restore the stack
 
 l_edfb:
-    sta filename,y      ;save a filename character
+    sta dir_entry,y     ;save a filename character
     iny                 ;increment the index
     bpl l_edec          ;go get another filename character, branch always
 
@@ -1189,7 +1188,7 @@ l_ee05:
     cpx #$06            ;compare the filename index with max + 1
     bcs l_ee0f          ;if done go get the drive number
 
-    sta filename,x      ;save a [SPACE] to the filename
+    sta dir_entry,x     ;save a [SPACE] to the filename
     inx                 ;increment the index
     bpl l_ee05          ;go try another space, branch always
 
@@ -1349,7 +1348,7 @@ l_ee5f:
     beq l_ee95          ;if end of directory go do the not found exit
 
 l_ee67:
-    cmp filename,y      ;compare it with a filename character
+    cmp dir_entry,y     ;compare it with a filename character
     bne l_ee76          ;if not a match go try the next directory entry
 
     iny                 ;increment the filename index

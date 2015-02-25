@@ -5,10 +5,7 @@ chrget = $70
 L7857 = $7857
 L7C00 = $7C00
 L7C11 = $7C11
-filename = $7fa0
-entry_addr = $7fa6
-filetype = $7faa
-start_addr = $7fa8
+dir_entry = $7fa0
 drive_sel_f = $7fb1
 latch = $e900
 drive_selects = $ea2f
@@ -138,14 +135,14 @@ external_cmd:
     lda #'*'
     ldy #$00
 ext1:
-    sta filename,y
+    sta dir_entry,y
     iny
     cpy #$05
     bmi ext1
 
     ;Set last char of filename to command character
     pla
-    sta filename+$05
+    sta dir_entry+$05  ;Last byte of filename
 
     ;Set drive select pattern for drive 0
     ldy #$01
@@ -164,7 +161,7 @@ L7AAC:
     jsr chrin
     cmp #':'
     beq L7ABB
-    sta filename,y
+    sta dir_entry,y
     iny
     cpy #$07
     bmi L7AAC
@@ -173,7 +170,7 @@ L7ABB:
 L7ABD:
     cpy #$06
     bpl L7AC7
-    sta filename,y
+    sta dir_entry,y
     iny
     bne L7ABD
 L7AC7:
@@ -215,7 +212,7 @@ try_load_file:
 ;on success, A=nonzero on any error.
 ;
     ;Print "FILE?" and get a filename from user
-    ;  Sets filename and drive_sel_f
+    ;  Sets filename bytes in dir_entry and drive_sel_f
     jsr input_filename
 
     ;Load the file into memory
@@ -277,7 +274,7 @@ save_prog:
 ;S-SAVE A PROGRAM
 ;
     ;Print "FILE?" and get a filename from user
-    ;  Sets filename and drive_sel_f
+    ;  Sets filename bytes in dir_entry and drive_sel_f
     jsr input_filename
 
     ;Print a newline
@@ -285,12 +282,12 @@ save_prog:
     jsr chrout
 
     ;Print "ADDR?" and get the start address in edit_ptr
-    ;Copy the start address into $7fa8/7fa9
+    ;Copy the start address into load address
     jsr input_hex_addr
     lda edit_ptr
-    sta start_addr
+    sta dir_entry+$08   ;Load address low byte
     lda edit_ptr+1
-    sta start_addr+1
+    sta dir_entry+$09   ;Load address high byte
 
     ;Print "-" to separate start and end address
     ;Get the end address in edit_ptr
@@ -303,17 +300,17 @@ save_prog:
     adc #$7F
     php
     sec
-    sbc start_addr
+    sbc dir_entry+$08   ;Load address low byte
     sta hex_save_a
     lda edit_ptr+1
-    sbc start_addr+1
+    sbc dir_entry+$09   ;Load address high byte
     plp
     adc #$00
     asl hex_save_a
     rol ;a
-    sta $7fae
+    sta dir_entry+$0e   ;Sector count low byte
     lda #$00
-    sta $7faf
+    sta dir_entry+$0f   ;Sector count high byte
 
     lda #<enter_entry
     ldy #>enter_entry
@@ -325,12 +322,12 @@ save_prog:
     jsr chrout
 
     lda edit_ptr
-    sta entry_addr
+    sta dir_entry+$06   ;Entry address low byte
     lda edit_ptr+1
-    sta entry_addr+1
+    sta dir_entry+$07   ;Entry address high byte
 
     lda #$05            ;Type 5 = machine language program
-    sta filetype
+    sta dir_entry+$0a   ;File type
 
     jsr find_file
     bmi L7B90           ;Branch if a disk error occurred
