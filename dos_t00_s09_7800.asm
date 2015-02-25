@@ -490,7 +490,7 @@ L7AAC:
     beq L7AE8
 L7AB3:
     jsr ptrget
-    lda $07
+    lda valtyp
     bne L7AC2
     bit $08
     bmi L7AC6
@@ -730,7 +730,7 @@ _dos_input:
     jsr read_a_sector
     bne L7CA2           ;Branch if a disk error occurred
     jsr ptrget
-    bit $07
+    bit valtyp
     bmi L7C82
     lda #$09
 L7C7F:
@@ -760,7 +760,7 @@ _dos_print:
     jsr L7BA6
     jsr L7BC4
     jsr ptrget
-    bit $07
+    bit valtyp
     bmi L7CB7
     lda #$09
 L7CB4:
