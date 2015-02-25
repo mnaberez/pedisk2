@@ -129,10 +129,10 @@ L7857:
     bne L7852           ;Branch always
 
 L786A:
-    lda dir_entry+$08
+    lda dir_entry+$08   ;File load address low byte
     sta target_ptr
 
-    lda dir_entry+$09
+    lda dir_entry+$09   ;File load address high byte
     sta target_ptr+1
 
     lda open_track
