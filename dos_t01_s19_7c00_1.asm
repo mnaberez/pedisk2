@@ -79,8 +79,9 @@ start:
     jmp pdos_prompt
 
 L7CE8:
+    ;Set number of used directory entries to 0
     lda #$00
-    sta $0408
+    sta dir_buffer+$08
 
 next_new:
     ;Advance to the next directory entry in the new directory
@@ -117,7 +118,8 @@ check_deleted:
                         ;     but the new directory stays as it is
                         ;No: continue to handle the file
 
-    inc $0408
+    ;Increment number of used directory entries
+    inc dir_buffer+$08
 
     ;Old dir: Get track number of the file
     ldy #$0C            ;Y=$0c index to file track number
@@ -214,14 +216,17 @@ L7DB0:
 L7DB6:
     lda num_sectors
     sta tmp_7f97
+
     lda old_track
     sta track
     lda old_sector
     sta sector
+
     lda #<file_buffer
     sta target_ptr
     lda #>file_buffer
     sta target_ptr+1
+
     jsr read_sectors
     beq L7DE2           ;Branch if read succeeded
 
@@ -243,8 +248,10 @@ L7DEA:
     sta old_track
     lda sector
     sta old_sector
+
     lda tmp_7f97
     sta num_sectors
+
     lda new_track
     sta track
     lda new_sector
@@ -262,23 +269,29 @@ L7DEA:
     sta target_ptr
     lda #>file_buffer
     sta target_ptr+1
+
     jsr write_sectors
     bne L7E5B           ;Branch if a disk error occurred
+
     jsr next_incr
     bcc L7E27
     jmp L7E65
+
 L7E27:
     lda track
     sta new_track
     lda sector
     sta new_sector
     jmp L7D8A
+
 L7E36:
+    ;Set next open track and sector to after this file
     lda new_track
-    sta $0409
+    sta dir_buffer+$09  ;Set next open track
     lda new_sector
-    sta $040A
+    sta dir_buffer+$0a  ;Set next open sector
     lda new_dir_ptr
+
     tay
     lda #$00
     sta new_dir_ptr
@@ -305,14 +318,17 @@ L7E5B:
 L7E65:
     lda #$08
     sta num_sectors
+
     lda #<dir_buffer
     sta target_ptr
     lda #>dir_buffer
     sta target_ptr+1
+
     ldy #$00
     sty track
     iny
     sty sector
+
     jsr write_sectors
     beq L7E8A           ;Branch if write succeeded
 
