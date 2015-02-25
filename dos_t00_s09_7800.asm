@@ -11,6 +11,7 @@ latch        = $e900    ;Drive Select Latch
 ;a location that is used for some other purpose by CBM BASIC 4.
 
 valtyp      = $07       ;Data type of value: 0=numeric, $ff=string
+intflg      = $08       ;Type of number: 0=floating point, $80=integer
 linnum      = $11       ;2 byte integer (usually a line number) from linget
 dir_ptr     = $22       ;Pointer: PEDISK directory **
 hex_save_a  = $26       ;PEDISK temporarily saves A during hex conversion **
@@ -492,7 +493,7 @@ L7AB3:
     jsr ptrget
     lda valtyp
     bne L7AC2
-    bit $08
+    bit intflg
     bmi L7AC6
     lda #$34
     bne L7ADB
