@@ -121,7 +121,7 @@ check_end_dir:
     lda (old_dir_ptr),y ;Get first byte of filename
     cmp #$FF            ;Is it equal to $FF (end of directory)?
     bne check_deleted   ;  No: branch to handle this entry
-    jmp write_dir_end   ;  Yes: done with all entries, jump to set end of dir
+    jmp finish_dir      ;  Yes: done with all entries, jump to set end of dir
 
 check_deleted:
     ;Check if file was deleted
@@ -170,19 +170,24 @@ check_deleted:
     ;Copy bytes $00-$0B from old dir entry into new entry
     ;These bytes are the filename, type, size, and load address
     ldy #$0B            ;Y=$0b index to unknown byte
-L7D45:
+copy_entry_loop:
     lda (old_dir_ptr),y
     sta (new_dir_ptr),y
     dey
-    bpl L7D45
+    bpl copy_entry_loop
+
+    ;If the starting track or sector of the file has changed in the
+    ;new dir entry, branch to move the file data.
 
     lda old_sector
     cmp new_sector
-    bne L7D8A
+    bne move_file       ;Branch if new sector is different
 
     lda old_track
     cmp new_track
-    bne L7D8A
+    bne move_file       ;Branch if new track is different
+
+    ;The file has not moved.
 
     lda old_count
     sta $7FAE
@@ -199,18 +204,21 @@ L7D45:
     sec
     sbc #$1C            ;TODO 28 sectors per track?
     inc new_track
+
 L7D7B:
     sta new_sector
     lda new_track
     clc
     adc $58
     sta new_track
-L7D87:
+jmp_next_new:
     jmp next_new
-L7D8A:
+
+move_file:
+    ;If the file size is 0, jump out because there's nothing to move.
     lda old_count
     ora old_count+1
-    beq L7D87
+    beq jmp_next_new
 
     lda old_count
     sta num_sectors
@@ -299,9 +307,9 @@ L7E27:
     sta new_track
     lda sector
     sta new_sector
-    jmp L7D8A
+    jmp move_file
 
-write_dir_end:
+finish_dir:
     ;All entries have been written to the new directory.
     ;Set the next open track and sector, then fill any
     ;remaining space in the directory with $FF.
@@ -362,7 +370,7 @@ write_new_dir:
 
     ;Write the new directory to disk
     jsr write_sectors
-    beq finish_up       ;Branch if write succeeded
+    beq success_exit    ;Branch if write succeeded
 
     ;Write dir failed, print error message and return to the prompt
 
@@ -374,7 +382,7 @@ write_new_dir:
 
     jmp pdos_prompt
 
-finish_up:
+success_exit:
     ;Set start of variables to $0404
     lda #>dir_buffer ;TODO this code must be changed to set low byte and
                      ;     high byte separately if dir_buffer ever moves
