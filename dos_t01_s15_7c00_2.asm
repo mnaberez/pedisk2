@@ -5,6 +5,7 @@ pdos_prompt = $7A05
 input_device = $7AD1
 dir_sector = $7f00
 tmp_7f97 = $7f97
+tmp_7f9a = $7f9a
 read_a_sector = $ECDF
 read_sectors = $ECE4
 write_a_sector = $ED3A
@@ -70,7 +71,7 @@ start:
     sbc $7F9C
     sta $7F9E
     lda #$00
-    sta $7F9A
+    sta tmp_7f9a
     jsr input_device
 L7CAE:
     sta tmp_7f97
@@ -85,7 +86,7 @@ L7CAE:
     cmp tmp_7f97
     bne L7CC8
     lda #$80
-    sta $7F9A
+    sta tmp_7f9a
 L7CC8:
     jsr L7DCD
     lda tmp_7f97
@@ -108,7 +109,7 @@ L7CEE:
     jsr L7DE3
     jsr read_sectors
     bne L7CEB           ;Branch if a disk error occurred
-    bit $7F9A
+    bit tmp_7f9a
     bpl L7D4D
 L7CFE:
     ;Print "PUT COPY"
@@ -181,7 +182,7 @@ L7D69:
     lda $62
     sta $7F9B
 L7D8A:
-    bit $7F9A
+    bit tmp_7f9a
     bpl L7D92
     jsr L7DCD
 L7D92:

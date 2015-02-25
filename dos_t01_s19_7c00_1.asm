@@ -15,6 +15,7 @@ num_sectors = $7f96
 tmp_7f97 = $7f97   ;Temp storage for sector count
 old_track = $7f98  ;Old track number of file
 old_sector = $7f99 ;Old sector number of file
+tmp_7f9a = $7f9a   ;Temp storage for TODO ??
 old_count = $7f9b  ;2 bytes for old file sector count
 next_incr = $EC74
 read_sectors = $ECE4
@@ -60,7 +61,7 @@ start:
 
     ;TODO ???
     lda #$60
-    sta $7F9A
+    sta tmp_7f9a
 
     ;Set track/sector for read_sectors (beginning of directory)
     ldx #$00
@@ -223,7 +224,7 @@ move_file:
     lda old_count
     sta num_sectors
     sec
-    sbc $7F9A
+    sbc tmp_7f9a
     sta old_count
     bcs L7DB0
     dec old_count+1
@@ -233,7 +234,7 @@ move_file:
     sta old_count+1
     beq L7DB6
 L7DB0:
-    lda $7F9A
+    lda tmp_7f9a
     sta num_sectors
 L7DB6:
     lda num_sectors
