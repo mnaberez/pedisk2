@@ -2,6 +2,7 @@ vartab = $2a
 old_dir_ptr = $4b
 new_dir_ptr = $4d
 target_ptr = $b7
+dir_buffer = $0400 ;1024 byte buffer for all directory sectors
 L790D = $790D
 pdos_prompt = $7A05
 try_extrnl_cmd = $7A47
@@ -64,11 +65,11 @@ start:
     stx sector
     lda #$08
     sta num_sectors
-    lda #$00
+    lda #<dir_buffer
     sta target_ptr
     sta old_dir_ptr
     sta new_dir_ptr
-    lda #$04
+    lda #>dir_buffer
     sta target_ptr+1
     sta old_dir_ptr+1
     sta new_dir_ptr+1
@@ -303,9 +304,9 @@ L7E5B:
 L7E65:
     lda #$08
     sta num_sectors
-    lda #$00
+    lda #<dir_buffer
     sta target_ptr
-    lda #$04
+    lda #>dir_buffer
     sta target_ptr+1
     ldy #$00
     sty track
@@ -321,16 +322,24 @@ L7E65:
     jsr puts
 
     jmp pdos_prompt
+
 L7E8A:
-    lda #$04
-    sta vartab
-    sta vartab+1
+    ;Set start of variables to $0404
+    lda #>dir_buffer ;TODO this code must be changed to set low byte and
+                     ;     high byte separately if dir_buffer ever moves
+    sta vartab       ;Set vartab low byte to $04
+    sta vartab+1     ;Set vartab high byte to $04
+
+    ;Store an empty BASIC program to reset BASIC since we overwrote
+    ;the BASIC program area to use it as buffer storage.
     lda #$00
-    sta $0400
-    sta $0401
-    sta $0402
+    sta dir_buffer+$00  ;End of current BASIC line
+    sta dir_buffer+$01  ;End of BASIC program first byte
+    sta dir_buffer+$02  ;End of BASIC program second byte
+
+    ;Print directory and exit
     lda #'P'            ;P-PRINT DISK DIRECTORY
-    jmp try_extrnl_cmd
+    jmp try_extrnl_cmd  ;Load overlay and return to PDOS prompt
 
 put_filename:
 ;Print the filename at (new_dir_ptr)
