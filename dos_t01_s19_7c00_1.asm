@@ -121,7 +121,7 @@ check_end_dir:
     lda (old_dir_ptr),y ;Get first byte of filename
     cmp #$FF            ;Is it equal to $FF (end of directory)?
     bne check_deleted   ;  No: branch to handle this entry
-    jmp L7E36           ;  Yes: done with all entries, jump to finish up
+    jmp write_dir_end   ;  Yes: done with all entries, jump to set end of dir
 
 check_deleted:
     ;Check if file was deleted
@@ -301,28 +301,34 @@ L7E27:
     sta new_sector
     jmp L7D8A
 
-L7E36:
+write_dir_end:
+    ;All entries have been written to the new directory.
+    ;Set the next open track and sector, then fill any
+    ;remaining space in the directory with $FF.
+
     ;Set next open track and sector to after this file
     lda new_track
     sta dir_buffer+$09  ;Set next open track
     lda new_sector
     sta dir_buffer+$0a  ;Set next open sector
-    lda new_dir_ptr
 
-    tay
+    ;Fill any remaining directory entries with $FF.
+
+    lda new_dir_ptr     ;Get pointer low byte
+    tay                 ;Copy it to Y to use with indirect addressing
     lda #$00
-    sta new_dir_ptr
-    lda #$FF
-L7E4B:
-    sta (new_dir_ptr),y
+    sta new_dir_ptr     ;Zero the low byte for use with indirect addressing
+    lda #$FF            ;A=fill byte to write into unused dir entries
+fill_dir_loop:
+    sta (new_dir_ptr),y ;Fill byte in dir entry
     iny
-    bne L7E4B
+    bne fill_dir_loop
     ldx new_dir_ptr+1
     inx
     stx new_dir_ptr+1
-    cpx #>(dir_buffer+1024)
-    bmi L7E4B
-    bpl write_new_dir
+    cpx #>(dir_buffer+1024) ;Reached end of directory?
+    bmi fill_dir_loop       ;  No: branch to keep filling
+    bpl write_new_dir       ;  Yes: branch to write dir to disk
 
 write_file_err:
     ;Print "CANNOT WRITE FILE "
@@ -336,6 +342,8 @@ write_file_err:
     ;Fall through into write_new_dir
 
 write_new_dir:
+    ;Write the new directory to the disk.
+
     ;Set sector count for write_sectors (entire directory)
     lda #$08
     sta num_sectors
