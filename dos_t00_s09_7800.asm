@@ -22,8 +22,7 @@ varpnt      = $44       ;Pointer: Current BASIC variable
 open_track  = $56       ;Next track open for a new file **
 open_sector = $57       ;Next sector open for a new file **
 edit_ptr    = $66       ;Pointer: PEDISK current address of memory editor **
-chrget      = $70       ;Subroutine: Get Next Byte of BASIC Text
-L0076       = $76
+chrget      = $70       ;Subroutine: Get Next Byte of BASIC Text (patched)
 txtptr      = $77       ;Pointer: Current Byte of BASIC Text
 target_ptr  = $b7       ;Pointer: PEDISK target address for memory ops **
 
@@ -452,7 +451,7 @@ L7A5B:
     jmp restore
 L7A66:
     pha
-    jsr L0076
+    jsr chrget+$06
     cmp #$A2
     bne L7AD6
     pla
