@@ -42,8 +42,6 @@ sector      = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
 num_sectors = dos+$0796 ;Number of sectors to read or write
 dir_entry   = dos+$07a0 ;16 byte buffer for a directory entry
 wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
-entry_addr  = dos+$07a6 ;2 byte entry address of a file
-start_addr  = dos+$07a8 ;2 byte start address of a file
 drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename
 linget      = $b8f6     ;BASIC Fetch integer (usually a line number)
 ptrget      = $c12b     ;BASIC Find a variable
@@ -86,19 +84,19 @@ L7818:
     lda vartab
     sec
     sbc txttab
-    sta entry_addr
+    sta dir_entry+$06   ;File size low byte
     sta $58
 
     lda vartab+1
     sbc txttab+1
     sta $59
-    sta entry_addr+1
+    sta dir_entry+$07   ;File size high byte
 
     lda txttab
-    sta start_addr
+    sta dir_entry+$08   ;Load address low byte
 
     lda txttab+1
-    sta start_addr+1
+    sta dir_entry+$09   ;Load address high byte
 
     jsr L7891
     lda num_sectors
@@ -132,10 +130,10 @@ L7857:
     bne L7852           ;Branch always
 
 L786A:
-    lda start_addr
+    lda dir_entry+$08
     sta target_ptr
 
-    lda start_addr+1
+    lda dir_entry+$09
     sta target_ptr+1
 
     lda open_track
@@ -466,11 +464,11 @@ L7A75:
     lda #$64
     sta dir_entry+$0e   ;File sector count low byte
     lda #$80
-    sta entry_addr
-    sta start_addr
+    sta dir_entry+$06   ;File size low byte
+    sta dir_entry+$08   ;Load address low byte
     lda #$00
-    sta entry_addr+1
-    sta start_addr+1
+    sta dir_entry+$07   ;File size high byte
+    sta dir_entry+$09   ;Load address high byte
     sta dir_entry+$0a   ;File type (0=SEQ)
     sta dir_entry+$0b   ;TODO ??
     sta dir_entry+$0f   ;File sector count high byte
