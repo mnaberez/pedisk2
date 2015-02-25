@@ -270,9 +270,9 @@ L7DB6:
     jmp write_new_dir
 
 L7DE2:
-    jsr next_sector
-    bcc L7DEA
-    jmp write_new_dir
+    jsr next_sector     ;Increment to next sector, don't change target_ptr
+    bcc L7DEA           ;Branch if success
+    jmp write_new_dir   ;Jump out if failed to increment (end of disk)
 
 L7DEA:
     lda track
@@ -302,11 +302,11 @@ L7DEA:
     sta target_ptr+1
 
     jsr write_sectors
-    bne write_file_err           ;Branch if a disk error occurred
+    bne write_file_err  ;Branch if a disk error occurred
 
-    jsr next_sector
-    bcc L7E27
-    jmp write_new_dir
+    jsr next_sector     ;Increment to next sector, don't change target_ptr
+    bcc L7E27           ;Branch if success
+    jmp write_new_dir   ;Jump out if failed to increment (end of disk)
 
 L7E27:
     lda track
