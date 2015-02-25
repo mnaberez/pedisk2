@@ -17,7 +17,7 @@ old_track = $7f98  ;Old track number of file
 old_sector = $7f99 ;Old sector number of file
 tmp_7f9a = $7f9a   ;Temp storage for TODO ??
 old_count = $7f9b  ;2 bytes for old file sector count
-next_incr = $EC74
+next_sector = $EC74
 read_sectors = $ECE4
 write_sectors = $ED3F
 puts = $EFE7
@@ -182,11 +182,11 @@ copy_entry_loop:
 
     lda old_sector
     cmp new_sector
-    bne move_file       ;Branch if new sector is different
+    bne start_move_file ;Branch if new sector is different
 
     lda old_track
     cmp new_track
-    bne move_file       ;Branch if new track is different
+    bne start_move_file ;Branch if new track is different
 
     ;The file has not moved.
 
@@ -215,7 +215,7 @@ L7D7B:
 jmp_next_new:
     jmp next_new
 
-move_file:
+start_move_file:
     ;If the file size is 0, jump out because there's nothing to move.
     lda old_count
     ora old_count+1
@@ -229,10 +229,12 @@ move_file:
     bcs L7DB0
     dec old_count+1
     bpl L7DB0
+
     lda #$00
     sta old_count
     sta old_count+1
     beq L7DB6
+
 L7DB0:
     lda tmp_7f9a
     sta num_sectors
@@ -240,15 +242,17 @@ L7DB6:
     lda num_sectors
     sta tmp_7f97
 
+    ;Set track/sector for read_sectors
     lda old_track
-    sta track
+    sta track           ;Set track
     lda old_sector
-    sta sector
+    sta sector          ;Set sector
 
+    ;Set target_ptr for read_sectors (beginning of file)
     lda #<file_buffer
-    sta target_ptr
+    sta target_ptr      ;Low byte
     lda #>file_buffer
-    sta target_ptr+1
+    sta target_ptr+1    ;High byte
 
     jsr read_sectors
     beq L7DE2           ;Branch if read succeeded
@@ -266,9 +270,10 @@ L7DB6:
     jmp write_new_dir
 
 L7DE2:
-    jsr next_incr
+    jsr next_sector
     bcc L7DEA
     jmp write_new_dir
+
 L7DEA:
     lda track
     sta old_track
@@ -299,7 +304,7 @@ L7DEA:
     jsr write_sectors
     bne write_file_err           ;Branch if a disk error occurred
 
-    jsr next_incr
+    jsr next_sector
     bcc L7E27
     jmp write_new_dir
 
@@ -308,7 +313,7 @@ L7E27:
     sta new_track
     lda sector
     sta new_sector
-    jmp move_file
+    jmp start_move_file
 
 finish_dir:
     ;All entries have been written to the new directory.

@@ -748,16 +748,38 @@ delay_inner:
     rts
 
 
-next_sector:
-;increment pointers to the next sector
+next_sector_ptr:
+;Increment to the next sector and also advance target_ptr memory pointer.
+;If sector is last on track, will continue to the next track.
+;
+;Calling parameters (will be overwritten with new values):
+;  track: Current track number
+;  sector: Current sector number
+;  target_ptr: Pointer to memory, will be advanced by sector size
+;
+;Returns:
+;  Carry clear on success, carry set on failure (end of disk).
 ;
     lda target_ptr      ;get the memory pointer low byte
     clc                 ;clear carry for add
     adc #sector_size    ;add the sector byte count
     sta target_ptr      ;save the memory pointer low byte
-    bcc next_incr       ;if no carry skip the high byte increment
+    bcc next_sector     ;if no carry skip the high byte increment
     inc target_ptr+1    ;else increment the memory pointer high byte
-next_incr:
+
+                        ;Fall through into next_sector
+
+next_sector:
+;Increment to the next sector (does not change target_ptr).
+;If sector is last on track, will continue to the next track.
+;
+;Calling parameters (will be overwritten with new values):
+;  track: Current track number
+;  sector: Current sector number
+;
+;Returns:
+;  Carry clear on success, carry set on failure (end of disk).
+;
     ldx sector          ;get the requested sector number
     inx                 ;increment the sector number
     cpx #sectors+1      ;compare it with max + 1
@@ -929,7 +951,7 @@ l_ed05:
     dec num_sectors     ;decrement the requested sector count
     beq l_ed38          ;if all done just exit
 
-    jsr next_sector     ;increment pointers to the next sector
+    jsr next_sector_ptr ;increment to next sector and advance target_ptr
     bcs l_ed38          ;if error just exit
 
     lda track           ;get the requested track number
@@ -1044,7 +1066,7 @@ l_ed84:
     dec num_sectors     ;decrement the requested sector count
     beq l_ed38          ;if all done just exit
 
-    jsr next_sector     ;increment pointers to the next sector
+    jsr next_sector_ptr ;increment to next sector and advance target_ptr
     bcs l_ed38          ;if error just exit
 
     lda track           ;get the requested track number
