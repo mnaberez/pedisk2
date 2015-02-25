@@ -4,6 +4,7 @@ L7931 = $7931
 pdos_prompt = $7A05
 input_device = $7AD1
 dir_sector = $7f00
+tmp_7f97 = $7f97
 read_a_sector = $ECDF
 read_sectors = $ECE4
 write_a_sector = $ED3A
@@ -72,7 +73,7 @@ start:
     sta $7F9A
     jsr input_device
 L7CAE:
-    sta $7F97
+    sta tmp_7f97
 
     ;Print "COPY TO DRIVE #"
     ldy #>copy_to
@@ -81,13 +82,13 @@ L7CAE:
 
     jsr input_device
     sta $7F98
-    cmp $7F97
+    cmp tmp_7f97
     bne L7CC8
     lda #$80
     sta $7F9A
 L7CC8:
     jsr L7DCD
-    lda $7F97
+    lda tmp_7f97
     sta drive_sel
     lda #$00
     sta $7F99
@@ -103,7 +104,7 @@ L7CC8:
 L7CEB:
     jmp pdos_prompt
 L7CEE:
-    lda $7F97
+    lda tmp_7f97
     jsr L7DE3
     jsr read_sectors
     bne L7CEB           ;Branch if a disk error occurred

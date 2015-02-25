@@ -10,6 +10,7 @@ drive_sel = $7f91
 track = $7f92
 sector = $7f93
 num_sectors = $7f96
+tmp_7f97 = $7f97   ;Temp storage for sector count
 old_track = $7f98  ;Old track number of file
 old_sector = $7f99 ;Old sector number of file
 old_count = $7f9b  ;2 bytes for old file sector count
@@ -210,7 +211,7 @@ L7DB0:
     sta num_sectors
 L7DB6:
     lda num_sectors
-    sta $7F97
+    sta tmp_7f97
     lda old_track
     sta track
     lda old_sector
@@ -240,7 +241,7 @@ L7DEA:
     sta old_track
     lda sector
     sta old_sector
-    lda $7F97
+    lda tmp_7f97
     sta num_sectors
     lda new_track
     sta track

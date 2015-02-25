@@ -5,6 +5,7 @@ input_device = $7AD1
 drive_sel = $7f91
 track = $7f92
 sector = $7f93
+tmp_7f97 = $7f97 ;Temp storage for "R" or "W" menu choice
 num_sectors = $7f96
 read_sectors = $ECE4
 write_sectors = $ED3F
@@ -37,7 +38,7 @@ start:
 
     ;Get a character from the user and save it.
     jsr get_char_w_stop
-    sta $7F97
+    sta tmp_7f97
 
     ;Validate char is "R" or "W", ask again until it is.
     cmp #'R'
@@ -89,7 +90,7 @@ ask_trk_sec:
     sta target_ptr+1
 
     ;Get the "R" or "W" character, branch if it's "R" for read
-    lda $7F97
+    lda tmp_7f97
     cmp #'W'
     bne do_read
 
