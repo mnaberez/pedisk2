@@ -665,7 +665,7 @@ L7BE9:
     lda $7FB3
     sbc #$00
     sta $5F
-    lda #$1C
+    lda #$1C            ;TODO 28 sectors per track?
     sta $60
     lda #$00
     sta $61
