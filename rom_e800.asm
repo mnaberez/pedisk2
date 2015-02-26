@@ -810,8 +810,19 @@ end_of_disk:
                         ;Fall through into disk_error
 
 disk_error:
-;Print "DISK ERROR" followed by hex bytes with error info,
+;Print "DISK ERROR" followed by 8 hex bytes with error info,
 ;then deselect the drive.
+;
+;  "DISK ERROR <1> <2> <3> <4> <5> <6> <7> <8>"
+;
+;  1. Error Code (one of the e_* constants passed in A)
+;  2. status_mask (mask to apply when checking WD1793 status)
+;  3. drive_sel (drive select pattern)
+;  4. track (requested track number)
+;  5. sector (requested sector number)
+;  6. command (WD1793 command sent)
+;  7. num_sectors (requested sector count)
+;  8. tmp_7f97
 ;
 ;Calling parameters:
 ;  Error code to display in A.  See the e_* constants at the
@@ -834,12 +845,12 @@ disk_error:
     tay                 ;restore Y
     pla                 ;restore A
 
-    jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex Byte
+    jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex byte
 
     ldx #0              ;clear the index
 l_eca8:
     lda status_mask,x
-    jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex Byte
+    jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex byte
     inx                 ;increment the index
     cpx #$07            ;compare it with max + 1
     bmi l_eca8          ;loop if more to do
@@ -1649,14 +1660,14 @@ l_ef86:
     jsr chrout          ;do character out
 
     lda edit_ptr+1      ;get the address high byte
-    jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex Byte
+    jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex byte
     lda edit_ptr        ;get the address low byte
-    jsr put_hex_byte    ;output A as a two digit hex Byte
+    jsr put_hex_byte    ;output A as a two digit hex byte
 
     ldy #0              ;clear the index
 l_ef97:
     lda (edit_ptr),y    ;get a byte from memory
-    jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex Byte
+    jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex byte
     iny                 ;increment the index
     cpy #$08            ;compare it with max + 1
     bmi l_ef97          ;loop if more to do
