@@ -107,6 +107,8 @@ puts_exit:
 
 file_not_found:
     ;Print "****NOT IN DIRECTORY****" and exit
+    ;TODO not_in_dir can't be moved because this code assumes it has
+    ;     the same high byte as already_in_file
     lda #<not_in_dir
     jmp puts_exit
 
