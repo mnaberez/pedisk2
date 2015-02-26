@@ -479,10 +479,12 @@ install_wedge:
                         ;Fall through into deselect
 
 deselect:
-;deselect the drives and stop the motors ??
+;Deselect the drive.
+;
+;On the 8" drive, this routine will disengage the head load solenoid.
 ;
     lda #%00001000
-    sta latch           ;save the drive select latch
+    sta latch
     rts
 
 
@@ -553,7 +555,13 @@ disk_err_msg:
 
 
 select_drive:
-;Select a drive.
+;Select a drive and disable interrupts.
+;
+;Most programs won't need to call this routine directly because
+;read_sectors and write_sectors always call it.  However, those
+;routines don't deselect the drive.
+;
+;On the 8" drive, this routine engage the head load solenoid.
 ;
 ;Calling parameters:
 ;  drive_sel: Drive select pattern of drive to select
@@ -905,7 +913,14 @@ read_a_sector:
 read_sectors:
 ;Read multiple sectors into memory.
 ;
+;This routine always calls select_drive to select the drive and
+;disable interrupts.  It will enable interrupts again before
+;returning.  However, it does not deselect the drive unless an
+;error occurred.  The caller should call deselect or write to
+;the drive select latch when it is done using the drive.
+;
 ;Calling parameters:
+;  drive_sel: Drive select pattern of drive, used by select_drive
 ;  track: Requested track number
 ;  sector: Requested sector number
 ;  num_sectors: Number of sectors to read (may span tracks)
@@ -996,13 +1011,20 @@ write_a_sector:
                         ;Fall through into write_sectors
 
 write_sectors:
-;Read multiple sectors to disk.
+;Write multiple sectors to disk.
+;
+;This routine always calls select_drive to select the drive and
+;disable interrupts.  It will enable interrupts again before
+;returning.  However, it does not deselect the drive unless an
+;error occurred.  The caller should call deselect or write to
+;the drive select latch when it is done using the drive.
 ;
 ;Calling parameters:
+;  drive_sel: Drive select pattern of drive, used by select_drive
 ;  track: Requested track number
 ;  sector: Requested sector number
 ;  num_sectors: Number of sectors to write (may span tracks)
-;  target_ptr: Pointer to where to read the data from in memory
+;  target_ptr: Pointer to where to write the data in memory
 ;
 ;Returns:
 ;  A=0 means success (all sectors written).
