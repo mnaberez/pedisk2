@@ -68,6 +68,8 @@ puts           = $EFE7
 chrin          = $FFCF
 chrout         = $FFD2
 
+e_exists = $05 ;File Exists
+
     *=dos
 
 dos_save:   jmp _dos_save
@@ -112,7 +114,7 @@ L7818:
     bmi L7890           ;Branch if a disk error occurred
     bne L7857           ;Branch if the file was not found
 
-    lda #$05            ;A = 5, TODO error number for ??
+    lda #e_exists       ;Set error code $05, file exists error
 L7852:
     jsr disk_error      ;Print error msg, FDC restore cmd, deselect drive
     bne L7890           ;Branch always

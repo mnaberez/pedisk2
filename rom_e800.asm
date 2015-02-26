@@ -147,6 +147,7 @@ dir_track   = 0         ;Track where directory is stored (always one track)
 e_illegal   = $01       ;Illegal Command or Mode
 e_no_fname  = $03       ;No Filename
 e_bad_fname = $04       ;Bad Filename
+e_exists    = $05       ;File Exists
 e_seek_err  = $10       ;Seek Error
 e_end_disk  = $11       ;End of Disk
 e_not_ready = $13       ;Drive Not Ready
