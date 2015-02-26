@@ -20,7 +20,7 @@ chrin = $ffe4
 
     *=$7c00
 
-    jmp L7C52
+    jmp start
 
 disk_or_mem:
     !text $0d,"  PEDISK II DUMP UTILITY"
@@ -32,14 +32,17 @@ enter_sector:
 more:
     !text "MORE..",0
 
-L7C52:
+start:
     ;Print banner and "DISK OR MEMORY ( D OR M )?"
     lda #<disk_or_mem
     ldy #>disk_or_mem
     jsr puts
 
+    ;Set line count for screen pause
     lda #$0A
     sta edit_pos
+
+    ;Get a character from the user
     jsr get_char_w_stop
 
     ;Save A, print a newline, restore A
@@ -49,49 +52,59 @@ L7C52:
     pla
 
     cmp #'D'
-    beq L7C94
+    beq dump_disk
+
     cmp #'M'
-    bne L7C52
+    bne start
+
+    ;Print "ADDR"? and get a valid address into edit_ptr
     jsr input_hex_addr
 
     ;Print a newline
     lda #$0D
     jsr chrout
 
-L7C77:
+dump_memory:
+    ;Print the address in hex
     lda edit_ptr+1
     jsr put_hex_byte
     lda edit_ptr
     jsr put_hex_byte
-    ldx #$01
-    jsr L7CF1
+
+    ;Dump 16 bytes to the screen
+    ldx #1              ;X=1 time
+    jsr dump_16_x_times ;Dump 16 bytes 1 time
+
+    ;Move edit_ptr forward 16 bytes, keep dumping until end of memory
     lda edit_ptr
     clc
-    adc #$10
+    adc #16
     sta edit_ptr
-    bcc L7C77
+    bcc dump_memory
     inc edit_ptr+1
-    bne L7C77
-    rts
-L7C94:
-    jsr input_device
-    sta drive_sel
+    bne dump_memory
 
-    ;Print "TRACK? "
+    ;Return to PDOS prompt
+    rts
+
+dump_disk:
+    ;Get drive
+    jsr input_device    ;Print "DEVICE? " and get drive num from the user
+    sta drive_sel       ;Save it in drive_sel
+
+    ;Get track
     lda #<enter_track
     ldy #>enter_track
-    jsr puts
+    jsr puts            ;Print "TRACK? "
+    jsr input_hex_byte  ;Get a hex byte from the user
+    sta track           ;Save it track
 
-    jsr input_hex_byte
-    sta track
-
-    ;Print "SECTOR? "
+    ;Get sector
     lda #<enter_sector
     ldy #>enter_sector
-    jsr puts
-
-    jsr input_hex_byte
-    sta sector
+    jsr puts            ;Print "SECTOR? "
+    jsr input_hex_byte  ;Get a hex byte from the user
+    sta sector          ;Save it sector
 
     lda #<dir_sector
     sta target_ptr
@@ -99,36 +112,47 @@ L7C94:
     lda #>dir_sector
     sta target_ptr+1
     sta edit_ptr+1
-L7CC0:
+
+sector_loop:
+    ;Read sector from disk
     jsr read_a_sector
-    bne L7CEE           ;Branch if a disk error occurred
+    bne disk_error           ;Branch if a disk error occurred
 
     ;Print a newline
     lda #$0D
     jsr chrout
 
+    ;Print track and sector in hex like "TTSS"
     lda track
-    jsr put_hex_byte
+    jsr put_hex_byte    ;Print track in hex
     lda sector
-    jsr put_hex_byte
+    jsr put_hex_byte    ;Print sector in hex
+
+    ;Increment the next sector for the next time around
     clc
     adc #$01
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
-    bmi L7CE3
+    bmi skip_trk_inc
     sec
     sbc #$1C            ;TODO 28 sectors per track?
     inc track
-L7CE3:
+skip_trk_inc:
     sta sector
-    ldx #$08
-    jsr L7CF1
-    jmp L7CC0
-L7CEE:
+
+    ;Dump the sector (128 bytes) to the screen
+    ldx #8              ;X=8 times
+    jsr dump_16_x_times ;Dump 16 bytes to the screen 8 times
+
+    jmp sector_loop
+
+disk_error:
     jmp pdos_prompt
-L7CF1:
+
+dump_16_x_times:
     stx dir_ptr
+
     ldy #$00
-L7CF5:
+loop:
     lda #$04
     sta dir_ptr+1
     sty hex_save_a
@@ -139,12 +163,13 @@ L7CFB:
     lda #' '
     jsr chrout
 
-L7D02:
+hex_loop:
     lda (edit_ptr),y
     jsr put_hex_byte
     iny
     dex
-    bne L7D02
+    bne hex_loop
+
     dec dir_ptr+1
     bne L7CFB
 
@@ -171,41 +196,52 @@ L7D2B:
     lda #' '
     jsr chrout
 
+    ;Print the byte in PETSCII or "." if unprintable
     lda (edit_ptr),y
     cmp #' '
-    bmi L7D3A
+    bmi unprintable
     cmp #$80
-    bmi L7D3C
-L7D3A:
+    bmi printable
+unprintable:
     lda #'.'
-L7D3C:
+printable:
     jsr chrout
+
     iny
     dex
     bne L7D21
-    jsr chrin
-    cmp #$03
-    bne L7D4D
-    jmp pdos_prompt
-L7D4D:
+
+    ;Check if STOP key was pressed, return to prompt if so
+    jsr chrin           ;Get key, or 0 if none
+    cmp #$03            ;Was the STOP key pressed?
+    bne not_stop        ;  No: keep going
+    jmp pdos_prompt     ;  Yes: jump to the PDOS prompt
+
+not_stop:
     dec edit_pos
-    bpl L7D68
+    bpl skip_pause
+
+    ;Print "MORE.." while preserving Y
     tya
     pha
-
-    ;Print "MORE.."
     lda #<more
     ldy #>more
     jsr puts
-
     pla
     tay
+
+    ;Wait for a key
     jsr get_char_w_stop
+
+    ;Print a newline
     lda #$0D
     jsr chrout
+
+    ;Reset line count for screen pause
     lda #$0A
     sta edit_pos
-L7D68:
+
+skip_pause:
     dec dir_ptr
     beq L7D7D
 
@@ -216,8 +252,9 @@ L7D68:
     jsr chrout
     jsr chrout
 
-    jmp L7CF5
+    jmp loop
 L7D7D:
-    rts
-    !byte $FF
-    !byte $FF
+    rts                 ;Return to PDOS prompt
+
+filler:
+    !byte $FF,$FF
