@@ -615,7 +615,7 @@ seek_track:
 ;
     lda #$03            ;set the retry count
     sta retries         ;save the retry count
-l_ebd3:
+seek_loop:
     lda track           ;get the requested track number
     cmp #tracks         ;compare it with max + 1
     bpl bad_track       ;if > max go do disk error $15
@@ -629,21 +629,21 @@ l_ebd3:
 
     lda #$16            ;set seek command, verify track, 20ms step rate
     jsr send_fdc_cmd    ;wait for WD1793 not busy and do command A
-    bne l_ebf2          ;go handle any returned error
+    bne seek_error      ;Branch to retry if any error occurred
 
     lda track           ;get the requested track number
-    cmp fdc_track       ;compare it with the requested track register
-    bne l_ebf2          ;go handle any difference
+    cmp fdc_track       ;compare it with the WD1793 track register
+    bne seek_error      ;Branch to retry if they are different
     rts
 
+seek_error:
     ;there was an error or the track numbers differ
 
-l_ebf2:
     lda #$02            ;set restore command, 20ms step rate
     jsr send_fdc_cmd    ;wait for WD1793 not busy and do command A
 
     dec retries         ;decrement the retry count
-    bne l_ebd3          ;if not all done go try again
+    bne seek_loop       ;if not all done go try again
 
 ;else do disk error $10, seek error
 ;
@@ -678,8 +678,8 @@ no_drive_sel:
 send_fdc_cmd:
 ;wait for WD1793 not busy and do command A
 ;
-    jsr wait_for_fdc    ;wait for WD1793 not busy
-    bcs drv_not_resp    ;if counted out go do disk error $17
+    jsr wait_for_fdc    ;Wait for WD1793 not busy
+    bcs drv_not_resp    ;Branch to "not responding" error if timeout
 
     sta command         ;Remember this command as the last one written
     sta fdc_cmdst       ;Write to the WD1793 command register
@@ -689,7 +689,13 @@ send_fdc_cmd:
 
 
 wait_for_fdc:
-;wait for WD1793 not busy
+;Wait for WD1793 not busy.
+;
+;No calling parameters.  Preserves all registers.
+;
+;Returns:
+;  On success, clears carry flag.
+;  On failure (timeout), sets carry flag.
 ;
     pha                 ;save A
     txa                 ;copy X
@@ -770,7 +776,8 @@ next_sector_ptr:
 ;  target_ptr: Pointer to memory, will be advanced by sector size
 ;
 ;Returns:
-;  Carry clear on success, carry set on failure (end of disk).
+;  On success, clears carry flag.
+;  On failure (end of disk), sets carry flag.
 ;
     lda target_ptr      ;get the memory pointer low byte
     clc                 ;clear carry for add
@@ -790,7 +797,8 @@ next_sector:
 ;  sector: Current sector number
 ;
 ;Returns:
-;  Carry clear on success, carry set on failure (end of disk).
+;  On success, clears carry flag.
+;  On failure (end of disk), sets carry flag.
 ;
     ldx sector          ;get the requested sector number
     inx                 ;increment the sector number
@@ -861,12 +869,12 @@ disk_error:
     jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex byte
 
     ldx #0              ;clear the index
-l_eca8:
+disk_error_loop:
     lda status_mask,x
     jsr put_spc_hex     ;output [SPACE] <A> as a two digit hex byte
     inx                 ;increment the index
     cpx #$07            ;compare it with max + 1
-    bmi l_eca8          ;loop if more to do
+    bmi disk_error_loop ;loop if more to do
 
     lda #$02            ;set restore command, 20ms step rate
     sta fdc_cmdst       ;Write to the WD1793 command register
@@ -874,7 +882,7 @@ l_eca8:
     cli                 ;enable interrupts
     jsr deselect        ;deselect the drives and stop the motors ??
     sec
-l_ecbd:
+ret_ff_in_a:
     lda #$ff
     rts
 
@@ -896,10 +904,15 @@ l_ecca:
 
 
 wait_fdc_status:
-;wait for WD1793 not busy and mask the status
+;Wait for WD1793 not busy and mask the status
 ;
-    jsr wait_for_fdc    ;wait for WD1793 not busy
-    bcs l_ecbd          ;if counted out go return $FF
+;Returns:
+;  A=0 means success
+;  A=$FF means timeout occurred waiting for WD1793 not busy
+;  A=anything else means a non-timeout error from WD1793
+;
+    jsr wait_for_fdc    ;Wait for WD1793 not busy
+    bcs ret_ff_in_a     ;Branch to return A=$FF if timeout
 
     lda fdc_cmdst       ;Read the WD1793 status register
     sta status          ;save the WD1793 status register copy
@@ -976,7 +989,7 @@ l_ed05:
     bne l_ed05          ;loop if more to do
 
     jsr wait_fdc_status ;wait for WD1793 not busy and mask the status
-    bne l_ed2e          ;if any bits set go to retry
+    bne l_ed2e          ;Branch to retry if an error occurred
 
     dec num_sectors     ;decrement the requested sector count
     beq l_ed38          ;if all done just exit
@@ -1098,7 +1111,7 @@ l_ed7b:
 
 l_ed84:
     jsr wait_fdc_status ;wait for WD1793 not busy and mask the status
-    bne l_ed9d          ;if any bits set go to retry
+    bne l_ed9d          ;Branch to retry if an error occurred
 
     dec num_sectors     ;decrement the requested sector count
     beq l_ed38          ;if all done just exit
