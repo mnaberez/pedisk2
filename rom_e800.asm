@@ -602,6 +602,10 @@ select_done:
 seek_track:
 ;Seek to track with retries.
 ;
+;The drive must already be selected (call select_drive) before calling
+;this routine.  The drive will remain selected when this routine returns
+;unless an error occurred.
+;
 ;Calling parameters:
 ;  track: Requested track number
 ;
