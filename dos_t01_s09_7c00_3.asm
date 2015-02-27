@@ -58,21 +58,30 @@ start:
     ldy #>are_you_sure
     jsr puts
 
+    ;Get a character from the user, exit if it's not "Y"
     jsr get_char
     cmp #'Y'
     bne exit
 
+    ;Select drive 0
     jsr select_drive
-    bne exit
+    bne exit            ;Exit if an error occurred
+
+    ;TODO ?
     lda #$03
     jsr send_fdc_cmd
+
+    ;Check if the disk is write protected
     lda fdc_cmdst
     and #$40
-    bne protected
+    bne protected       ;Branch if write protected
+
+    ;TODO ?
     lda fdc_cmdst
     and #$9D
     cmp #$04
-    beq format
+    beq format          ;Branch if no error
+
     lda #$F0
     jmp puts_error_exit
 
@@ -96,13 +105,17 @@ protected:
 format:
 ;Start formatting the disk.
 ;
+    ;Set first track (track 0)
     ldx #$00
     stx track
+
+    ;Set first sector (sector 1)
     inx
     stx sector
     stx fdc_sector
 
 track_loop:
+    ;Format the current track
     jsr format_track
 
     ;Print "FORMAT TRACK "
@@ -115,16 +128,22 @@ track_loop:
     ldx track           ;Low byte of number to print = track
     jsr linprt          ;Print 256*A + X in decimal
 
+    ;Increment track, loop until all tracks have been formatted.
     inc track
     lda #$28            ;TODO 40/41 tracks?
     cmp track
     bpl track_loop
 
+    ;All tracks have been formatted.
+
+    ;Set target_ptr to dir_sector, a 128 byte buffer in memory
+    ;that we will use to write the directory sectors.
     lda #<dir_sector
     sta target_ptr
     lda #>dir_sector
     sta target_ptr+1
 
+    ;Fill all 128 bytes of the buffer with $FF
     ldy #$7F
     lda #$FF
 L7CF9:
@@ -141,8 +160,11 @@ L7D08:
     jsr write_a_sector
 L7D0B:
     bne exit            ;Branch if a disk error occurred
+
+    ;TODO check ??
     lda status
-    beq L7D17
+    beq L7D17           ;Branch if no error
+
     lda #$F1
     jmp puts_error_exit
 
@@ -160,6 +182,7 @@ L7D17:
     ldy #>enter_name
     jsr puts
 
+    ;Get 8 characters for disk name, store it in the directory
     ldx #$00
 L7D30:
     stx hex_save_a
@@ -171,16 +194,20 @@ L7D30:
     bcc L7D30
 
     lda #$00
-    sta dir_sector+$08
-    sta dir_sector+$09
+    sta dir_sector+$08  ;Number of used file entries
+    sta dir_sector+$09  ;Next open track
     lda #$09
-    sta dir_sector+$0a
+    sta dir_sector+$0a  ;Next open sector
+
+    ;Fill unknown bytes in directory
     lda #$20
-    sta dir_sector+$0b
-    sta dir_sector+$0c
+    sta dir_sector+$0b  ;TODO These bytes in the directory
+    sta dir_sector+$0c  ;     are unknown and appear unused.
     sta dir_sector+$0d
     sta dir_sector+$0e
     sta dir_sector+$0f
+
+    ;Write the new directory
     jsr write_a_sector
     bne L7D0B           ;Branch if a disk error occurred
 
