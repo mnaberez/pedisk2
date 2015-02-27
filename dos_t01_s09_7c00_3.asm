@@ -50,8 +50,9 @@ start:
     ldy #>disk_format
     jsr puts
 
-    jsr input_device
-    sta drive_sel
+    ;Get drive number
+    jsr input_device    ;Print "DEVICE? " and get drive number in A
+    sta drive_sel       ;Save it in drive_sel
 
     ;Print "SURE? (Y-YES)"
     lda #<are_you_sure
@@ -63,8 +64,8 @@ start:
     cmp #'Y'
     bne exit
 
-    ;Select drive 0
-    jsr select_drive
+    ;Select drive
+    jsr select_drive    ;Select drive number in drive_sel
     bne exit            ;Exit if an error occurred
 
     ;TODO ?
