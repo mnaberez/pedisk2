@@ -151,12 +151,15 @@ L7CF9:
     dey
     bpl L7CF9
 
+    ;Set track 0, sector 2 (this is the second sector of the directory)
     ldx #$00
-    stx track
+    stx track           ;Set track 0
     inx
     inx
-    stx sector
-L7D08:
+    stx sector          ;Set sector 2
+
+erase_dir_loop:
+    ;Write the sector to disk (all $FF bytes)
     jsr write_a_sector
 L7D0B:
     bne exit            ;Branch if a disk error occurred
@@ -169,11 +172,18 @@ L7D0B:
     jmp puts_error_exit
 
 L7D17:
+    ;Increment to next directory sector, keep filling until end of dir
     ldx sector
     inx
     stx sector
     cpx #$09
-    bmi L7D08
+    bmi erase_dir_loop
+
+    ;All directory sectors except the first one has been filled
+    ;with $FF (track 0, sectors 2-8).  Only the first directory
+    ;sector (track 0, sector 1) needs to be written now.
+
+    ;Set sector 1 (first directory sector)
     lda #$01
     sta sector
 
@@ -193,11 +203,15 @@ L7D30:
     cpx #$08
     bcc L7D30
 
+    ;Set number of used file entries to 0 (empty disk)
     lda #$00
-    sta dir_sector+$08  ;Number of used file entries
-    sta dir_sector+$09  ;Next open track
+    sta dir_sector+$08  ;Number of used file entries to 0
+
+    ;Set next open track and sector to track 0, sector 9.
+    ;This is the first sector after the directory.
+    sta dir_sector+$09  ;Set next open track to 0
     lda #$09
-    sta dir_sector+$0a  ;Next open sector
+    sta dir_sector+$0a  ;Set next open sector to 9
 
     ;Fill unknown bytes in directory
     lda #$20
@@ -207,7 +221,7 @@ L7D30:
     sta dir_sector+$0e
     sta dir_sector+$0f
 
-    ;Write the new directory
+    ;Write the first directory sector
     jsr write_a_sector
     bne L7D0B           ;Branch if a disk error occurred
 
