@@ -248,20 +248,29 @@ puts_error_exit:
     jmp pdos_prompt
 
 format_track:
+    ;Seek to track 1
     lda track
     sta fdc_data
-    lda #$13
+    lda #%00010011      ;seek?
     jsr send_fdc_cmd
+
     lda #$00
     sta status_mask
-    ldy #$01
+
+    ldy #$01            ;Initialize sector count to 1
+
     sei
-    lda #$F4
+
+    lda #%11110100      ;write track, 15ms delay?
     sta fdc_cmdst
+
+;Busy wait for WD1793
     ldx #$06
 L7D97:
     dex
     bne L7D97
+
+;Write $4E x 16
     ldx #$10
 L7D9C:
     lda #$E6
@@ -269,9 +278,11 @@ L7D9E:
     bit fdc_cmdst
     beq L7D9E
     lda #$4E
-    sta fdc_data
+    sta fdc_data        ;data = 4e
     dex
     bne L7D9C
+
+;Write $00 x 8
     ldx #$08
 L7DAD:
     lda #$E6
@@ -279,9 +290,11 @@ L7DAF:
     bit fdc_cmdst
     beq L7DAF
     lda #$00
-    sta fdc_data
+    sta fdc_data        ;data = 0
     dex
     bne L7DAD
+
+;Write $F6 x 3
     ldx #$03
 L7DBE:
     lda #$E6
@@ -289,15 +302,19 @@ L7DC0:
     bit fdc_cmdst
     beq L7DC0
     lda #$F6
-    sta fdc_data
+    sta fdc_data        ;data = f6 (writes c2)
     dex
     bne L7DBE
+
+;Write $FC x 1
     lda #$E6
 L7DCF:
     bit fdc_cmdst
     beq L7DCF
     lda #$FC
-    sta fdc_data
+    sta fdc_data        ;data = fc (index mark)
+
+;Write $4E x 32
     ldx #$20
 L7DDB:
     lda #$E6
@@ -305,10 +322,17 @@ L7DDD:
     bit fdc_cmdst
     beq L7DDD
     lda #$4E
-    sta fdc_data
+    sta fdc_data        ;data = 4e
     dex
     bne L7DDB
+
+;
+;Start of a sector
+;
+
 L7DEA:
+
+;Write $00 x 8
     ldx #$08
 L7DEC:
     lda #$E6
@@ -316,9 +340,11 @@ L7DEE:
     bit fdc_cmdst
     beq L7DEE
     lda #$00
-    sta fdc_data
+    sta fdc_data        ;data = 0
     dex
     bne L7DEC
+
+;Write $F5 x 3
     ldx #$03
 L7DFD:
     lda #$E6
@@ -326,45 +352,61 @@ L7DFF:
     bit fdc_cmdst
     beq L7DFF
     lda #$F5
-    sta fdc_data
+    sta fdc_data        ;data = f5 (write ?)
     dex
     bne L7DFD
+
+;Write $FE x 1 (id address mark)
     lda #$E6
 L7E0E:
     bit fdc_cmdst
     beq L7E0E
     lda #$FE
-    sta fdc_data
+    sta fdc_data        ;data = fe (id address mark)
+
+;Write track byte
     lda #$E6
 L7E1A:
     bit fdc_cmdst
     beq L7E1A
     lda track
-    sta fdc_data
+    sta fdc_data        ;data = track number
+
+;Write side number byte
     lda #$E6
 L7E27:
     bit fdc_cmdst
     beq L7E27
     lda #$00
-    sta fdc_data
+    sta fdc_data        ;data = side number 0
+
+;Write sector number byte
     lda #$E6
 L7E33:
     bit fdc_cmdst
     beq L7E33
-    sty fdc_data
+    sty fdc_data        ;data = sector number
+
+;Increment sector number for next iteration
     iny
+
+;Write sector length byte
     lda #$E6
 L7E3E:
     bit fdc_cmdst
     beq L7E3E
     lda #$00
-    sta fdc_data
+    sta fdc_data        ;data = sector length (0 = 128 bytes)
+
+;Write $F7 x 1
     lda #$E6
 L7E4A:
     bit fdc_cmdst
     beq L7E4A
     lda #$F7
-    sta fdc_data
+    sta fdc_data        ;data = f7 (2 CRCs written)
+
+;Write $4E x 22
     ldx #$16
 L7E56:
     lda #$E6
@@ -372,9 +414,11 @@ L7E58:
     bit fdc_cmdst
     beq L7E58
     lda #$4E
-    sta fdc_data
+    sta fdc_data        ;data = 4e
     dex
     bne L7E56
+
+;Write $00 x 12
     ldx #$0C
 L7E67:
     lda #$E6
@@ -382,9 +426,11 @@ L7E69:
     bit fdc_cmdst
     beq L7E69
     lda #$00
-    sta fdc_data
+    sta fdc_data        ;data = 0
     dex
     bne L7E67
+
+;Write $F5 x 3
     ldx #$03
 L7E78:
     lda #$E6
@@ -392,31 +438,39 @@ L7E7A:
     bit fdc_cmdst
     beq L7E7A
     lda #$F5
-    sta fdc_data
+    sta fdc_data        ;data = f5 (writes a1)
     dex
     bne L7E78
+
+;Write $FB x 1
     lda #$E6
 L7E89:
     bit fdc_cmdst
     beq L7E89
-    lda #$FB
+    lda #$FB            ;data = fb
     sta fdc_data
+
+;Write $E5 x 128
     ldx #$80
 L7E95:
     lda #$E6
 L7E97:
     bit fdc_cmdst
     beq L7E97
-    lda #$E5
+    lda #$E5            ;data = e5
     sta fdc_data
     dex
     bne L7E95
+
+;Write $F7 x 1
     lda #$E6
 L7EA6:
     bit fdc_cmdst
     beq L7EA6
     lda #$F7
-    sta fdc_data
+    sta fdc_data        ;data = f7
+
+;Write $4E x 28
     ldx #$1C            ;TODO 28 sectors per track?
 L7EB2:
     lda #$E6
@@ -424,18 +478,27 @@ L7EB4:
     bit fdc_cmdst
     beq L7EB4
     lda #$4E
-    sta fdc_data
+    sta fdc_data        ;data = 4e
     dex
     bne L7EB2
+
+;Write $4E x 1
     lda #$E6
 L7EC3:
     bit fdc_cmdst
     bne L7EC3
     lda #$4E
-    sta fdc_data
+    sta fdc_data        ;data = 4e
+
+;
+;End of Sector
+;
+
     cpy #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
     bpl L7ED4
+
     jmp L7DEA
+
 L7ED4:
     lda #$01
 L7ED6:
