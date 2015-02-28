@@ -16,6 +16,7 @@ linprt = $CF83
 select_drive = $EBA0
 deselect = $EB0B
 send_fdc_cmd = $EC0D
+read_a_sector = $ECDF
 puts = $EFE7
 chrout = $FFD2
 
@@ -61,7 +62,8 @@ init:
     ;Print "WRITE PROTECT ERROR" and exit
     lda #<protected_msg
     ldy #>protected_msg
-    jmp puts
+    jsr puts
+    jmp deselect_and_exit
 
 not_protected:
     ;TODO ? Check for other error
@@ -73,15 +75,57 @@ not_protected:
     ;Print "OTHER ERROR" and exit
     lda #<protected_msg
     ldy #>protected_msg
-    jmp puts
+    jsr puts
+    jmp deselect_and_exit
 
 not_other_err:
-    ;Format disk, deselect drive, and exit
+    ;Format all tracks on the disk
     jsr format
+
+    ;Set pointer target_ptr for sector read
+    lda #<dir_sector
+    sta target_ptr
+    lda #>dir_sector
+    sta target_ptr+1
+
+    ;Read last track, last sector as a test
+    ldx #tracks-1
+    stx track
+    ldx #sectors
+    jsr read_a_sector
+    bne failed          ;Branch if error
+
+    ;Read track 0, sector 1
+    ;This is a test and also returns the head to track 0.
+    ldx #0
+    stx track
+    ldx #sectors
+    jsr read_a_sector
+    bne failed          ;Branch if error
+
+finished_ok:
+    ;Print "FINISHED OK"
+    lda #<finished_msg
+    ldy #>finished_msg
+    jsr puts
+    jmp deselect_and_exit
+
+failed:
+    ;Print "FAILED"
+    lda #<failed_msg
+    ldy #>failed_msg
+    jsr puts
+    ;Fall through into deselect_and_exit
+
+deselect_and_exit:
     jmp deselect
 
 format:
-    ;Print "FORMAT TRACK"
+    lda #$0d
+    jsr chrout
+
+track_loop:
+    ;Print cursor up then "FORMAT TRACK"
     lda #<format_track_msg
     ldy #>format_track_msg
     jsr puts
@@ -102,11 +146,11 @@ format:
     inc track
     lda #tracks
     cmp track
-    bpl format
+    bne track_loop
     rts
 
 format_track:
-    ;Seek to track
+    ;Seek to track (no verify)
     lda track
     sta fdc_data
     lda #%00010011      ;seek?
@@ -355,4 +399,10 @@ other_err_msg:
     !text "OTHER ERROR",$0d,0
 
 format_track_msg:
-    !text "FORMAT TRACK",0
+    !text $91,"FORMAT TRACK",0
+
+failed_msg:
+    !text "FAILED",$0d,0
+
+finished_msg:
+    !text "FINISHED OK",$0d,0
