@@ -14,6 +14,7 @@ sector = $7f93
 status = $7f94
 linprt = $CF83
 select_drive = $EBA0
+deselect = $EB0B
 send_fdc_cmd = $EC0D
 puts = $EFE7
 chrout = $FFD2
@@ -69,6 +70,7 @@ format:
     lda #'S'
     jsr chrout
     jsr track_loop
+    jsr deselect
     rts
 
 track_loop:
