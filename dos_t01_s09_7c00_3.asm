@@ -248,7 +248,7 @@ puts_error_exit:
     jmp pdos_prompt
 
 format_track:
-    ;Seek to track 1
+    ;Seek to track
     lda track
     sta fdc_data
     lda #%00010011      ;seek?
