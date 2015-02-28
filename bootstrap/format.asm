@@ -37,15 +37,17 @@ bas_eol:
     !byte $00,$00       ;End of BASIC program
 
 init:
+    ;Init track and sector
     ldx #0
     stx track
     inx
     stx sector
     stx fdc_sector
 
+    ;Select drive 0
     lda #1              ;Pattern to select drive 0
     sta drive_sel
-    jsr select_drive    ;Select drive number in drive_sel
+    jsr select_drive    ;Select drive using pattern in drive_sel
 
     ;TODO ?
     lda #$03
@@ -54,45 +56,57 @@ init:
     ;Check if the disk is write protected
     lda fdc_cmdst
     and #$40
-    bne protected       ;Branch if write protected
+    beq not_protected   ;Branch if not write protected
 
-    ;TODO ?
+    ;Print "WRITE PROTECT ERROR" and exit
+    lda #<protected_msg
+    ldy #>protected_msg
+    jmp puts
+
+not_protected:
+    ;TODO ? Check for other error
     lda fdc_cmdst
     and #$9D
     cmp #$04
-    beq format          ;Branch if no error
+    beq not_other_err   ;Branch if error
 
-protected:
-    lda #'P'
-    jmp chrout
+    ;Print "OTHER ERROR" and exit
+    lda #<protected_msg
+    ldy #>protected_msg
+    jmp puts
+
+not_other_err:
+    ;Format disk, deselect drive, and exit
+    jsr format
+    jmp deselect
 
 format:
-    lda #'S'
-    jsr chrout
-    jsr track_loop
-    jsr deselect
-    rts
-
-track_loop:
-    jsr format_track
-
-    lda #<finished_track
-    ldy #>finished_track
+    ;Print "FORMAT TRACK"
+    lda #<format_track_msg
+    ldy #>format_track_msg
     jsr puts
 
+    ;Print track number
     lda #$00            ;High byte of number to print = 0
     ldx track           ;Low byte of number to print = track
     jsr linprt          ;Print 256*A + X in decimal
+
+    ;Print newline
+    lda #$0d
+    jsr chrout
+
+    ;Format the track
+    jsr format_track
 
     ;Increment track, loop until all tracks have been formatted.
     inc track
     lda #tracks
     cmp track
-    bpl track_loop
+    bpl format
     rts
 
 format_track:
-    ;Seek to track 1
+    ;Seek to track
     lda track
     sta fdc_data
     lda #%00010011      ;seek?
@@ -334,6 +348,11 @@ track_done_wait:
     cli
     rts
 
+protected_msg:
+    !text "WRITE PROTECT ERROR",$0d,0
 
-finished_track:
-    !text $0d,"FORMAT TRACK ",0
+other_err_msg:
+    !text "OTHER ERROR",$0d,0
+
+format_track_msg:
+    !text "FORMAT TRACK",0
