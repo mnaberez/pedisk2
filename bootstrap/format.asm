@@ -17,6 +17,7 @@ select_drive = $EBA0
 deselect = $EB0B
 send_fdc_cmd = $EC0D
 read_a_sector = $ECDF
+write_a_sector = $ED3A
 puts = $EFE7
 chrout = $FFD2
 
@@ -82,26 +83,86 @@ not_other_err:
     ;Format all tracks on the disk
     jsr format
 
-    ;Set pointer target_ptr for sector read
-    lda #<dir_sector
-    sta target_ptr
-    lda #>dir_sector
-    sta target_ptr+1
-
     ;Read last track, last sector as a test
-    ldx #tracks-1
-    stx track
-    ldx #sectors
+    jsr set_target_ptr
+    lda #tracks-1
+    sta track
+    lda #sectors
+    sta sector
     jsr read_a_sector
     bne failed          ;Branch if error
 
-    ;Read track 0, sector 1
-    ;This is a test and also returns the head to track 0.
-    ldx #0
-    stx track
-    ldx #sectors
-    jsr read_a_sector
+    ;Disk has been formatted successfully.  All sectors on the
+    ;disk have been filled with $E6.  Now we need to write the
+    ;directory sectors.
+
+    ;Print "WRITE EMPTY DIR"
+    lda #<write_dir_msg
+    ldy #>write_dir_msg
+    jsr puts
+
+    ;Fill all 128 bytes of the sector buffer with $FF.
+    ldx #$7F
+    lda #$FF
+fill_ff:
+    sta dir_sector,x
+    dex
+    bpl fill_ff
+
+    ;Fill track 0, sectors 1-8 (entire directory) with $FF
+    ;because empty directory entries always contain $FF.
+    ;Start with sector 8, step down to sector 1.
+    lda #0
+    sta track
+    lda #8
+    sta sector
+dir_loop:
+    jsr set_target_ptr
+    jsr write_a_sector
     bne failed          ;Branch if error
+    dec sector
+    lda sector
+    bne dir_loop
+
+    ;Now that the entire directory has been filled with $FF,
+    ;we just need to update the first directory sector.
+
+    ;Set the disk name
+    ldx #0
+fill_dn:
+    lda disk_name,x
+    beq write_dir
+    sta dir_sector,x
+    inx
+    bne fill_dn         ;Branch always
+
+write_dir:
+    ;Set number of used file entries to 0 (empty disk)
+    lda #$00
+    sta dir_sector+$08  ;Number of used file entries to 0
+
+    ;Set next open track and sector to track 0, sector 9.
+    ;This is the first sector after the directory.
+    sta dir_sector+$09  ;Set next open track to 0
+    lda #$09
+    sta dir_sector+$0a  ;Set next open sector to 9
+
+    ;Fill unknown bytes in directory
+    lda #$20
+    sta dir_sector+$0b  ;TODO These bytes in the directory
+    sta dir_sector+$0c  ;     are unknown and appear unused.
+    sta dir_sector+$0d
+    sta dir_sector+$0e
+    sta dir_sector+$0f
+
+    ;Write track 0, sector 1
+    lda #1
+    sta sector
+    jsr set_target_ptr
+    jsr write_a_sector
+    bne failed              ;Branch if error
+
+    ;Disk has been formatted and empty directory written to it.
 
 finished_ok:
     ;Print "FINISHED OK"
@@ -119,6 +180,14 @@ failed:
 
 deselect_and_exit:
     jmp deselect
+
+set_target_ptr:
+    ;Set pointer target_ptr for sector write
+    lda #<dir_sector
+    sta target_ptr
+    lda #>dir_sector
+    sta target_ptr+1
+    rts
 
 format:
     lda #$0d
@@ -401,8 +470,14 @@ other_err_msg:
 format_track_msg:
     !text $91,"FORMAT TRACK",0
 
+write_dir_msg:
+    !text "WRITE EMPTY DIR",$0d,0
+
+disk_name:
+    !text "YOURDISK",0
+
 failed_msg:
-    !text "FAILED",$0d,0
+    !text $0d,"FAILED",$0d,0
 
 finished_msg:
     !text "FINISHED OK",$0d,0
