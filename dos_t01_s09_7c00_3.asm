@@ -50,9 +50,9 @@ start:
     ldy #>disk_format
     jsr puts
 
-    ;Get drive number
-    jsr input_device    ;Print "DEVICE? " and get drive number in A
-    sta drive_sel       ;Save it in drive_sel
+    ;Get drive select pattern
+    jsr input_device    ;Print "DEVICE? ", get num, returns drv sel pat in A
+    sta drive_sel       ;Save the drive select pattern in drive_sel
 
     ;Print "SURE? (Y-YES)"
     lda #<are_you_sure

@@ -55,10 +55,9 @@ start:
     ldy #>disk_compression
     jsr puts
 
-    ;Print "DEVICE?" and get a valid drive number from the user
-    ;  Sets drive_sel with the drive select pattern
-    jsr input_device
-    sta drive_sel
+    ;Get drive select pattern
+    jsr input_device    ;Print "DEVICE? ", get num, returns drv sel pat in A
+    sta drive_sel       ;Save the drive select pattern in drive_sel
 
     ;TODO ???
     lda #$60

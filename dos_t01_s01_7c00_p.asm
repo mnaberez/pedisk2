@@ -49,8 +49,9 @@ filetypes:
     !text " OBJCT ",0
 
 L7CB4:
-    jsr input_device
-    sta drive_sel
+    ;Get drive select pattern
+    jsr input_device    ;Print "DEVICE? ", get num, returns drv sel pat in A
+    sta drive_sel       ;Save the drive select pattern in drive_sel
 
     ldx #dir_track      ;set track 0 (first track)
     stx track           ;save the requested track number

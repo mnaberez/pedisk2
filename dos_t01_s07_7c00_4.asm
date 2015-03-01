@@ -51,9 +51,9 @@ ask_trk_sec:
     lda #$0D
     jsr chrout
 
-    ;Print "DEVICE?", input a valid drive number, and save it
-    jsr input_device
-    sta drive_sel
+    ;Get drive select pattern
+    jsr input_device    ;Print "DEVICE? ", get num, returns drv sel pat in A
+    sta drive_sel       ;Save the drive select pattern in drive_sel
 
     ;Print "TRACK? "
     lda #<enter_track
