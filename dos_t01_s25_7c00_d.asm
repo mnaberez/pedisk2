@@ -128,7 +128,7 @@ sector_loop:
     lda sector
     jsr put_hex_byte    ;Print sector in hex
 
-    ;Increment the next sector for the next time around
+    ;Increment to the next sector for the next time around
     clc
     adc #$01
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
