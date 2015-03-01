@@ -175,23 +175,34 @@ L7ABD:
     bne L7ABD
 L7AC7:
     jsr chrin
-    jsr L7ADB
+    jsr parse_drive
     sta drive_sel_f
     rts
 
 input_device:
+;Prompt the user for a drive number and return its
+;drive select pattern in A.
+;
+    ;Print "DEVICE? "
     lda #<enter_device
     ldy #>enter_device
     jsr puts
+
+    ;Get a character from the user
     jsr get_char_w_stop
-L7ADB:
+
+parse_drive:
+;Parse an ASCII drive number ("0"-"2") in A and return the
+;correspoding drive select pattern in A.
+;
     cmp #'0'
-    bmi input_device
+    bmi input_device    ;Branch to ask for a new number if < '0'
     cmp #'3'
-    bpl input_device
-    and #$03
+    bpl input_device    ;Branch to ask for a new number if >= '3'
+
+    and #$03            ;Convert ASCII to number 0-2
     tax
-    lda drive_selects,x
+    lda drive_selects,x ;Get drive select pattern for drive number
     rts
 
 load_prog:
