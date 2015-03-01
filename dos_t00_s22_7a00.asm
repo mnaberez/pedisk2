@@ -341,25 +341,37 @@ L7B90:
 kill_file:
 ;K-KILL A FILE
 ;
-    ;Print "** DELETE-" prompt for filename to delete
+;Delete a file from disk.  This only sets a marker that hides the file
+;from being listed in the directory.  The directory entry and the data
+;sectors are not freed.  To reclaim the space, the "disk compression"
+;utility must be run.
+;
+    ;Print "** DELETE-" prompt
     lda #<enter_kill
     ldy #>enter_kill
     jsr puts
 
+    ;Get filename to delete from user
     jsr input_filename
 
+    ;Find the file in the directory.  If found, the directory sector with
+    ;the entry will be in dir_sector and dir_ptr will point to the entry.
     jsr find_file
     tax
-    bmi L7BAE           ;Branch if a disk error occurred
-    bne L7BB1           ;Branch if the file was not found
+    bmi kill_done           ;Branch if a disk error occurred
+    bne kill_not_found      ;Branch if the file was not found
 
+    ;Set the last byte of the filename to $FF, which
+    ;marks the file as deleted.
     lda #$FF
-    ldy #$05
-    sta (dir_ptr),y
+    ldy #$05                ;Y=index to last byte in filename
+    sta (dir_ptr),y         ;Set last byte of filename to $FF
+
+    ;Write the directory sector back to the disk.
     jsr write_a_sector
-L7BAE:
+kill_done:
     jmp pdos_prompt
-L7BB1:
+kill_not_found:
     jmp bad_cmd_or_file
 
 enter_kill:
