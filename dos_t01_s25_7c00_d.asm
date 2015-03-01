@@ -116,7 +116,7 @@ dump_disk:
 sector_loop:
     ;Read sector from disk
     jsr read_a_sector
-    bne disk_error           ;Branch if a disk error occurred
+    bne disk_error       ;Branch if a disk error occurred
 
     ;Print a newline
     lda #$0D

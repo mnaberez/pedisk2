@@ -142,7 +142,7 @@ ext1:
 
     ;Set last char of filename to command character
     pla
-    sta dir_entry+$05  ;Last byte of filename
+    sta dir_entry+$05   ;Last byte of filename
 
     ;Set drive select pattern for drive 0
     ldy #$01
