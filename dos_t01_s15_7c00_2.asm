@@ -1,5 +1,6 @@
 vartab = $2a
 target_ptr = $b7
+bastxt = $0400 ;BASIC program text area, stores disk data during copy
 L7931 = $7931
 pdos_prompt = $7A05
 input_device = $7AD1
@@ -159,10 +160,10 @@ insert_dst_disk:
     ldx #$07
 L7D2E:
     lda copy_sector,x
-    sta $0400,x
+    sta bastxt,x
     dex
     bpl L7D2E
-    stx $040F
+    stx bastxt+$0f
     bne L7D4D
 L7D3C:
     lda copy_sector+$0f
@@ -229,13 +230,13 @@ finish_and_exit:
     sta copy_sector+$0f
     jsr write_a_sector
     bne L7D56           ;Branch if a disk error occurred
-    lda #$04
+    lda #>bastxt
     sta vartab
     sta vartab+1
-    lda #$00
-    sta $0400
-    sta $0401
-    sta $0402
+    lda #<bastxt
+    sta bastxt+$00
+    sta bastxt+$01
+    sta bastxt+$02
     jmp pdos_prompt
 
 insert_src_disk:
@@ -265,8 +266,8 @@ set_rw_params:
     sta sector
     lda $7F9B
     sta num_sectors
-    ldx #$00
+    ldx #<bastxt
     stx target_ptr
-    lda #$04
+    lda #>bastxt
     sta target_ptr+1
     rts
