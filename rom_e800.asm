@@ -1356,12 +1356,14 @@ find_file:
 ;is 65,535 bytes.  This is far less than the maximum file size that the sector
 ;count word seems to allow.
 ;
-;The RAM-resident portion of the DOS is stored in multiple LOAD (type $05)
-;files.  These files are always at the top of the directory and are always
-;named starting with "*****" (five asterisks) followed by a unique character.
-;The user can see these files in a directory listing.  Their track/sector
-;positions on the disk are important.  Some routines load code from these files
-;directly by track/sector number, not filename.
+;The RAM-resident portions of the DOS are stored in multiple LOAD (type $05)
+;files.  The first file is named "******" (six asterisks) and it contains
+;both BASIC wedge commands and the PDOS monitor prompt.  It must be the first
+;file on disk (track 0, sector 9) because its contents are accessed by track
+;and sector number, not filename.  Additional PEDISK monitor commands are
+;implemented as overlays whose filenames are "*****" (five asterisks)
+;followed by one character.  The overlays are loaded by filename and can
+;be stored anywhere on the disk.
 ;
     lda drive_sel_f     ;get drive select bit pattern parsed from filename
     sta drive_sel       ;save pattern to write to drive select latch
