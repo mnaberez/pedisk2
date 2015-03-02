@@ -65,7 +65,7 @@ start:
     bne exit
 
     ;Select drive
-    jsr select_drive    ;Select drive number in drive_sel
+    jsr select_drive    ;Select drive using pattern in drive_sel
     bne exit            ;Exit if an error occurred
 
     ;TODO ?
