@@ -10,6 +10,7 @@ tmp_7f97 = $7f97
 src_drive_sel = $7f97 ;Drive select pattern of source drive
 tmp_7f98 = $7f98
 dst_drive_sel = tmp_7f98 ;Drive select pattern of destination drive
+copy_track = $7f99 ;Current track number for copy
 tmp_7f9a = $7f9a
 copy_mode = tmp_7f9a ;Copy mode flag (0=two drives, $80=one drive)
 read_a_sector = $ECDF
@@ -108,7 +109,7 @@ start_copy:
     lda src_drive_sel
     sta drive_sel
     lda #$00
-    sta $7F99
+    sta copy_track
     sta track
     lda #$01
     sta sector
@@ -155,7 +156,7 @@ insert_dst_disk:
     sta target_ptr+1
     jsr read_a_sector
     bne L7CEB           ;Branch if a disk error occurred
-    lda $7F99
+    lda copy_track
     bne L7D3C
     ldx #$07
 L7D2E:
@@ -182,10 +183,10 @@ L7D4D:
     jsr write_sectors
 L7D56:
     bne L7CEB           ;Branch if a disk error occurred
-    lda $7F99
+    lda copy_track
     clc
     adc $7F9C
-    sta $7F99
+    sta copy_track
     cmp dir_sector+$09  ;Get next open track
     beq L7D69
     bpl finish_and_exit
@@ -194,7 +195,7 @@ L7D69:
     bmi L7D8A
     lda #$28            ;TODO 40/41 tracks?
     sec
-    sbc $7F99
+    sbc copy_track
     bcc finish_and_exit
     sta $5E
     lda #$1C            ;TODO 28 sectors per track?
@@ -260,7 +261,7 @@ wait_for_r_key:
 
 set_rw_params:
     sta drive_sel
-    lda $7F99
+    lda copy_track
     sta track
     lda #$01
     sta sector
