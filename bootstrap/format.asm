@@ -147,10 +147,10 @@ write_dir:
     lda #$09
     sta dir_sector+$0a  ;Set next open sector to 9
 
-    ;Fill unknown bytes in directory
+    ;Fill unused bytes in directory with $20
     lda #$20
-    sta dir_sector+$0b  ;TODO These bytes in the directory
-    sta dir_sector+$0c  ;     are unknown and appear unused.
+    sta dir_sector+$0b
+    sta dir_sector+$0c
     sta dir_sector+$0d
     sta dir_sector+$0e
     sta dir_sector+$0f

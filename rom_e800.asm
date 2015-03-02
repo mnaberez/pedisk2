@@ -1300,7 +1300,7 @@ find_file:
 ;  $08       byte  number of used file entries (includes deleted files)
 ;  $09       byte  next open track
 ;  $0A       byte  next open sector
-;  $0B-0F    byte  ??
+;  $0B-0F    byte  unused bytes, format program sets each to $20
 ;
 ;Each successive 16 bytes is a directory entry for a file.  There are a total
 ;of 63 entries possible.  A directory entry consists of:
