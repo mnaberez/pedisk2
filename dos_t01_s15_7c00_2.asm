@@ -95,15 +95,15 @@ start:
 
     ;Skip setting copy mode flag to single drive if drives are different
     cmp src_drive_sel
-    bne L7CC8           ;Branch if drives are different
+    bne start_copy     ;Branch if drives are different
 
     ;Source and destination drives are the same
     ;Set copy mode flag to one drive
     lda #$80
     sta copy_mode
 
-L7CC8:
-    jsr L7DCD
+start_copy:
+    jsr insert_src_disk
     lda src_drive_sel
     sta drive_sel
     lda #$00
@@ -116,12 +116,13 @@ L7CC8:
     lda #>dir_sector
     sta target_ptr+1
     jsr read_a_sector
-    beq L7CEE           ;Branch if read succeeded
+    beq copy_loop       ;Branch if read succeeded
 L7CEB:
     jmp pdos_prompt
-L7CEE:
+
+copy_loop:
     lda src_drive_sel
-    jsr L7DE3
+    jsr set_rw_params
     jsr read_sectors
     bne L7CEB           ;Branch if a disk error occurred
 
@@ -129,12 +130,13 @@ L7CEE:
     bit copy_mode
     bpl L7D4D           ;Branch if two drive mode
 
-L7CFE:
+insert_dst_disk:
     ;Print "PUT COPY"
     ldy #>put_copy
     lda #<put_copy
     jsr puts
 
+    ;TODO deselect drive?
     lda #$00
     sta latch
 
@@ -172,10 +174,10 @@ L7D3C:
     ldy #>wrong_disk
     jsr puts
 
-    jmp L7CFE
+    jmp insert_dst_disk
 L7D4D:
     lda dst_drive_sel
-    jsr L7DE3
+    jsr set_rw_params
     jsr write_sectors
 L7D56:
     bne L7CEB           ;Branch if a disk error occurred
@@ -185,14 +187,14 @@ L7D56:
     sta $7F99
     cmp dir_sector+$09  ;Get next open track
     beq L7D69
-    bpl L7D95
+    bpl finish_and_exit
 L7D69:
     cmp $7F9E
     bmi L7D8A
     lda #$28            ;TODO 40/41 tracks?
     sec
     sbc $7F99
-    bcc L7D95
+    bcc finish_and_exit
     sta $5E
     lda #$1C            ;TODO 28 sectors per track?
     sta $60
@@ -207,10 +209,11 @@ L7D8A:
     bit copy_mode
     bpl L7D92           ;Branch if two drive mode
 
-    jsr L7DCD
+    jsr insert_src_disk
 L7D92:
-    jmp L7CEE
-L7D95:
+    jmp copy_loop
+
+finish_and_exit:
     lda #$00
     sta track
     lda #$01
@@ -234,7 +237,8 @@ L7D95:
     sta $0401
     sta $0402
     jmp pdos_prompt
-L7DCD:
+
+insert_src_disk:
     ;Print "PUT ORIGINAL"
     ldy #>put_original
     lda #<put_original
@@ -253,7 +257,7 @@ wait_for_r_key:
     bne wait_for_r_key
     rts
 
-L7DE3:
+set_rw_params:
     sta drive_sel
     lda $7F99
     sta track
