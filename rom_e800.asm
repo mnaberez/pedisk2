@@ -114,6 +114,7 @@ status      = dos+$0794 ;Last status byte read from WD1793 (no masking)
 command     = dos+$0795 ;Last command byte written to WD1793
 num_sectors = dos+$0796 ;Number of sectors to read or write
 tmp_7f97    = dos+$0797 ;Temp byte used by $7c00 overlays for various things
+tmp_7f98    = dos+$0797 ;Temp byte used by $7c00 overlays for various things
 tmp_7f9a    = dos+$079a ;Temp byte used by $7c00 overlays for various things
 dir_entry   = dos+$07a0 ;16 byte buffer for a directory entry
 drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename

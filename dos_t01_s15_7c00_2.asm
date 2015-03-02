@@ -5,6 +5,9 @@ pdos_prompt = $7A05
 input_device = $7AD1
 dir_sector = $7f00
 tmp_7f97 = $7f97
+src_drive_sel = $7f97 ;Drive select pattern of source drive
+tmp_7f98 = $7f98
+dst_drive_sel = tmp_7f98 ;Drive select pattern of destination drive
 tmp_7f9a = $7f9a
 copy_mode = tmp_7f9a ;Copy mode flag (0=two drives, $80=one drive)
 read_a_sector = $ECDF
@@ -78,7 +81,7 @@ start:
 
     ;Get drive select pattern of source drive
     jsr input_device    ;Print "DEVICE? ", get num, returns drv sel pat in A
-    sta tmp_7f97
+    sta src_drive_sel
 
     ;Print "COPY TO DRIVE #"
     ldy #>copy_to
@@ -87,10 +90,10 @@ start:
 
     ;Get drive select pattern of destination drive
     jsr input_device    ;Print "DEVICE? ", get num, returns drv sel pat in A
-    sta $7F98
+    sta dst_drive_sel
 
     ;Skip setting copy mode flag to single drive if drives are different
-    cmp tmp_7f97
+    cmp src_drive_sel
     bne L7CC8           ;Branch if drives are different
 
     ;Source and destination drives are the same
@@ -100,7 +103,7 @@ start:
 
 L7CC8:
     jsr L7DCD
-    lda tmp_7f97
+    lda src_drive_sel
     sta drive_sel
     lda #$00
     sta $7F99
@@ -116,7 +119,7 @@ L7CC8:
 L7CEB:
     jmp pdos_prompt
 L7CEE:
-    lda tmp_7f97
+    lda src_drive_sel
     jsr L7DE3
     jsr read_sectors
     bne L7CEB           ;Branch if a disk error occurred
@@ -170,7 +173,7 @@ L7D3C:
 
     jmp L7CFE
 L7D4D:
-    lda $7F98
+    lda dst_drive_sel
     jsr L7DE3
     jsr write_sectors
 L7D56:
