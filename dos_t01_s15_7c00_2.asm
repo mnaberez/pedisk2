@@ -121,7 +121,10 @@ L7CFE:
 
     lda #$00
     sta latch
-    jsr L7DDB
+
+    ;Wait for user to press the "R" key
+    jsr wait_for_r_key
+
     lda #$00
     sta track
     lda #$01
@@ -223,11 +226,15 @@ L7DCD:
     lda #<in_drive
     ldy #>in_drive
     jsr puts
-L7DDB:
+
+wait_for_r_key:
+;Wait for the user to press the "R" key
+;
     jsr get_char
-    cmp #$52
-    bne L7DDB
+    cmp #'R'
+    bne wait_for_r_key
     rts
+
 L7DE3:
     sta drive_sel
     lda $7F99
