@@ -952,7 +952,7 @@ L7DF0:
     lda (dir_ptr),y     ;Get last byte of filename
     cmp #$FF            ;Equal to $FF?
     beq L7DCF           ;  Yes: file is deleted, skip it
-                                ;  No: continue
+                        ;  No: continue
 
     ;Print a newline
 
