@@ -389,11 +389,11 @@ write_new_dir:
     jmp pdos_prompt
 
 success_exit:
-    ;Set start of variables to $0404
-    lda #>dir_buffer ;TODO this code must be changed to set low byte and
-                     ;     high byte separately if dir_buffer ever moves
-    sta vartab       ;Set vartab low byte to $04
-    sta vartab+1     ;Set vartab high byte to $04
+    ;Set start of BASIC variables to $0404
+    lda #>dir_buffer    ;TODO this code must be changed to set low byte and
+                        ;     high byte separately if dir_buffer ever moves
+    sta vartab          ;Set vartab low byte to $04
+    sta vartab+1        ;Set vartab high byte to $04
 
     ;Store an empty BASIC program to reset BASIC since we overwrote
     ;the BASIC program area to use it as buffer storage.
