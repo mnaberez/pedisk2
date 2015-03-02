@@ -1,6 +1,6 @@
 vartab = $2a
 target_ptr = $b7
-bastxt = $0400 ;BASIC program text area, stores disk data during copy
+copy_buffer = $0400 ;Stores data during copy (overwrites BASIC program text)
 L7931 = $7931
 pdos_prompt = $7A05
 input_device = $7AD1
@@ -161,10 +161,10 @@ insert_dst_disk:
     ldx #$07
 L7D2E:
     lda copy_sector,x
-    sta bastxt,x
+    sta copy_buffer,x
     dex
     bpl L7D2E
-    stx bastxt+$0f
+    stx copy_buffer+$0f
     bne L7D4D
 L7D3C:
     lda copy_sector+$0f
@@ -231,13 +231,20 @@ finish_and_exit:
     sta copy_sector+$0f
     jsr write_a_sector
     bne L7D56           ;Branch if a disk error occurred
-    lda #>bastxt
-    sta vartab
-    sta vartab+1
-    lda #<bastxt
-    sta bastxt+$00
-    sta bastxt+$01
-    sta bastxt+$02
+
+    ;Set start of BASIC variables to $0404
+    lda #>copy_buffer   ;TODO this code must be changed to set low byte and
+                        ;     high byte separately if copy_buffer ever moves
+    sta vartab          ;Set vartab low byte to $04
+    sta vartab+1        ;Set vartab high byte to $04
+
+    ;Store an empty BASIC program to reset BASIC since we overwrote
+    ;the BASIC program area to use it as buffer storage.
+    lda #$00
+    sta copy_buffer+$00 ;End of current BASIC line
+    sta copy_buffer+$01 ;End of BASIC program first byte
+    sta copy_buffer+$02 ;End of BASIC program second byte
+
     jmp pdos_prompt
 
 insert_src_disk:
@@ -267,8 +274,8 @@ set_rw_params:
     sta sector
     lda $7F9B
     sta num_sectors
-    ldx #<bastxt
+    ldx #<copy_buffer
     stx target_ptr
-    lda #>bastxt
+    lda #>copy_buffer
     sta target_ptr+1
     rts
