@@ -6,6 +6,7 @@ input_device = $7AD1
 dir_sector = $7f00
 tmp_7f97 = $7f97
 tmp_7f9a = $7f9a
+copy_mode = tmp_7f9a ;Copy mode flag (0=two drives, $80=one drive)
 read_a_sector = $ECDF
 read_sectors = $ECE4
 write_a_sector = $ED3A
@@ -70,10 +71,12 @@ start:
     sec
     sbc $7F9C
     sta $7F9E
-    lda #$00
-    sta tmp_7f9a
 
-    ;Get drive select pattern
+    ;Init copy mode flag to two drive mode (0=two drives, $80=one drive)
+    lda #$00
+    sta copy_mode
+
+    ;Get drive select pattern of source drive
     jsr input_device    ;Print "DEVICE? ", get num, returns drv sel pat in A
     sta tmp_7f97
 
@@ -82,13 +85,19 @@ start:
     lda #<copy_to
     jsr puts
 
-    ;Get drive select pattern
+    ;Get drive select pattern of destination drive
     jsr input_device    ;Print "DEVICE? ", get num, returns drv sel pat in A
     sta $7F98
+
+    ;Skip setting copy mode flag to single drive if drives are different
     cmp tmp_7f97
-    bne L7CC8
+    bne L7CC8           ;Branch if drives are different
+
+    ;Source and destination drives are the same
+    ;Set copy mode flag to one drive
     lda #$80
-    sta tmp_7f9a
+    sta copy_mode
+
 L7CC8:
     jsr L7DCD
     lda tmp_7f97
@@ -111,8 +120,11 @@ L7CEE:
     jsr L7DE3
     jsr read_sectors
     bne L7CEB           ;Branch if a disk error occurred
-    bit tmp_7f9a
-    bpl L7D4D
+
+    ;Skip disk swap if copying in two drive mode
+    bit copy_mode
+    bpl L7D4D           ;Branch if two drive mode
+
 L7CFE:
     ;Print "PUT COPY"
     ldy #>put_copy
@@ -187,8 +199,10 @@ L7D69:
     lda $62
     sta $7F9B
 L7D8A:
-    bit tmp_7f9a
-    bpl L7D92
+    ;Skip disk swap if copying in two drive mode
+    bit copy_mode
+    bpl L7D92           ;Branch if two drive mode
+
     jsr L7DCD
 L7D92:
     jmp L7CEE
