@@ -809,10 +809,12 @@ L7CF3:
     cli
     ldy wedge_y
     ldx wedge_x
-    lda #$8A
+    lda #$8A            ;CBM BASIC token for RUN
     jmp check_colon
 L7D0C:
-    !byte $8a,0,0,0
+    !byte $8a           ;CBM BASIC token for RUN
+    !byte 0             ;End of BASIC line
+    !byte 0,0           ;End of BASIC program
 L7D10:
     jmp restore
 
