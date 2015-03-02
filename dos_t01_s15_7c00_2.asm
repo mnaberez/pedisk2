@@ -3,6 +3,7 @@ target_ptr = $b7
 L7931 = $7931
 pdos_prompt = $7A05
 input_device = $7AD1
+copy_sector = $7e00 ;128 byte buffer used only by this copy program
 dir_sector = $7f00
 tmp_7f97 = $7f97
 src_drive_sel = $7f97 ;Drive select pattern of source drive
@@ -145,9 +146,9 @@ L7CFE:
     lda #$01
     sta sector
     sta num_sectors
-    lda #$00
+    lda #<copy_sector
     sta target_ptr
-    lda #$7E
+    lda #>copy_sector
     sta target_ptr+1
     jsr read_a_sector
     bne L7CEB           ;Branch if a disk error occurred
@@ -155,14 +156,14 @@ L7CFE:
     bne L7D3C
     ldx #$07
 L7D2E:
-    lda $7E00,x
+    lda copy_sector,x
     sta $0400,x
     dex
     bpl L7D2E
     stx $040F
     bne L7D4D
 L7D3C:
-    lda $7E0F
+    lda copy_sector+$0f
     cmp #$FF
     beq L7D4D
 
@@ -182,7 +183,7 @@ L7D56:
     clc
     adc $7F9C
     sta $7F99
-    cmp dir_sector+$09
+    cmp dir_sector+$09  ;Get next open track
     beq L7D69
     bpl L7D95
 L7D69:
@@ -215,14 +216,14 @@ L7D95:
     lda #$01
     sta sector
     sta num_sectors
-    lda #$00
+    lda #<copy_sector
     sta target_ptr
-    lda #$7E
+    lda #>copy_sector
     sta target_ptr+1
     jsr read_a_sector
     bne L7D56           ;Branch if a disk error occurred
     lda #$20
-    sta $7E0F
+    sta copy_sector+$0f
     jsr write_a_sector
     bne L7D56           ;Branch if a disk error occurred
     lda #$04

@@ -94,6 +94,7 @@ dos_run     = dos+$000f ;Entry point for !RUN (load and run)
 dos_sys     = dos+$0012 ;Entry point for !SYS (disk monitor)
 dos_list    = dos+$0015 ;Entry point for !LIST (directory)
 dos_stop    = dos+$0200 ;Unknown, PEDISK monitor jumps here if STOP pressed
+copy_sector = dos+$0600 ;128 bytes for sector used only by copy disk overlay
 buf_1       = dos+$0680 ;Unknown, possible buffer area #1
 buf_2       = dos+$06a0 ;Unknown, possible buffer area #2
 buf_3       = dos+$06c0 ;Unknown, possible buffer area #3
