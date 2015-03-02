@@ -48,9 +48,8 @@ put_original:
     !text $0d,"PUT ORIGINAL",0
 put_copy:
     !text $0d,"PUT COPY"
-in_drive:
+in_drv_hit_r:
     !text " IN DRIVE"
-hit_r_key:
     !text $0d,"HIT R KEY",0
 wrong_disk:
     !text $0d,"* WRONG DISK *",$0d,0
@@ -253,9 +252,9 @@ insert_src_disk:
     lda #<put_original
     jsr puts
 
-    ;Print "IN DRIVE"
-    lda #<in_drive
-    ldy #>in_drive
+    ;Print "IN DRIVE" followed by "HIT R KEY"
+    lda #<in_drv_hit_r
+    ldy #>in_drv_hit_r
     jsr puts
 
 wait_for_r_key:
