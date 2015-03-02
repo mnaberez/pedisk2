@@ -72,9 +72,9 @@ start:
     sta $7F9E
     lda #$00
     sta tmp_7f9a
+
     ;Get drive select pattern
     jsr input_device    ;Print "DEVICE? ", get num, returns drv sel pat in A
-L7CAE:
     sta tmp_7f97
 
     ;Print "COPY TO DRIVE #"
