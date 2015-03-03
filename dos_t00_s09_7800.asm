@@ -539,7 +539,7 @@ L7B00:
     iny
     lda $7FB2
     sta (varpnt),y
-    jsr $7b59
+    jsr L7B59
     ldy #$00
     lda #$00
     sta (varpnt),y
