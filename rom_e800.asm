@@ -484,7 +484,7 @@ install_wedge:
 deselect:
 ;Deselect the drive.
 ;
-;On the 8" drive, this routine will disengage the head load solenoid.
+;This will disengage the head load solenoid on mechanisms that have one.
 ;
     lda #%00001000
     sta latch
@@ -564,7 +564,7 @@ select_drive:
 ;read_sectors and write_sectors always call it.  However, those
 ;routines don't deselect the drive.
 ;
-;On the 8" drive, this routine engage the head load solenoid.
+;This will engage the head load solenoid on mechanisms that have one.
 ;
 ;Calling parameters:
 ;  drive_sel: Drive select pattern of drive to select
