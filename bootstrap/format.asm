@@ -13,6 +13,7 @@ track = $7f92
 sector = $7f93
 status = $7f94
 linprt = $CF83
+drive_selects = $ea2f
 select_drive = $EBA0
 deselect = $EB0B
 send_fdc_cmd = $EC0D
@@ -47,7 +48,7 @@ init:
     stx fdc_sector
 
     ;Select drive 0
-    lda #1              ;Pattern to select drive 0
+    lda drive_selects,x ;Get pattern to select drive 0
     sta drive_sel
     jsr select_drive    ;Select drive using pattern in drive_sel
 
