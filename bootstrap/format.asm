@@ -15,7 +15,7 @@ status = $7f94
 linprt = $CF83
 drive_selects = $ea2f
 select_drive = $EBA0
-deselect = $EB0B
+deselect_drive = $EB0B
 send_fdc_cmd = $EC0D
 read_a_sector = $ECDF
 write_a_sector = $ED3A
@@ -180,7 +180,7 @@ failed:
     ;Fall through into deselect_and_exit
 
 deselect_and_exit:
-    jmp deselect
+    jmp deselect_drive
 
 set_target_ptr:
     ;Set pointer target_ptr for sector write

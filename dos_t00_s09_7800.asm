@@ -48,7 +48,7 @@ ptrget      = $c12b     ;BASIC Find a variable
 L3400 = $3400
 
 check_colon    = $EA44
-deselect       = $EB0B
+deselect_drive = $EB0B
 restore        = $EB5E
 put_spc        = $EB7A
 put_spc_hex    = $EB7F
@@ -1038,7 +1038,7 @@ L7E56:
     lda #$0D
     jsr chrout
 
-    jsr deselect
+    jsr deselect_drive
     jsr chrget
     jmp restore
 

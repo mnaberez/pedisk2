@@ -451,7 +451,7 @@ load_dos:
     stx sector          ;save the requested sector number
 
     jsr read_sectors    ;read <n> sector(s) to memory ??
-    bne deselect        ;if any error go deselect the drives,
+    bne deselect_drive  ;if any error go deselect the drives,
                         ;  stop the motors and exit to BASIC
 
 install_wedge:
@@ -479,9 +479,9 @@ install_wedge:
     lda #>wedge
     sta chrget+$0b      ;Patch high byte of wedge address
 
-                        ;Fall through into deselect
+                        ;Fall through into deselect_drive
 
-deselect:
+deselect_drive:
 ;Deselect the drive.
 ;
 ;This will disengage the head load solenoid on mechanisms that have one.
@@ -883,7 +883,7 @@ disk_error_loop:
     sta fdc_cmdst       ;Write to the WD1793 command register
 
     cli                 ;enable interrupts
-    jsr deselect        ;deselect the drives and stop the motors ??
+    jsr deselect_drive  ;deselect the drives and stop the motors ??
     sec
 ret_ff_in_a:
     lda #$ff
@@ -1525,7 +1525,7 @@ l_eebe:
     ldx #0              ;flag no error
                         ;Fall through into load_done
 load_done:
-    jmp deselect        ;stop the disk and return
+    jmp deselect_drive  ;stop the disk and return
 
 ;output "??????"
 
