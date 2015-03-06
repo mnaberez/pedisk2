@@ -259,7 +259,7 @@ tlf2:
 exec_prog:
 ;X-EXECUTE DISK FILE
 ;
-;Load a machine language program (file type 5) from disk.
+;Load a machine language program (file type 5) from disk and execute it.
 ;The program will be loaded into memory at the start address specified
 ;by the file.  The program will be executed by jumping to the
 ;entry address specified by the file.
@@ -293,17 +293,19 @@ save_prog:
     jsr chrout
 
     ;Print "ADDR?" and get the start address in edit_ptr
-    ;Copy the start address into load address
     jsr input_hex_addr
+
+    ;Set the load address in the directory entry
     lda edit_ptr
     sta dir_entry+$08   ;Load address low byte
     lda edit_ptr+1
     sta dir_entry+$09   ;Load address high byte
 
-    ;Print "-" to separate start and end address
-    ;Get the end address in edit_ptr
+    ;Print "-" to prompt for the end address
     lda #'-'
     jsr chrout
+
+    ;Get the end address in edit_ptr
     jsr input_hex_word
 
     lda edit_ptr
@@ -323,27 +325,33 @@ save_prog:
     lda #$00
     sta dir_entry+$0f   ;Sector count high byte
 
+    ;Print "ENTRY? "
     lda #<enter_entry
     ldy #>enter_entry
     jsr puts
 
+    ;Get the entry address into edit ptr
     jsr input_hex_word
 
+    ;Print a newline
     lda #$0D
     jsr chrout
 
+    ;Set the entry address in the directory entry
     lda edit_ptr
     sta dir_entry+$06   ;Entry address low byte
     lda edit_ptr+1
     sta dir_entry+$07   ;Entry address high byte
 
+    ;Set the file type in the directory entry
     lda #$05            ;Type 5 = machine language program
     sta dir_entry+$0a   ;File type
 
+    ;Check that the filename does not already exist
     jsr find_file
     bmi L7B90           ;Branch if a disk error occurred
     tax
-    beq L7BE2           ;Branch if the file was found
+    beq file_exists     ;Branch if the file was found
 
     jsr L7857
 L7B90:
@@ -390,7 +398,7 @@ enter_kill:
 dupe_error:
     !text $0d,"DUPLICATE FILE NAME-CANNOT SAVE",$0d,0
 
-L7BE2:
+file_exists:
     lda #<dupe_error
     ldy #>dupe_error
     jsr puts
