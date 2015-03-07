@@ -120,6 +120,8 @@ L7852:
     bne L7890           ;Branch always
 
 L7857:
+;TODO Monitor command "S" (save file) jumps here to perform the save
+;
     lda #$00
     sta dir_entry+$0b   ;TODO ??
     jsr L78A2
