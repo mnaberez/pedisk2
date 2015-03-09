@@ -1480,12 +1480,13 @@ load_file:
 
     ldy #$0a            ;set the index to the file type
     lda (dir_ptr),y     ;get the file type
-    cmp #$03            ;compare it with ?? type
-    bmi not_found       ;if less than ?? go do "??????" message
+    cmp #$03            ;compare it with type 3 (BASIC program)
+    bmi not_found       ;if less than type 3 (BASIC) go do "??????" message
 
-    bne l_eebe          ;if not type $03 skip setting the end of program
+    bne l_eebe          ;if not type 3 skip setting the end of program,
+                        ;  the file is assumed to be type 5 (machine language)
 
-;the file is type $03
+    ;the file is type 3 (BASIC program)
 
     ldy #$06            ;set the index to the file length low byte
     lda (dir_ptr),y     ;get the file length low byte
@@ -1499,6 +1500,8 @@ load_file:
     sta vartab+1        ;save BASIC start of variables high byte
 
 l_eebe:
+    ;the file is type 3 (BASIC) or type 5 (machine language)
+
     ldy #$08            ;set index to load address low byte
     lda (dir_ptr),y     ;get load address low byte from dir entry
     sta target_ptr      ;save the memory pointer low byte
