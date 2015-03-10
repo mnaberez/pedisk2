@@ -450,7 +450,7 @@ load_dos:
     ldx #dos_sector     ;set the sector number
     stx sector          ;save the requested sector number
 
-    jsr read_sectors    ;read <n> sector(s) to memory ??
+    jsr read_sectors    ;read <n> sector(s) to memory
     bne deselect_drive  ;if any error go deselect the drives,
                         ;  stop the motors and exit to BASIC
 
@@ -902,7 +902,7 @@ l_ecca:
     dex                 ;decrement the delay count
     bne l_ecca          ;loop if more to do
 
-    ldx #sector_size    ;set the byte count ??
+    ldx #sector_size    ;set the byte count
     rts
 
 
@@ -1054,7 +1054,7 @@ write_sectors:
     bne l_ed38
 
 l_ed44:
-    jsr seek_track      ;seek to track with retries ??
+    jsr seek_track      ;seek to track with retries
     bne l_ed38          ;if there was any error just enable interrupts and exit
 
     lda fdc_cmdst       ;Read the WD1793 status register
