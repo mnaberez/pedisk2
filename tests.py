@@ -10,7 +10,8 @@ import shutil
 import sys
 import tempfile
 
-FILES = {'dos_t00_s09_7800.asm':   'bin/dos_t00_s09_7800.bin',
+FILES = {'bootstrap/format.asm':   None,
+         'dos_t00_s09_7800.asm':   'bin/dos_t00_s09_7800.bin',
          'dos_t00_s22_7a00.asm':   'bin/dos_t00_s22_7a00.bin',
          'dos_t00_s26_7c00_h.asm': 'bin/dos_t00_s26_7c00_h.bin',
          'dos_t01_s01_7c00_p.asm': 'bin/dos_t01_s01_7c00_p.bin',
@@ -21,7 +22,7 @@ FILES = {'dos_t00_s09_7800.asm':   'bin/dos_t00_s09_7800.bin',
          'dos_t01_s19_7c00_1.asm': 'bin/dos_t01_s19_7c00_1.bin',
          'dos_t01_s25_7c00_d.asm': 'bin/dos_t01_s25_7c00_d.bin',
          'dos_t01_s28_7c00_n.asm': 'bin/dos_t01_s28_7c00_n.bin',
-         'rom_e800.asm':           'bin/rom_e800.bin'
+         'rom_e800.asm':           'bin/rom_e800.bin',
         }
 
 def main():
