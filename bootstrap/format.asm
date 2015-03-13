@@ -52,8 +52,8 @@ init:
     sta drive_sel
     jsr select_drive    ;Select drive using pattern in drive_sel
 
-    ;TODO ?
-    lda #$03
+    ;Move head to track 0
+    lda #$03            ;Set restore command, no verify, 30ms step rate
     jsr send_fdc_cmd
 
     ;Check if the disk is write protected
