@@ -72,11 +72,11 @@ not_protected:
     lda fdc_cmdst
     and #$9D
     cmp #$04
-    beq not_other_err   ;Branch if error
+    beq not_other_err   ;Branch if no error
 
     ;Print "OTHER ERROR" and exit
-    lda #<protected_msg
-    ldy #>protected_msg
+    lda #<other_err_msg
+    ldy #>other_err_msg
     jsr puts
     jmp deselect_and_exit
 
