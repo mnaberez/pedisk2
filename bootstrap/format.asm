@@ -4,14 +4,12 @@ fdc_track    = fdc+1    ;  Track register
 fdc_sector   = fdc+2    ;  Sector register
 fdc_data     = fdc+3    ;  Data register
 
-hex_save_a = $26
 target_ptr = $b7
 dir_sector  = $7f00
 status_mask = $7f90
 drive_sel = $7f91
 track = $7f92
 sector = $7f93
-status = $7f94
 linprt = $CF83
 drive_selects = $ea2f
 select_drive = $EBA0
