@@ -77,11 +77,16 @@ start:
     and #$40
     bne protected       ;Branch if write protected
 
-    ;TODO ?
+    ;Check drive is ready and at track 0
     lda fdc_cmdst
-    and #$9D
-    cmp #$04
-    beq format          ;Branch if no error
+    and #%10011101      ;Mask x00x xx0x:
+                        ;     x--- ---- not ready
+                        ;     ---x ---- seek error
+                        ;     ---- x--- crc error
+                        ;     ---- -x-- track 0
+                        ;     ---- ---x busy
+    cmp #%00000100      ;Compare with only track 0 flag set
+    beq format          ;Branch if at track 0 and no error
 
     lda #$F0
     jmp puts_error_exit

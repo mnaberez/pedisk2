@@ -66,11 +66,16 @@ init:
     jmp deselect_and_exit
 
 not_protected:
-    ;TODO ? Check for other error
+    ;Check drive is ready and at track 0
     lda fdc_cmdst
-    and #$9D
-    cmp #$04
-    beq not_other_err   ;Branch if no error
+    and #%10011101      ;Mask x00x xx0x:
+                        ;     x--- ---- not ready
+                        ;     ---x ---- seek error
+                        ;     ---- x--- crc error
+                        ;     ---- -x-- track 0
+                        ;     ---- ---x busy
+    cmp #%00000100      ;Compare with only track 0 flag set
+    beq not_other_err   ;Branch if at track 0 and no error
 
     ;Print "OTHER ERROR" and exit
     lda #<other_err_msg
