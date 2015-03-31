@@ -81,7 +81,8 @@ dos_run:    jmp _dos_run
 dos_sys:    jmp _dos_sys
 dos_list:   jmp _dos_list
 
-L7818:
+save_from_basic:
+;TODO Implements !SAVE command; _dos_save jumps here immediately
     lda vartab
     sec
     sbc txttab
@@ -99,7 +100,7 @@ L7818:
     lda txttab+1
     sta dir_entry+$09   ;Load address high byte
 
-    jsr L7891
+    jsr calc_n_sectors  ;Calculate num_sectors from file size in $58/59
     lda num_sectors
     sta dir_entry+$0e   ;File sector count low byte
 
@@ -111,13 +112,13 @@ L7818:
 
     jsr find_file
     tax
-    bmi L7890           ;Branch if a disk error occurred
+    bmi save_done       ;Branch if a disk error occurred
     bne L7857           ;Branch if the file was not found
 
     lda #e_exists       ;Set error code $05, file exists error
-L7852:
+save_error:
     jsr disk_error      ;Print error msg, FDC restore cmd, deselect drive
-    bne L7890           ;Branch always
+    bne save_done       ;Branch always
 
 L7857:
 ;TODO Monitor command "S" (save file) jumps here to perform the save
@@ -125,12 +126,12 @@ L7857:
     lda #$00
     sta dir_entry+$0b   ;TODO ??
     jsr L78A2
-    bne L7890
+    bne save_done
     lda $7FB5
     beq L786A
 
     lda #$06            ;A = 6, TODO error number for ??
-    bne L7852           ;Branch always
+    bne save_error      ;Branch always
 
 L786A:
     lda dir_entry+$08   ;File load address low byte
@@ -149,17 +150,18 @@ L786A:
     sta num_sectors
 
     jsr write_sectors
-    bne L7890           ;Branch if a disk error occurred
+    bne save_done       ;Branch if a disk error occurred
     lda #$00
     sta latch           ;Drive Select Latch
     lda #$00
-L7890:
+save_done:
     rts
 
-L7891:
+calc_n_sectors:
+;TODO seems to calculate num_sectors from file size in $58/59
     lda $58
     clc
-    adc #$7F
+    adc #$7F            ;$7F = 128 byte sector - 1
     bcc L789A
     inc $59
 L789A:
@@ -198,11 +200,11 @@ L78C2:
     cmp #$01
     beq L78E0
     jsr write_a_sector
-    bne L7890           ;Branch if a disk error occurred
+    bne save_done       ;Branch if a disk error occurred
     lda #$01
     sta sector
     jsr read_a_sector
-    bne L7890           ;Branch if a disk error occurred
+    bne save_done       ;Branch if a disk error occurred
 L78E0:
     inc dir_sector+$08  ;Increment number of used file entries
 
@@ -393,7 +395,7 @@ dos_stop:
     !byte $46,$49,$25,0
 
 _dos_save:
-    jsr L7818
+    jsr save_from_basic
     jmp restore
 
 L7A0A:
