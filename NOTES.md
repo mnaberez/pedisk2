@@ -110,9 +110,14 @@ not pulse.
 Disk Format
 -----------
 
-The PEDISK II model 877-1 uses an 8″ single sided, soft sectored, single density
+The PEDISK II model 877-1 uses an 8" single sided, soft sectored, single density
 (FM) floppy disk. It has 77 tracks, 26 sectors per track, and a 128 byte sector
 length.  It can hold about 250 KB.
+
+8" single sided disks have the index hole in a different position than 8"
+double sided disks.  The PEDISK requires single sided disks.  If a double sided
+disk is inserted, the index hole sensor will not pulse, and the head load
+solenoid will not engage.
 
 FD1793 pin 37 is ``/DDEN`` (``/DOUBLE DENSITY``) and should be low when double
 density.  On the PEDISK II, pin 37 is high (single density).
@@ -122,7 +127,7 @@ be 2.0 MHz for 8" drives.  On the PEDISK II, it measures 2.0 MHz on the
 logic analyzer.
 
 Midnite Software Gazette, Issue 11 (Feb/Mar 1983):
-"PEDISK Model 877 is an 8” SD floppy disk system that uses the IBM 3740
+"PEDISK Model 877 is an 8" SD floppy disk system that uses the IBM 3740
  format ... Eight inch SD CPM (trademark of Digital Research) diskettes
  can also be read/written with the 877 system."
 
