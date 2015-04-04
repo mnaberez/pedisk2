@@ -114,10 +114,14 @@ The PEDISK II model 877-1 uses an 8" single sided, soft sectored, single density
 (FM) floppy disk. It has 77 tracks, 26 sectors per track, and a 128 byte sector
 length.  It can hold about 250 KB.
 
-8" single sided disks have the index hole in a different position than 8"
-double sided disks.  The PEDISK requires single sided disks.  If a double sided
-disk is inserted, the index hole sensor will not pulse, and the head load
-solenoid will not engage.
+8" double sided disks are not compatible because they have the index hole in
+a different position than 8" single sided disks.  The PEDISK requires single
+sided disks.  If a double sided disk is inserted, the index hole sensor will
+not pulse, and the head load solenoid will not engage.
+
+8" hard sectored disks are also not compatible.  The PEDISK requires soft
+sectored disks.  If a hard sectored disk is inserted, the head load solenoid
+will engage, but the format program will hang.
 
 FD1793 pin 37 is ``/DDEN`` (``/DOUBLE DENSITY``) and should be low when double
 density.  On the PEDISK II, pin 37 is high (single density).
