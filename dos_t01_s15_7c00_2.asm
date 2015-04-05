@@ -252,7 +252,7 @@ insert_src_disk:
     lda #<put_original
     jsr puts
 
-    ;Print "IN DRIVE" followed by "HIT R KEY"
+    ;Print " IN DRIVE" followed by "HIT R KEY"
     lda #<in_drv_hit_r
     ldy #>in_drv_hit_r
     jsr puts
