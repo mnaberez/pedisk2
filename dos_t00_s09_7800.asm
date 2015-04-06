@@ -675,7 +675,7 @@ L7BC0:
 L7BC4:
     ldy #$00
     lda (txtptr),y
-    cmp #$B9
+    cmp #$B9            ;TODO CBM BASIC token for POS?
     bne L7C22
     jsr chrget
     jsr L7B55
