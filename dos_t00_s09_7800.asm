@@ -72,14 +72,14 @@ e_exists = $05 ;File Exists
 
     *=dos
 
-dos_save:   jmp _dos_save
-dos_open:   jmp _dos_open
-dos_close:  jmp _dos_close
-dos_input:  jmp _dos_input
-dos_print:  jmp _dos_print
-dos_run:    jmp _dos_run
-dos_sys:    jmp _dos_sys
-dos_list:   jmp _dos_list
+dos_save:   jmp _dos_save   ;Perform !SAVE
+dos_open:   jmp _dos_open   ;Perform !OPEN
+dos_close:  jmp _dos_close  ;Perform !CLOSE
+dos_input:  jmp _dos_input  ;Perform !INPUT
+dos_print:  jmp _dos_print  ;Perform !PRINT
+dos_run:    jmp _dos_run    ;Perform !RUN
+dos_sys:    jmp _dos_sys    ;Perform !SYS
+dos_list:   jmp _dos_list   ;Perform !LIST
 
 save_from_basic:
 ;TODO Implements !SAVE command; _dos_save jumps here immediately
@@ -216,6 +216,7 @@ L78E0:
 
     jsr write_a_sector
     rts
+
 L78F1:
     jsr L790D
     lda dir_entry+$0d   ;File sector number
@@ -232,6 +233,7 @@ L7902:
     adc $58
     sta $58
     rts
+
 L790D:
     lda dir_entry+$0e   ;File sector count low byte
     sec
@@ -359,6 +361,11 @@ L79C8:
     jmp L79AB
 
 _dos_sys:
+;Perform !SYS
+;Enter PDOS monitor mode.
+;
+;Usage: !SYS (accepts no arguments)
+;
     lda #<dos_stop      ;Load address low byte
     sta target_ptr
     lda #>dos_stop      ;Load address high byte
@@ -395,6 +402,11 @@ dos_stop:
     !byte $46,$49,$25,0
 
 _dos_save:
+;Perform !SAVE
+;Save a program to disk.
+;
+;Usage: !SAVE"NAME:0"
+;
     jsr save_from_basic
     jmp restore
 
@@ -428,6 +440,10 @@ L7A2D:
     bne L7A12
 
 _dos_open:
+;Perform !OPEN
+;
+;TODO usage?
+;
     jsr L7A0A
     inx
     beq L7A41
@@ -606,6 +622,10 @@ L7B5B:
     rts
 
 _dos_close:
+;Perform !CLOSE
+;
+;TODO usage?
+;
     jsr L7BA6
     ldy #$00
     lda (txtptr),y
@@ -728,6 +748,10 @@ L7C56:
     rts
 
 _dos_input:
+;Perform !INPUT
+;
+;TODO usage?
+;
     jsr L7BA6
     jsr L7BC4
     jsr read_a_sector
@@ -760,6 +784,10 @@ L7CA2:
     jmp restore
 
 _dos_print:
+;Perform !PRINT
+;
+;TODO usage?
+;
     jsr L7BA6
     jsr L7BC4
     jsr ptrget
@@ -794,6 +822,11 @@ L7CD2:
     jmp L7B00
 
 _dos_run:
+;Perform !RUN
+;Load and run a BASIC program.
+;
+;Usage: !RUN"NAME:0"
+;
     jsr load_file
     txa
     bne L7D10           ;Branch if load failed
@@ -823,14 +856,17 @@ L7D10:
     jmp restore
 
 _dos_list:
+;Perform !LIST
+;List the disk directory
+;
+;Usage: !LIST (accepts no arguments)
+;
     ;Print "DEVICE?"
-
     lda #<device
     ldy #>device
     jsr puts
 
     ;Get a character until it is a valid drive number
-
     jsr get_char_w_stop ;Get a character and test for {STOP}
     cmp #'0'
     bmi _dos_list
