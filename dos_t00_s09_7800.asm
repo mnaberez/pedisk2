@@ -598,7 +598,7 @@ L7B3D:
 L7B44:
     cmp #$00
     beq L7B52
-    cmp #$3A
+    cmp #':'
     beq L7B52
     jsr chrget
     jmp L7B44
