@@ -442,8 +442,10 @@ L7A2D:
 _dos_open:
 ;Perform !OPEN
 ;
-;Usage: !OPEN F$
+;Usage: !OPEN F$ 
+;       !OPEN F$ NEW LEN
 ; - F$ contains a filename with drive like "NAME:0"
+; - TODO: Keywords "NEW" and "LEN" may optionally follow F$ and are unknown
 ;
     jsr L7A0A
     inx
@@ -475,7 +477,7 @@ L7A5B:
 L7A66:
     pha
     jsr chrget+$06
-    cmp #$A2
+    cmp #$A2            ;CBM BASIC token for NEW
     bne L7AD6
     pla
     bne L7A75
@@ -495,7 +497,7 @@ L7A75:
     sta dir_entry+$0b   ;TODO ??
     sta dir_entry+$0f   ;File sector count high byte
     jsr chrget
-    cmp #$C3
+    cmp #$C3            ;CBM BASIC token for LEN
     bne L7AAC
     jsr chrget
     bcs L7AB3
