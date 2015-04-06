@@ -442,7 +442,8 @@ L7A2D:
 _dos_open:
 ;Perform !OPEN
 ;
-;TODO usage?
+;Usage: !OPEN F$
+; - F$ contains a filename with drive like "NAME:0"
 ;
     jsr L7A0A
     inx
@@ -624,7 +625,8 @@ L7B5B:
 _dos_close:
 ;Perform !CLOSE
 ;
-;TODO usage?
+;Usage: !CLOSE F$
+; - F$ contains a filename with drive like "NAME:0"
 ;
     jsr L7BA6
     ldy #$00
@@ -750,7 +752,9 @@ L7C56:
 _dos_input:
 ;Perform !INPUT
 ;
-;TODO usage?
+;Usage: !INPUT F$ A$
+; - F$ contains a filename with drive like "NAME:0"
+; - A$ is the variable to write to
 ;
     jsr L7BA6
     jsr L7BC4
@@ -786,7 +790,9 @@ L7CA2:
 _dos_print:
 ;Perform !PRINT
 ;
-;TODO usage?
+;Usage: !PRINT F$ A$
+; - F$ contains a filename with drive like "NAME:0"
+; - A$ is the variable to read from
 ;
     jsr L7BA6
     jsr L7BC4
