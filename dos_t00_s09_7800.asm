@@ -511,16 +511,18 @@ L7AAC:
     bne L7B2C
     beq L7AE8
 L7AB3:
-    jsr ptrget
-    lda valtyp
-    bne L7AC2
-    bit intflg
-    bmi L7AC6
+    jsr ptrget          ;Find variable
+    lda valtyp          ;A = type of variable (0=numeric, $ff=string)
+    bne L7AC2           ;Branch if variable is not numeric
+
+    bit intflg          ;Test type of numeric (0=floating point, $80=integer)
+    bmi L7AC6           ;Branch if integer
+
     lda #$34
-    bne L7ADB
+    bne L7ADB           ;Branch always
 L7AC2:
     lda #$35
-    bne L7ADB
+    bne L7ADB           ;Branch always
 L7AC6:
     ldy #$00
     lda (varpnt),y
@@ -762,9 +764,11 @@ _dos_input:
     jsr L7BC4
     jsr read_a_sector
     bne L7CA2           ;Branch if a disk error occurred
-    jsr ptrget
-    bit valtyp
-    bmi L7C82
+
+    jsr ptrget          ;Find variable
+    bit valtyp          ;Test type of variable (0=numeric, $ff=string)
+    bmi L7C82           ;Branch if variable is a string
+
     lda #$09
 L7C7F:
     jmp L7B3D
@@ -798,9 +802,11 @@ _dos_print:
 ;
     jsr L7BA6
     jsr L7BC4
-    jsr ptrget
-    bit valtyp
-    bmi L7CB7
+
+    jsr ptrget          ;Find variable
+    bit valtyp          ;Test type of variable (0=numeric, $ff=string)
+    bmi L7CB7           ;Branch if variable is a string
+
     lda #$09
 L7CB4:
     jmp L7B3D
