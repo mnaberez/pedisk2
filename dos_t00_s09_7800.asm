@@ -442,7 +442,7 @@ L7A2D:
 _dos_open:
 ;Perform !OPEN
 ;
-;Usage: !OPEN F$ 
+;Usage: !OPEN F$
 ;       !OPEN F$ NEW LEN
 ; - F$ contains a filename with drive like "NAME:0"
 ; - TODO: Keywords "NEW" and "LEN" may optionally follow F$ and are unknown
@@ -655,6 +655,7 @@ L7B93:
     jmp L7B00
 L7BA3:
     jmp restore
+
 L7BA6:
     jsr L7A0A
     inx
@@ -673,6 +674,7 @@ L7BB4:
 L7BC0:
     sta $7FB5
     rts
+
 L7BC4:
     ldy #$00
     lda (txtptr),y
@@ -757,30 +759,45 @@ L7C56:
 _dos_input:
 ;Perform !INPUT
 ;
+;Read a record from a file.  See _dos_print for a description of records.
+;
 ;Usage: !INPUT F$ A$
 ; - F$ contains a filename with drive like "NAME:0"
 ; - A$ is the variable to write to
 ;
-    jsr L7BA6
+    jsr L7BA6           ;TODO these must handle the filename
     jsr L7BC4
+
+    ;Read the sector from disk
     jsr read_a_sector
     bne L7CA2           ;Branch if a disk error occurred
 
+    ;Get the variable that will receive the record data
     jsr ptrget          ;Find variable
     bit valtyp          ;Test type of variable (0=numeric, $ff=string)
     bmi L7C82           ;Branch if variable is a string
 
-    lda #$09
+    lda #$09            ;TODO error code for "Not a string"?
 L7C7F:
     jmp L7B3D           ;TODO error exit?
+
 L7C82:
-    lda dir_sector
-    cmp #$FF
-    beq L7C7F
-    cmp #$80
-    bcc L7C91
-    lda #$0A
-    bne L7C7F
+    ;Get record length
+    lda dir_sector      ;Get length of record (normally 0-127)
+
+    ;Check for end of records marker
+    cmp #$FF            ;TODO end of records?
+    beq L7C7F           ;If so, branch to error exit
+
+    ;Check record length is sane
+    cmp #$80            ;Compare with 128 (the size of a disk sector)
+    bcc L7C91           ;If less than 128, the record length is valid (0-127),
+                        ;  so we continue.
+
+    ;Record would be longer than 127 bytes
+    lda #$0A            ;TODO error code for "Record too long"?
+    bne L7C7F           ;Branch always to error exit
+
 L7C91:
     ldy #$00
     sta (varpnt),y
@@ -797,44 +814,67 @@ L7CA2:
 _dos_print:
 ;Perform !PRINT
 ;
+;Write a record to a file.  A record is a string of 127 bytes or less.
+;Each sector (128 bytes) stores one record.  The first byte of the sector
+;stores the record length (0-127).
+;
 ;Usage: !PRINT F$ A$
 ; - F$ contains a filename with drive like "NAME:0"
-; - A$ is the variable to read from
+; - A$ is the variable to read record data from
 ;
-    jsr L7BA6
+    jsr L7BA6           ;TODO these must handle the filename
     jsr L7BC4
 
-    jsr ptrget          ;Find variable
+    ;Get the variable that will provide the record data
+    jsr ptrget          ;Find variable, sets valtyp and varpnt
     bit valtyp          ;Test type of variable (0=numeric, $ff=string)
     bmi L7CB7           ;Branch if variable is a string
 
-    lda #$09
+    ;Variable is not a string
+    lda #$09            ;TODO error code for "Not a string"?
 L7CB4:
     jmp L7B3D           ;TODO error exit?
 
 L7CB7:
-    ldy #$00
-    lda (varpnt),y
-    cmp #$80
-    bcc L7CC3
-    lda #$0A
-    bne L7CB4
+    ;Check that the string length is 127 bytes or less
+    ldy #$00            ;Y=0 index string length byte
+    lda (varpnt),y      ;Get length of string variable
+    cmp #$80            ;Compare with 128 (the size of a disk sector)
+    bcc L7CC3           ;If less than 128, the variable will fit as a record,
+                        ;  so we continue.  A sector is 128 bytes, but the first
+                        ;  byte is used for the record length.
+
+    ;String is longer than 127 bytes, so it won't fit as a record
+    lda #$0A            ;TODO error code for "Record too long"?
+    bne L7CB4           ;Branch always to error exit
+
 L7CC3:
-    sta dir_sector
-    iny
-    lda (varpnt),y
-    sta dir_ptr
-    iny
-    lda (varpnt),y
-    sta dir_ptr+1
-    ldy #$7E
+    ;String is valid as a record, set record length
+    sta dir_sector      ;Store the string length in the first byte of
+                        ;  the sector buffer
+
+    ;Set dir_ptr to point to the string data in memory
+    iny                 ;Increment Y to point to low byte of string pointer
+    lda (varpnt),y      ;Get low byte of string data pointer
+    sta dir_ptr         ;Copy it into the dir_ptr low byte
+    iny                 ;Increment Y to point to high byte of string pointer
+    lda (varpnt),y      ;Get high byte of string data pointer
+    sta dir_ptr+1       ;Copy it into the dir_ptr high byte
+
+    ;Copy 127 bytes from string data buffer into the sector buffer
+    ;The first byte of the sector is the record length, the other 127 bytes
+    ;hold the record data.
+    ldy #$7E            ;Y = 127 minus 1 to count down string data bytes
 L7CD2:
-    lda (dir_ptr),y
-    sta dir_sector+$01,y
-    dey
-    bpl L7CD2
+    lda (dir_ptr),y     ;Get byte from string data
+    sta dir_sector+1,y  ;Store in sector buffer (+1 is for the length byte)
+    dey                 ;Decrement Y to move to next string data byte
+    bpl L7CD2           ;Keep going until 127 bytes are copied
+
+    ;Write the sector to disk
     jsr write_a_sector
     bne L7CA2           ;Branch if a disk error occurred
+
     jmp L7B00
 
 _dos_run:
