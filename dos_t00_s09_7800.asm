@@ -536,7 +536,7 @@ L7AD6:
     beq L7ADE
     lda #$32
 L7ADB:
-    jmp L7B3D
+    jmp L7B3D           ;TODO error exit?
 L7ADE:
     ldy #$0F
 L7AE0:
@@ -591,6 +591,7 @@ L7B2F:
     tax
     ldy #$1F
     rts
+
 L7B3D:
     sta $7FB5
     ldy #$00
@@ -606,7 +607,7 @@ L7B52:
     jmp L7B00
 L7B55:
     lda #$49
-    bne L7B5B
+    bne L7B5B           ;Branch always
 L7B59:
     lda #$43
 L7B5B:
@@ -659,7 +660,7 @@ L7BA6:
     inx
     bne L7BB1
     lda #$07
-    jmp L7B3D
+    jmp L7B3D           ;TODO error exit?
 L7BB1:
     jsr L7B2F
 L7BB4:
@@ -688,7 +689,7 @@ L7BC4:
     ora $7FB3
     bne $7BE9
     lda #$08
-    jmp L7B3D
+    jmp L7B3D           ;TODO error exit?
 L7BE9:
     lda $7FB2
     sec
@@ -741,7 +742,7 @@ L7C3C:
     bcc L7C56
 L7C51:
     lda #$08
-    jmp L7B3D
+    jmp L7B3D           ;TODO error exit?
 L7C56:
     lda $7FBB
     sta sector
@@ -771,7 +772,7 @@ _dos_input:
 
     lda #$09
 L7C7F:
-    jmp L7B3D
+    jmp L7B3D           ;TODO error exit?
 L7C82:
     lda dir_sector
     cmp #$FF
@@ -809,7 +810,8 @@ _dos_print:
 
     lda #$09
 L7CB4:
-    jmp L7B3D
+    jmp L7B3D           ;TODO error exit?
+
 L7CB7:
     ldy #$00
     lda (varpnt),y
