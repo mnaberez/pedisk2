@@ -443,7 +443,8 @@ _dos_open:
 ;Perform !OPEN
 ;
 ;Usage: !OPEN F$
-;       !OPEN F$ NEW LEN
+;       !OPEN F$ NEW LEN      (default 100 records -- TODO is this correct?)
+;       !OPEN F$ NEW LEN 123  (123 is the number of records)
 ; - F$ contains a filename with drive like "NAME:0"
 ; - TODO: Keywords "NEW" and "LEN" may optionally follow F$ and are unknown
 ;
@@ -485,8 +486,8 @@ L7A66:
 L7A73:
     bne L7ADB
 L7A75:
-    lda #$64
-    sta dir_entry+$0e   ;File sector count low byte
+    lda #$64            ;A = default of 100 records
+    sta dir_entry+$0e   ;Set file sector count low byte
     lda #$80
     sta dir_entry+$06   ;File size low byte
     sta dir_entry+$08   ;Load address low byte
@@ -496,16 +497,21 @@ L7A75:
     sta dir_entry+$0a   ;File type (0=SEQ)
     sta dir_entry+$0b   ;TODO ??
     sta dir_entry+$0f   ;File sector count high byte
-    jsr chrget
+
+    jsr chrget          ;Get next byte of BASIC text
     cmp #$C3            ;CBM BASIC token for LEN
     bne L7AAC
-    jsr chrget
-    bcs L7AB3
-    jsr linget
-    lda linnum
-    sta dir_entry+$0e   ;File sector count low byte
-    lda linnum+1
-    sta dir_entry+$0f   ;File sector count high byte
+
+    jsr chrget          ;Get next byte of BASIC text
+    bcs L7AB3           ;TODO what does carry set mean?
+
+    ;Set record count from text (e.g. 123 from "!OPEN F$ NEW LEN 123")
+    jsr linget          ;Fetch integer into linnum
+    lda linnum          ;A = low byte of integer
+    sta dir_entry+$0e   ;Set file sector count low byte
+    lda linnum+1        ;A = high byte of integer
+    sta dir_entry+$0f   ;Set file sector count high byte
+
 L7AAC:
     jsr L78A2
     bne L7B2C
@@ -799,6 +805,7 @@ L7C82:
     bne L7C7F           ;Branch always to error exit
 
 L7C91:
+    ;TODO finish disassembly
     ldy #$00
     sta (varpnt),y
     iny
