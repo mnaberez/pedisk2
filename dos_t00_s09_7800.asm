@@ -553,7 +553,7 @@ L7AD6:
     beq L7ADE
     lda #$32            ;TODO FC% error code for ???
 L7ADB:
-    jmp L7B3D           ;TODO error exit?
+    jmp seq_cmd_error   ;Jump out to finish this command on error
 L7ADE:
     ldy #$0F
 L7AE0:
@@ -573,8 +573,9 @@ L7AF0:
     ldx dir_entry+$0d   ;File sector number
     dex
     stx $7FBB
+                        ;Fall through into seq_cmd_done
 
-L7B00:
+seq_cmd_done:
     jsr ptrget_fi       ;Find variable FI%
     ldy #$00
     lda $7FB3
@@ -597,7 +598,8 @@ L7B22:
     dey
     bpl L7B22
 L7B2C:
-    jmp restore
+    jmp restore         ;Restore top 32 bytes of the stack page and return
+
 L7B2F:
     lda $7F8F
     asl ;a
@@ -610,19 +612,29 @@ L7B2F:
     ldy #$1F
     rts
 
-L7B3D:
-    sta fc_error
+seq_cmd_error:
+;Sequential file command error has occurred.  Set the error code
+;that will be store in the FC% variable, consume any bytes of BASIC
+;text remaining in the current statement, and jump to seq_cmd_done
+;to finish up.
+;
+;A = error code that will be stored in the FC% variable
+;
+    sta fc_error        ;Store A so it will become the FC% variable
+
     ldy #$00
-    lda (txtptr),y
-L7B44:
-    cmp #$00
-    beq L7B52
-    cmp #':'
-    beq L7B52
-    jsr chrget
-    jmp L7B44
-L7B52:
-    jmp L7B00
+    lda (txtptr),y      ;Peek at next byte of BASIC text
+stmt_loop:
+    cmp #$00            ;Is it the end of current BASIC line?
+    beq stmt_done       ;  Yes: branch, we're done consuming BASIC text
+
+    cmp #':'            ;Is it the end of the current BASIC statement?
+    beq stmt_done       ;  Yes: branch, we're done consuming BASIC text
+
+    jsr chrget          ;Consume the byte of BASIC text (it will be ignored)
+    jmp stmt_loop       ;Loop until end of current statement or line
+stmt_done:
+    jmp seq_cmd_done
 
 ptrget_fi:
 ;Find the variable FI% using ptrget
@@ -694,7 +706,7 @@ L7B93:
     lda #$00
     sta latch
     lda #$FF
-    jmp L7B00
+    jmp seq_cmd_done
 L7BA3:
     jmp restore
 
@@ -705,7 +717,7 @@ L7BA6:
     inx
     bne L7BB1
     lda #$07            ;TODO FC% error code for ???
-    jmp L7B3D           ;TODO error exit?
+    jmp seq_cmd_error   ;Jump out to finish this command on error
 L7BB1:
     jsr L7B2F
 L7BB4:
@@ -736,7 +748,7 @@ L7BC4:
     ora $7FB3
     bne $7BE9
     lda #$08            ;TODO FC% error code for ???
-    jmp L7B3D           ;TODO error exit?
+    jmp seq_cmd_error   ;Jump out to finish this command on error
 L7BE9:
     lda $7FB2
     sec
@@ -789,7 +801,7 @@ L7C3C:
     bcc L7C56
 L7C51:
     lda #$08            ;TODO FC% error code for ???
-    jmp L7B3D           ;TODO error exit?
+    jmp seq_cmd_error   ;Jump out to finish this command on error
 L7C56:
     lda $7FBB
     sta sector
@@ -825,7 +837,7 @@ _dos_input:
 
     lda #$09            ;FC% error code for "Not a string"
 L7C7F:
-    jmp L7B3D           ;TODO error exit?
+    jmp seq_cmd_error   ;Jump out to finish this command on error
 
 L7C82:
     ;Get record length
@@ -854,7 +866,7 @@ L7C91:
     iny
     lda #$7F
     sta (varpnt),y
-    jmp L7B00
+    jmp seq_cmd_done
 L7CA2:
     jmp restore
 
@@ -879,7 +891,7 @@ _dos_print:
     ;Variable is not a string
     lda #$09            ;FC% error code for "Not a string"
 L7CB4:
-    jmp L7B3D           ;TODO error exit?
+    jmp seq_cmd_error   ;Jump out to finish this command on error
 
 L7CB7:
     ;Check that the string length is 127 bytes or less
@@ -921,7 +933,7 @@ L7CD2:
     jsr write_a_sector
     bne L7CA2           ;Branch if a disk error occurred
 
-    jmp L7B00
+    jmp seq_cmd_done
 
 _dos_run:
 ;Perform !RUN
