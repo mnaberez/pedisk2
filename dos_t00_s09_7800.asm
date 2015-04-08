@@ -399,6 +399,7 @@ L79F3:
     !byte $01
 
 dos_stop:
+fi_or_fc:
     !text "FI%",0
 
 _dos_save:
@@ -572,14 +573,14 @@ L7AF0:
     dex
     stx $7FBB
 L7B00:
-    jsr L7B55
+    jsr ptrget_fi       ;Find variable FI%
     ldy #$00
     lda $7FB3
     sta (varpnt),y
     iny
     lda $7FB2
     sta (varpnt),y
-    jsr L7B59
+    jsr ptrget_fc       ;Find variable FC%
     ldy #$00
     lda #$00
     sta (varpnt),y
@@ -620,22 +621,39 @@ L7B44:
     jmp L7B44
 L7B52:
     jmp L7B00
-L7B55:
-    lda #'I'
-    bne L7B5B           ;Branch always
-L7B59:
-    lda #'C'
-L7B5B:
-    sta dos_stop+1
+
+ptrget_fi:
+;Find the variable FI% using ptrget
+;
+    lda #'I'            ;A = "I" to make "FI%"
+    bne ptrget_fc_or_fi ;Branch always
+
+ptrget_fc:
+;Find the variable FC% using ptrget
+;
+    lda #'C'            ;A = "C" to make "FC%""
+                        ;Fall through into ptrget_fc_or_fi
+
+ptrget_fc_or_fi:
+    ;Store A making fi_or_fi into "FC%" or "FI%"
+    sta fi_or_fc+1
+
+    ;Save the current txtptr on the stack
     lda txtptr
     pha
     lda txtptr+1
     pha
-    lda #<dos_stop
+
+    ;Set txtptr to address of "FI%" or "FC%" string
+    lda #<fi_or_fc
     sta txtptr
-    lda #>dos_stop
+    lda #>fi_or_fc
     sta txtptr+1
+
+    ;Find variable FC% or FI%
     jsr ptrget
+
+    ;Restore original value of txtptr and return
     pla
     sta txtptr+1
     pla
@@ -704,7 +722,7 @@ L7BC4:
     bne L7C22
 
     jsr chrget          ;Consume the POS token
-    jsr L7B55
+    jsr ptrget_fi       ;Find variable FI%
     ldy #$00
     lda (varpnt),y
     sta $7FB3
