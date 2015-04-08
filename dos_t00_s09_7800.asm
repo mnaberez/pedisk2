@@ -399,7 +399,7 @@ L79F3:
     !byte $01
 
 dos_stop:
-    !byte $46,$49,$25,0
+    !text "FI%",0
 
 _dos_save:
 ;Perform !SAVE
@@ -621,10 +621,10 @@ L7B44:
 L7B52:
     jmp L7B00
 L7B55:
-    lda #$49
+    lda #'I'
     bne L7B5B           ;Branch always
 L7B59:
-    lda #$43
+    lda #'C'
 L7B5B:
     sta dos_stop+1
     lda txtptr
