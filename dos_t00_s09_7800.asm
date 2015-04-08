@@ -42,6 +42,7 @@ num_sectors = dos+$0796 ;Number of sectors to read or write
 dir_entry   = dos+$07a0 ;16 byte buffer for a directory entry
 wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
 drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename
+fc_error    = dos+$07b5 ;Error code that will be set in FC% variable
 linget      = $b8f6     ;BASIC Fetch integer (usually a line number)
 ptrget      = $c12b     ;BASIC Find a variable
 
@@ -127,7 +128,7 @@ L7857:
     sta dir_entry+$0b   ;TODO ??
     jsr L78A2
     bne save_done
-    lda $7FB5
+    lda fc_error
     beq L786A
 
     lda #$06            ;A = 6, TODO error number for ??
@@ -173,7 +174,7 @@ L789A:
 
 L78A2:
     lda #$00
-    sta $7FB5
+    sta fc_error
 
     lda open_track
     sta dir_entry+$0c   ;File track number
@@ -186,7 +187,7 @@ L78A2:
     cmp #$51
     bmi L78C0
     lda #$2B
-    sta $7FB5
+    sta fc_error
     rts
 
 L78C0:
@@ -550,7 +551,7 @@ L7AC6:
 L7AD6:
     pla
     beq L7ADE
-    lda #$32
+    lda #$32            ;TODO FC% error code for ???
 L7ADB:
     jmp L7B3D           ;TODO error exit?
 L7ADE:
@@ -566,12 +567,13 @@ L7AEA:
     sta $7FB2
     sta $7FB3
 L7AF0:
-    sta $7FB5
+    sta fc_error
     lda dir_entry+$0c   ;File track number
     sta $7FBA
     ldx dir_entry+$0d   ;File sector number
     dex
     stx $7FBB
+
 L7B00:
     jsr ptrget_fi       ;Find variable FI%
     ldy #$00
@@ -584,7 +586,7 @@ L7B00:
     ldy #$00
     lda #$00
     sta (varpnt),y
-    lda $7fb5
+    lda fc_error
     iny
     sta (varpnt),y
     jsr L7B2F
@@ -609,7 +611,7 @@ L7B2F:
     rts
 
 L7B3D:
-    sta $7FB5
+    sta fc_error
     ldy #$00
     lda (txtptr),y
 L7B44:
@@ -688,7 +690,7 @@ L7B91:
     lda #$FF
 L7B93:
     sta dir_entry
-    sta $7FB5
+    sta fc_error
     lda #$00
     sta latch
     lda #$FF
@@ -697,10 +699,12 @@ L7BA3:
     jmp restore
 
 L7BA6:
+;TODO called from _dos_print, _dos_open, _dos_close
+;Appears to handle the filename
     jsr L7A0A
     inx
     bne L7BB1
-    lda #$07
+    lda #$07            ;TODO FC% error code for ???
     jmp L7B3D           ;TODO error exit?
 L7BB1:
     jsr L7B2F
@@ -712,7 +716,7 @@ L7BB4:
     bpl L7BB4
     lda #$00
 L7BC0:
-    sta $7FB5
+    sta fc_error
     rts
 
 L7BC4:
@@ -731,7 +735,7 @@ L7BC4:
     sta $7FB2
     ora $7FB3
     bne $7BE9
-    lda #$08
+    lda #$08            ;TODO FC% error code for ???
     jmp L7B3D           ;TODO error exit?
 L7BE9:
     lda $7FB2
@@ -784,7 +788,7 @@ L7C3C:
     cmp $7FBD
     bcc L7C56
 L7C51:
-    lda #$08
+    lda #$08            ;TODO FC% error code for ???
     jmp L7B3D           ;TODO error exit?
 L7C56:
     lda $7FBB
@@ -807,8 +811,8 @@ _dos_input:
 ; - F$ contains a filename with drive like "NAME:0"
 ; - A$ is the variable to write to
 ;
-    jsr L7BA6           ;TODO these must handle the filename
-    jsr L7BC4
+    jsr L7BA6           ;TODO this must handle the filename
+    jsr L7BC4           ;TODO ???
 
     ;Read the sector from disk
     jsr read_a_sector
@@ -819,7 +823,7 @@ _dos_input:
     bit valtyp          ;Test type of variable (0=numeric, $ff=string)
     bmi L7C82           ;Branch if variable is a string
 
-    lda #$09            ;TODO error code for "Not a string"?
+    lda #$09            ;FC% error code for "Not a string"
 L7C7F:
     jmp L7B3D           ;TODO error exit?
 
@@ -864,8 +868,8 @@ _dos_print:
 ; - F$ contains a filename with drive like "NAME:0"
 ; - A$ is the variable to read record data from
 ;
-    jsr L7BA6           ;TODO these must handle the filename
-    jsr L7BC4
+    jsr L7BA6           ;TODO this must handle the filename
+    jsr L7BC4           ;TODO ???
 
     ;Get the variable that will provide the record data
     jsr ptrget          ;Find variable, sets valtyp and varpnt
@@ -873,7 +877,7 @@ _dos_print:
     bmi L7CB7           ;Branch if variable is a string
 
     ;Variable is not a string
-    lda #$09            ;TODO error code for "Not a string"?
+    lda #$09            ;FC% error code for "Not a string"
 L7CB4:
     jmp L7B3D           ;TODO error exit?
 
