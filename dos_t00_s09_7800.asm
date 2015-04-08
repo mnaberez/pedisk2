@@ -442,11 +442,20 @@ L7A2D:
 _dos_open:
 ;Perform !OPEN
 ;
-;Usage: !OPEN F$
-;       !OPEN F$ NEW LEN      (default 100 records -- TODO is this correct?)
-;       !OPEN F$ NEW LEN 123  (123 is the number of records)
-; - F$ contains a filename with drive like "NAME:0"
-; - TODO: Keywords "NEW" and "LEN" may optionally follow F$ and are unknown
+;Open a sequential (SEQ) file for reading or writing.
+;
+;A sequential file is a set of records.  A record is a variable length string
+;of 127 bytes or less.  A record is written with the !PRINT command and read
+;with !INPUT.  Each record occupies one sector (128 bytes), where the first
+;byte of the sector stores the record length (0-127).  The total number of
+;records in the file is set when the file is created, and is the same as the
+;file's sector count (offsets $0E-$0F in the directory entry).
+;
+;Usage: !OPEN "NAME:0"            (open an existing SEQ file)
+;       !OPEN "NAME:0" NEW        (create SEQ file with default 100 records)
+;       !OPEN "NAME:0" NEW LEN 35 (create SEQ file with 35 records)
+;
+;Filename may be specified as a variable (F$) or immediate ("NAME:0").
 ;
     jsr L7A0A
     inx
@@ -636,6 +645,9 @@ L7B5B:
 _dos_close:
 ;Perform !CLOSE
 ;
+;Close an open sequential (SEQ) file.
+;See _dos_open for a description of sequential files.
+;
 ;Usage: !CLOSE F$
 ; - F$ contains a filename with drive like "NAME:0"
 ;
@@ -765,7 +777,8 @@ L7C56:
 _dos_input:
 ;Perform !INPUT
 ;
-;Read a record from a file.  See _dos_print for a description of records.
+;Read a record from an open sequential (SEQ) file.
+;See _dos_open for a description of sequential files.
 ;
 ;Usage: !INPUT F$ A$
 ; - F$ contains a filename with drive like "NAME:0"
@@ -821,9 +834,8 @@ L7CA2:
 _dos_print:
 ;Perform !PRINT
 ;
-;Write a record to a file.  A record is a string of 127 bytes or less.
-;Each sector (128 bytes) stores one record.  The first byte of the sector
-;stores the record length (0-127).
+;Write a record to an open sequential (SEQ) file.
+;See _dos_open for a description of sequential files.
 ;
 ;Usage: !PRINT F$ A$
 ; - F$ contains a filename with drive like "NAME:0"
