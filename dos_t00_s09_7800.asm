@@ -649,14 +649,18 @@ _dos_close:
 ;See _dos_open for a description of sequential files.
 ;
 ;Usage: !CLOSE F$
-; - F$ contains a filename with drive like "NAME:0"
+;       !CLOSE F$ END  (TOOD what does END mean? truncate file?)
 ;
-    jsr L7BA6
+;Filename may be specified as a variable (F$) or immediate ("NAME:0").
+;
+    jsr L7BA6           ;TODO this must handle the filename
+
     ldy #$00
-    lda (txtptr),y
-    cmp #$80
-    bne L7B91
-    jsr chrget
+    lda (txtptr),y      ;Peek at next byte of BASIC text
+    cmp #$80            ;Is it the CBM BASIC token for END?
+    bne L7B91           ;  No: branch to ??? TODO
+
+    jsr chrget          ;Consume the END token
     jsr L7C22
     lda #$FF
     sta dir_sector
@@ -695,10 +699,11 @@ L7BC0:
 
 L7BC4:
     ldy #$00
-    lda (txtptr),y
+    lda (txtptr),y      ;Peek at next byte of BASIC text
     cmp #$B9            ;TODO CBM BASIC token for POS?
     bne L7C22
-    jsr chrget
+
+    jsr chrget          ;Consume the POS token
     jsr L7B55
     ldy #$00
     lda (varpnt),y
