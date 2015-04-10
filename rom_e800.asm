@@ -95,10 +95,7 @@ dos_sys     = dos+$0012 ;Entry point for !SYS (disk monitor)
 dos_list    = dos+$0015 ;Entry point for !LIST (directory)
 dos_stop    = dos+$0200 ;Unknown, PEDISK monitor jumps here if STOP pressed
 copy_sector = dos+$0600 ;128 bytes for sector, used only by copy disk overlay
-buf_1       = dos+$0680 ;Unknown, possible buffer area #1
-buf_2       = dos+$06a0 ;Unknown, possible buffer area #2
-buf_3       = dos+$06c0 ;Unknown, possible buffer area #3
-buf_4       = dos+$06e0 ;Unknown, possible buffer area #4
+file_infos  = dos+$0680 ;4 buffers of 32 bytes each for tracking open files
 dir_sector  = dos+$0700 ;128 bytes for directory sector used by find_file
 save_char   = dos+$0788 ;Temp storage for char read at PEDISK monitor prompt
 wedge_x     = dos+$0789 ;Temp storage for X register used by the wedge
@@ -415,10 +412,10 @@ l_eace:
 
 restart_dos:
     lda #$ff
-    sta buf_1
-    sta buf_2
-    sta buf_3
-    sta buf_4
+    sta file_infos+(0*$20) ;Clear info for open file #0
+    sta file_infos+(1*$20) ;Clear info for open file #1
+    sta file_infos+(2*$20) ;Clear info for open file #2
+    sta file_infos+(3*$20) ;Clear info for open file #3
 
 load_dos:
 ;Load the RAM-resident portion from disk into memory

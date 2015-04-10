@@ -27,14 +27,12 @@ txtptr      = $77       ;Pointer: Current Byte of BASIC Text
 target_ptr  = $b7       ;Pointer: PEDISK target address for memory ops **
 
 dos         = $7800     ;Base address for the RAM-resident portion
-buf_1       = dos+$0680 ;Unknown, possible buffer area #1
-buf_2       = dos+$06a0 ;Unknown, possible buffer area #2
-buf_3       = dos+$06c0 ;Unknown, possible buffer area #3
-buf_4       = dos+$06e0 ;Unknown, possible buffer area #4
+file_infos  = dos+$0680 ;4 buffers of 32 bytes each for tracking open files
 dir_sector  = dos+$0700 ;128 bytes for directory sector used by find_file
 wedge_x     = dos+$0789 ;Temp storage for X register used by the wedge
 wedge_y     = dos+$078a ;Temp storage for Y register used by the wedge
 wedge_sp    = dos+$078b ;Temp storage for stack pointer used by the wedge
+file_num    = dos+$078f ;File number (0-3) of currently open file
 drive_sel   = dos+$0791 ;Drive select bit pattern to write to the latch
 track       = dos+$0792 ;Track number to write to WD1793 (0-76 or $00-4c)
 sector      = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
@@ -414,9 +412,9 @@ _dos_save:
 
 L7A0A:
     ldx #$03
-    lda #>buf_4
+    lda #>(file_infos+(3*$20))
     sta dir_ptr+1
-    lda #<buf_4
+    lda #<(file_infos+(3*$20))
 L7A12:
     sta dir_ptr
     ldy #$05
@@ -431,7 +429,7 @@ L7A16:
     cmp drive_sel_f
     bne L7A2D
 L7A29:
-    stx $7F8F
+    stx file_num
     rts
 L7A2D:
     dex
@@ -468,7 +466,7 @@ L7A41:
     ldx #$03
     ldy #$60
 L7A45:
-    lda buf_1,y
+    lda file_infos,y
     cmp #$FF
     beq L7A5B
     dex
@@ -482,7 +480,7 @@ L7A53:
     tay
     jmp L7A45
 L7A5B:
-    stx $7F8F
+    stx file_num
     jsr find_file
     bpl L7A66           ;Branch if the file was found
     jmp restore
@@ -576,6 +574,7 @@ L7AF0:
                         ;Fall through into seq_cmd_done
 
 seq_cmd_done:
+    ;Set variable FI% to value in $7FB2/$7FB3
     jsr ptrget_fi       ;Find variable FI%
     ldy #$00
     lda $7FB3
@@ -583,6 +582,8 @@ seq_cmd_done:
     iny
     lda $7FB2
     sta (varpnt),y
+
+    ;Set variable FC% to value in fc_error
     jsr ptrget_fc       ;Find variable FC%
     ldy #$00
     lda #$00
@@ -590,10 +591,12 @@ seq_cmd_done:
     lda fc_error
     iny
     sta (varpnt),y
+
     jsr L7B2F
+
 L7B22:
     lda dir_entry,y
-    sta buf_1,x
+    sta file_infos,x
     dex
     dey
     bpl L7B22
@@ -601,7 +604,7 @@ L7B2C:
     jmp restore         ;Restore top 32 bytes of the stack page and return
 
 L7B2F:
-    lda $7F8F
+    lda file_num
     asl ;a
     asl ;a
     asl ;a
@@ -614,7 +617,7 @@ L7B2F:
 
 seq_cmd_error:
 ;Sequential file command error has occurred.  Set the error code
-;that will be store in the FC% variable, consume any bytes of BASIC
+;that will be stored in the FC% variable, consume any bytes of BASIC
 ;text remaining in the current statement, and jump to seq_cmd_done
 ;to finish up.
 ;
@@ -681,7 +684,7 @@ _dos_close:
 ;See _dos_open for a description of sequential files.
 ;
 ;Usage: !CLOSE F$
-;       !CLOSE F$ END  (TOOD what does END mean? truncate file?)
+;       !CLOSE F$ END  (TODO what does END mean? truncate file?)
 ;
 ;Filename may be specified as a variable (F$) or immediate ("NAME:0").
 ;
@@ -721,7 +724,7 @@ L7BA6:
 L7BB1:
     jsr L7B2F
 L7BB4:
-    lda buf_1,x
+    lda file_infos,x
     sta dir_entry,y
     dex
     dey
