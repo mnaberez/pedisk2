@@ -460,8 +460,8 @@ _dos_open:
     jsr L7A0A
     inx
     beq L7A41
-    lda #$30
-    bne L7A73
+    lda #$30            ;TODO FC% error code for ???
+    bne open_err_1      ;Branch always; go to seq_cmd_error
 L7A41:
     ldx #$03
     ldy #$60
@@ -471,8 +471,8 @@ L7A45:
     beq L7A5B
     dex
     bpl L7A53
-    lda #$31
-    bne L7A73
+    lda #$31            ;TODO FC% error code for ???
+    bne open_err_1      ;Branch always; go to seq_cmd_error
 L7A53:
     tya
     sec
@@ -491,9 +491,9 @@ L7A66:
     bne L7AD6
     pla
     bne L7A75
-    lda #$32
-L7A73:
-    bne L7ADB
+    lda #$32            ;TODO FC% error code for ???
+open_err_1:
+    bne open_err_2      ;Branch always; go to seq_cmd_error
 L7A75:
     lda #$64            ;A = default of 100 records
     sta dir_entry+$0e   ;Set file sector count low byte
@@ -533,11 +533,11 @@ L7AB3:
     bit intflg          ;Test type of numeric (0=floating point, $80=integer)
     bmi L7AC6           ;Branch if integer
 
-    lda #$34
-    bne L7ADB           ;Branch always
+    lda #$34            ;TODO FC% error code for ???
+    bne open_err_2      ;Branch always; go to seq_cmd_error
 L7AC2:
-    lda #$35
-    bne L7ADB           ;Branch always
+    lda #$35            ;TODO FC% error code for ???
+    bne open_err_2      ;Branch always; go to seq_cmd_error
 L7AC6:
     ldy #$00
     lda (varpnt),y
@@ -550,7 +550,7 @@ L7AD6:
     pla
     beq L7ADE
     lda #$32            ;TODO FC% error code for ???
-L7ADB:
+open_err_2:
     jmp seq_cmd_error   ;Jump out to finish this command on error
 L7ADE:
     ldy #$0F
