@@ -522,9 +522,11 @@ L7A5B:
     ;Found an open file number, it's in X
     stx file_num        ;Save file number in file_num
 
-    jsr find_file
-    bpl L7A66           ;Branch if the file was found
+    ;Try to find the file (may or may not exist)
+    jsr find_file       ;A=0 found, A=$7F not found, A=$FF disk error
+    bpl L7A66           ;Branch if no disk error occurred
 
+    ;Disk error occurred and was printed
     jmp restore
 
 L7A66:
