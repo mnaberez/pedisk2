@@ -387,7 +387,7 @@ _dos_sys:
     jmp dos_stop
 
 L79F3:
-    jmp restore
+    jmp restore         ;Restore top 32 bytes of the stack page and return
     !byte $B3
     !byte $FA
     rti
@@ -408,7 +408,7 @@ _dos_save:
 ;Usage: !SAVE"NAME:0"
 ;
     jsr save_from_basic
-    jmp restore
+    jmp restore         ;Restore top 32 bytes of the stack page and return
 
 get_file_num:
 ;Get the file number of an already opened file
@@ -522,24 +522,33 @@ L7A5B:
     ;Found an open file number, it's in X
     stx file_num        ;Save file number in file_num
 
-    ;Try to find the file (may or may not exist)
+    ;Try to find the file on disk (may or may not exist)
     jsr find_file       ;A=0 found, A=$7F not found, A=$FF disk error
     bpl L7A66           ;Branch if no disk error occurred
 
     ;Disk error occurred and was printed
-    jmp restore
+    jmp restore         ;Restore top 32 bytes of the stack page and return
 
 L7A66:
-    pha
+    ;Check if NEW keyword was specified
+    pha                 ;Push find_file status onto stack
     jsr chrget+$06
     cmp #$A2            ;CBM BASIC token for NEW
-    bne L7AD6
-    pla
-    bne L7A75
-    lda #$32            ;TODO FC% error code for ???
+    bne L7AD6           ;Branch if NEW was not specified
+
+    ;NEW keyword was specified so we are creating a new file.
+    ;Ensure that the file does not already exist.
+    pla                 ;Pull find_file status off stack
+    bne open_new_file   ;Branch if file was not found on disk
+
+    ;Trying to create a new file but filename already exists.
+    lda #$32            ;FC% error code for file exists
 open_err_1:
     bne open_err_2      ;Branch always; go to seq_cmd_error
-L7A75:
+
+open_new_file:
+    ;Create a new file on disk and open it
+
     lda #$64            ;A = default of 100 records
     sta dir_entry+$0e   ;Set file sector count low byte
     lda #$80
@@ -552,9 +561,12 @@ L7A75:
     sta dir_entry+$0b   ;TODO ??
     sta dir_entry+$0f   ;File sector count high byte
 
+    ;Check if LEN keyword was specified
     jsr chrget          ;Get next byte of BASIC text
     cmp #$C3            ;CBM BASIC token for LEN
-    bne L7AAC
+    bne L7AAC           ;Branch if LEN was not specified
+
+    ;LEN keyword was specified
 
     jsr chrget          ;Get next byte of BASIC text
     bcs L7AB3           ;TODO what does carry set mean?
@@ -591,13 +603,21 @@ L7AC6:
     lda (varpnt),y
     sta dir_entry+$0e   ;File sector count low byte
     jmp L7AAC
+
 L7AD6:
-    pla
-    beq L7ADE
-    lda #$32            ;TODO FC% error code for ???
+    ;NEW keyword was not specified so we are trying to open a file
+    ;that already exists on disk.  Ensure the file does not already exist.
+    pla                 ;Pull find_file status off stack
+    beq open_existing   ;Branch find_file found the file on disk
+
+    ;Trying to open an existing file but it doesn't exist.
+    lda #$32            ;FC% error code for file found
 open_err_2:
     jmp seq_cmd_error   ;Jump out to finish this command on error
-L7ADE:
+
+open_existing:
+    ;Open an existing file on disk
+
     ldy #$0F
 L7AE0:
     lda (dir_ptr),y
@@ -756,7 +776,7 @@ L7B93:
     lda #$FF
     jmp seq_cmd_done
 L7BA3:
-    jmp restore
+    jmp restore         ;Restore top 32 bytes of the stack page and return
 
 L7BA6:
 ;TODO called from _dos_print, _dos_open, _dos_close
@@ -917,7 +937,7 @@ L7C91:
     sta (varpnt),y
     jmp seq_cmd_done
 L7CA2:
-    jmp restore
+    jmp restore         ;Restore top 32 bytes of the stack page and return
 
 _dos_print:
 ;Perform !PRINT
@@ -1016,7 +1036,7 @@ L7D0C:
     !byte 0             ;End of BASIC line
     !byte 0,0           ;End of BASIC program
 L7D10:
-    jmp restore
+    jmp restore         ;Restore top 32 bytes of the stack page and return
 
 _dos_list:
 ;Perform !LIST
@@ -1089,7 +1109,7 @@ L7D97:
 
     jsr read_a_sector
     beq L7DAB           ;Branch if read succeeded
-    jmp restore
+    jmp restore         ;Restore top 32 bytes of the stack page and return
 
     ;Print "DISKNAME= "
 
@@ -1134,7 +1154,7 @@ L7DCF:
     inc sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
     jsr read_a_sector
     beq L7DE1           ;Branch if read succeeded
-    jmp restore
+    jmp restore         ;Restore top 32 bytes of the stack page and return
 L7DE1:
     lda #$00
 L7DE3:
@@ -1243,7 +1263,7 @@ L7E56:
 
     jsr deselect_drive
     jsr chrget
-    jmp restore
+    jmp restore         ;Restore top 32 bytes of the stack page and return
 
     !byte $8F
     sbc $FFF4,x
