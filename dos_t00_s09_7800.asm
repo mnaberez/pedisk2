@@ -487,49 +487,49 @@ _dos_open:
     ;Check if file is already open
     jsr get_file_num    ;X=file number from filename or $FF if not open
     inx                 ;Increment X to test it for $FF
-    beq L7A41           ;Equal to $FF?  File not open, branch to continue
+    beq open_find_num   ;Equal to $FF?  File not open, branch to continue
 
     ;File is already open
     lda #$30            ;FC% error code for file already open error
     bne open_err_1      ;Branch always; go to seq_cmd_error
 
-L7A41:
+open_find_num:
     ;Init to look for free buffer in file_infos
     ldx #$03            ;Init X for counting down 4 file numbers (3..0)
     ldy #(3*$20)        ;Init Y index for first byte of last file info
 
-L7A45:
+open_find_loop:
     ;Check if this file info is available to be used
     lda file_infos,y    ;Get first byte of filename from file info
     cmp #$FF            ;Is this file info unused?
-    beq L7A5B           ;  Yes: branch, we'll use this file info
+    beq open_found_num  ;  Yes: branch, we'll use this file info
     dex                 ;Decrement file number
-    bpl L7A53           ;File number >= 0? Branch to try next file info
+    bpl open_find_next  ;File number >= 0? Branch to try next file info
 
     ;No free space in file_infos, all 4 buffers are in use
     lda #$31            ;FC% error code for too many open files error
     bne open_err_1      ;Branch always; go to seq_cmd_error
 
-L7A53:
+open_find_next:
     ;Move to the next file info and loop
     tya                 ;Y->A so we can subtract it
     sec
     sbc #$20            ;Subtract $20 to move index to next file info
     tay                 ;A->Y
-    jmp L7A45           ;Loop to check if it is available to be used
+    jmp open_find_loop  ;Loop to check if it is available to be used
 
-L7A5B:
+open_found_num:
     ;Found an open file number, it's in X
     stx file_num        ;Save file number in file_num
 
     ;Try to find the file on disk (may or may not exist)
     jsr find_file       ;A=0 found, A=$7F not found, A=$FF disk error
-    bpl L7A66           ;Branch if no disk error occurred
+    bpl open_check_new  ;Branch if no disk error occurred
 
     ;Disk error occurred and was printed
     jmp restore         ;Restore top 32 bytes of the stack page and return
 
-L7A66:
+open_check_new:
     ;Check if NEW keyword was specified
     pha                 ;Push find_file status onto stack
     jsr chrget+$06
@@ -539,14 +539,14 @@ L7A66:
     ;NEW keyword was specified so we are creating a new file.
     ;Ensure that the file does not already exist.
     pla                 ;Pull find_file status off stack
-    bne open_new_file   ;Branch if file was not found on disk
+    bne open_new        ;Branch if file was not found on disk
 
     ;Trying to create a new file but filename already exists.
     lda #$32            ;FC% error code for file exists
 open_err_1:
     bne open_err_2      ;Branch always; go to seq_cmd_error
 
-open_new_file:
+open_new:
     ;Create a new file on disk and open it
 
     lda #$64            ;A = default of 100 records
@@ -564,12 +564,12 @@ open_new_file:
     ;Check if LEN keyword was specified
     jsr chrget          ;Get next byte of BASIC text
     cmp #$C3            ;CBM BASIC token for LEN
-    bne L7AAC           ;Branch if LEN was not specified
+    bne open_create     ;Branch if LEN was not specified
 
     ;LEN keyword was specified
 
     jsr chrget          ;Get next byte of BASIC text
-    bcs L7AB3           ;TODO what does carry set mean?
+    bcs open_handle_len ;TODO what does carry set mean?
 
     ;Set record count from text (e.g. 123 from "!OPEN F$ NEW LEN 123")
     jsr linget          ;Fetch integer into linnum
@@ -578,11 +578,12 @@ open_new_file:
     lda linnum+1        ;A = high byte of integer
     sta dir_entry+$0f   ;Set file sector count high byte
 
-L7AAC:
+open_create:
     jsr L78A2
     bne L7B2C
     beq L7AE8
-L7AB3:
+
+open_handle_len:
     jsr ptrget          ;Find variable
     lda valtyp          ;A = type of variable (0=numeric, $ff=string)
     bne L7AC2           ;Branch if variable is not numeric
@@ -602,7 +603,7 @@ L7AC6:
     iny
     lda (varpnt),y
     sta dir_entry+$0e   ;File sector count low byte
-    jmp L7AAC
+    jmp open_create
 
 L7AD6:
     ;NEW keyword was not specified so we are trying to open a file
