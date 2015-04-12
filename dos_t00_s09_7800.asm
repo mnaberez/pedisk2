@@ -668,7 +668,7 @@ seq_cmd_done:
     iny
     sta (varpnt),y
 
-    jsr L7B2F
+    jsr file_num_to_xy
 
 L7B22:
     lda dir_entry,y
@@ -679,7 +679,7 @@ L7B22:
 L7B2C:
     jmp restore         ;Restore top 32 bytes of the stack page and return
 
-L7B2F:
+file_num_to_xy:
     lda file_num
     asl ;a
     asl ;a
@@ -799,7 +799,7 @@ L7BA6:
     jmp seq_cmd_error   ;Jump out to finish this command on error
 
 L7BB1:
-    jsr L7B2F
+    jsr file_num_to_xy
 L7BB4:
     lda file_infos,x
     sta dir_entry,y
