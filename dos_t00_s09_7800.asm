@@ -744,12 +744,13 @@ L7BA3:
 
 L7BA6:
 ;TODO called from _dos_print, _dos_open, _dos_close
-;Appears to handle the filename
-    jsr get_file_num
-    inx
-    bne L7BB1
-    lda #$07            ;TODO FC% error code for ???
+    jsr get_file_num    ;X=file number from filename or $FF if not open
+    inx                 ;Increment X to test for $FF
+    bne L7BB1           ;Not equal to $FF?  File open, branch to continue
+
+    lda #$07            ;FC% error code for file not open error
     jmp seq_cmd_error   ;Jump out to finish this command on error
+
 L7BB1:
     jsr L7B2F
 L7BB4:
