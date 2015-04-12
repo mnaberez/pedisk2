@@ -484,35 +484,49 @@ _dos_open:
 ;
 ;Filename may be specified as a variable (F$) or immediate ("NAME:0").
 ;
+    ;Check if file is already open
     jsr get_file_num    ;X=file number from filename or $FF if not open
     inx                 ;Increment X to test it for $FF
     beq L7A41           ;Equal to $FF?  File not open, branch to continue
 
+    ;File is already open
     lda #$30            ;FC% error code for file already open error
     bne open_err_1      ;Branch always; go to seq_cmd_error
 
 L7A41:
-    ldx #$03
-    ldy #$60
+    ;Init to look for free buffer in file_infos
+    ldx #$03            ;Init X for counting down 4 file numbers (3..0)
+    ldy #(3*$20)        ;Init Y index for first byte of last file info
+
 L7A45:
-    lda file_infos,y
-    cmp #$FF
-    beq L7A5B
-    dex
-    bpl L7A53
-    lda #$31            ;TODO FC% error code for ???
+    ;Check if this file info is available to be used
+    lda file_infos,y    ;Get first byte of filename from file info
+    cmp #$FF            ;Is this file info unused?
+    beq L7A5B           ;  Yes: branch, we'll use this file info
+    dex                 ;Decrement file number
+    bpl L7A53           ;File number >= 0? Branch to try next file info
+
+    ;No free space in file_infos, all 4 buffers are in use
+    lda #$31            ;FC% error code for too many open files error
     bne open_err_1      ;Branch always; go to seq_cmd_error
+
 L7A53:
-    tya
+    ;Move to the next file info and loop
+    tya                 ;Y->A so we can subtract it
     sec
-    sbc #$20
-    tay
-    jmp L7A45
+    sbc #$20            ;Subtract $20 to move index to next file info
+    tay                 ;A->Y
+    jmp L7A45           ;Loop to check if it is available to be used
+
 L7A5B:
-    stx file_num
+    ;Found an open file number, it's in X
+    stx file_num        ;Save file number in file_num
+
     jsr find_file
     bpl L7A66           ;Branch if the file was found
+
     jmp restore
+
 L7A66:
     pha
     jsr chrget+$06
