@@ -484,11 +484,13 @@ _dos_open:
 ;
 ;Filename may be specified as a variable (F$) or immediate ("NAME:0").
 ;
-    jsr get_file_num
-    inx
-    beq L7A41
-    lda #$30            ;TODO FC% error code for ???
+    jsr get_file_num    ;X=file number from filename or $FF if not open
+    inx                 ;Increment X to test it for $FF
+    beq L7A41           ;Equal to $FF?  File not open, branch to continue
+
+    lda #$30            ;FC% error code for file already open error
     bne open_err_1      ;Branch always; go to seq_cmd_error
+
 L7A41:
     ldx #$03
     ldy #$60
