@@ -410,34 +410,61 @@ _dos_save:
     jsr save_from_basic
     jmp restore
 
-L7A0A:
-    ldx #$03
+get_file_num:
+;Get the file number of an already opened file
+;from its filename and drive.
+;
+;Open files are stored in the file_infos table.  There are 4
+;possible open files, numbered 0 to 3.  Each open file is
+;represented by 32 bytes in file_infos.  The first 16 bytes are
+;the file's directory entry, followed by 1 byte for the drive
+;select pattern.
+;
+;Calling parameters:
+;  dir_entry: first 6 bytes only with the filename
+;  drive_sel_f: drive select pattern of the drive
+;
+;Returns:
+;  file_num: File number (0..3) if found, or $FF if not found
+;  X = same as file_num
+;
+    ldx #$03            ;Counts down possible file numbers 3..0
+
+    ;Initialize pointer to last open file in file_infos
     lda #>(file_infos+(3*$20))
     sta dir_ptr+1
     lda #<(file_infos+(3*$20))
-L7A12:
-    sta dir_ptr
-    ldy #$05
-L7A16:
-    lda (dir_ptr),y
-    cmp dir_entry,y
-    bne L7A2D
-    dey
-    bpl L7A16
-    ldy #$11
-    lda (dir_ptr),y
-    cmp drive_sel_f
-    bne L7A2D
-L7A29:
+
+gfn_loop:
+    sta dir_ptr         ;Set pointer to file_infos low byte
+
+    ;Check if requested filename matches current file in file_infos
+    ldy #$05            ;Counts down filename chars 5..0
+gfn_fname_loop:
+    lda (dir_ptr),y     ;Get a filename byte from open file info
+    cmp dir_entry,y     ;Compare it to filename we want
+    bne gfn_next        ;Not a match? Go to next file info.
+    dey                 ;Decrement filename index
+    bpl gfn_fname_loop  ;Loop until entire filename is checked
+
+    ;Check if requested drive select pattern matches current in file_infos
+    ldy #$11            ;Set index to drive select pattern in file info
+    lda (dir_ptr),y     ;Get drive select pattern in file info
+    cmp drive_sel_f     ;Compare it to drive select pattern we want
+    bne gfn_next        ;Not a match? Go to next file info.
+
+gfn_found:
     stx file_num
     rts
-L7A2D:
-    dex
-    bmi L7A29
-    lda dir_ptr
+
+gfn_next:
+    dex                 ;Decrement to next file number
+    bmi gfn_found       ;Past zero?  Return file number of $FF
+
+    lda dir_ptr         ;Get low byte of file_infos pointer
     sec
-    sbc #$20
-    bne L7A12
+    sbc #$20            ;Subtract $20 to move to next file info
+    bne gfn_loop        ;Branch always
 
 _dos_open:
 ;Perform !OPEN
@@ -457,7 +484,7 @@ _dos_open:
 ;
 ;Filename may be specified as a variable (F$) or immediate ("NAME:0").
 ;
-    jsr L7A0A
+    jsr get_file_num
     inx
     beq L7A41
     lda #$30            ;TODO FC% error code for ???
@@ -716,7 +743,7 @@ L7BA3:
 L7BA6:
 ;TODO called from _dos_print, _dos_open, _dos_close
 ;Appears to handle the filename
-    jsr L7A0A
+    jsr get_file_num
     inx
     bne L7BB1
     lda #$07            ;TODO FC% error code for ???
