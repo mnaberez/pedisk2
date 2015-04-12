@@ -534,7 +534,7 @@ open_check_new:
     pha                 ;Push find_file status onto stack
     jsr chrget+$06
     cmp #$A2            ;CBM BASIC token for NEW
-    bne L7AD6           ;Branch if NEW was not specified
+    bne open_not_new    ;Branch if NEW was not specified
 
     ;NEW keyword was specified so we are creating a new file.
     ;Ensure that the file does not already exist.
@@ -579,24 +579,34 @@ open_new:
     sta dir_entry+$0f   ;Set file sector count high byte
 
 open_create:
+    ;Create a new file on disk
     jsr L78A2
     bne L7B2C
     beq L7AE8
 
 open_handle_len:
     jsr ptrget          ;Find variable
+
+    ;Check if LEN argument is numeric
     lda valtyp          ;A = type of variable (0=numeric, $ff=string)
-    bne L7AC2           ;Branch if variable is not numeric
+    bne open_len_str    ;Branch if variable is not numeric
 
+    ;LEN argument is numeric
+    ;Check if it is an integer
     bit intflg          ;Test type of numeric (0=floating point, $80=integer)
-    bmi L7AC6           ;Branch if integer
+    bmi open_set_len    ;Branch if integer
 
-    lda #$34            ;TODO FC% error code for ???
+    ;LEN argument is a float
+    lda #$34            ;FC% error code for LEN argument not an integer
     bne open_err_2      ;Branch always; go to seq_cmd_error
-L7AC2:
-    lda #$35            ;TODO FC% error code for ???
+
+open_len_str:
+    ;LEN argument is not numeric
+    lda #$35            ;FC% error code for LEN argument not numeric
     bne open_err_2      ;Branch always; go to seq_cmd_error
-L7AC6:
+
+open_set_len:
+    ;LEN argument is a valid integer, set sector count from it
     ldy #$00
     lda (varpnt),y
     sta dir_entry+$0f   ;File sector count high byte
@@ -605,7 +615,7 @@ L7AC6:
     sta dir_entry+$0e   ;File sector count low byte
     jmp open_create
 
-L7AD6:
+open_not_new:
     ;NEW keyword was not specified so we are trying to open a file
     ;that already exists on disk.  Ensure the file does not already exist.
     pla                 ;Pull find_file status off stack
