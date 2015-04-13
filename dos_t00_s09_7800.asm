@@ -772,7 +772,7 @@ _dos_close:
     bne L7B91           ;  No: branch to ??? TODO
 
     jsr chrget          ;Consume the END token
-    jsr L7C22
+    jsr no_pos_keyword
     lda #$FF
     sta dir_sector
     jsr write_a_sector
@@ -811,11 +811,12 @@ L7BC0:
     sta fc_error
     rts
 
-L7BC4:
+handle_pos:
+;TODO called from _dos_print and _dos_input
     ldy #$00
     lda (txtptr),y      ;Peek at next byte of BASIC text
     cmp #$B9            ;TODO CBM BASIC token for POS?
-    bne L7C22
+    bne no_pos_keyword
 
     jsr chrget          ;Consume the POS token
     jsr ptrget_fi       ;Find variable FI%
@@ -858,7 +859,8 @@ L7C00:
 L7C1C:
     sta $7FBB
     jmp L7C3C
-L7C22:
+
+no_pos_keyword:
     inc $7FB2
     bne L7C2A
     inc $7FB3
@@ -899,12 +901,14 @@ _dos_input:
 ;Read a record from an open sequential (SEQ) file.
 ;See _dos_open for a description of sequential files.
 ;
-;Usage: !INPUT F$ A$
-; - F$ contains a filename with drive like "NAME:0"
-; - A$ is the variable to write to
+;Usage: !INPUT "NAME:0" A$          (read record at current position into A$)
+;       !INPUT "NAME:0" POS 5 A$    (read record at position 5 into A$ - TODO this is a guess)
+;
+;Filename may be specified as a variable (F$) or immediate ("NAME:0").
+;Last argument is a variable that will receive the record data.
 ;
     jsr L7BA6           ;TODO this must handle the filename
-    jsr L7BC4           ;TODO ???
+    jsr handle_pos      ;TODO handle possible POS keyword
 
     ;Read the sector from disk
     jsr read_a_sector
@@ -956,12 +960,16 @@ _dos_print:
 ;Write a record to an open sequential (SEQ) file.
 ;See _dos_open for a description of sequential files.
 ;
-;Usage: !PRINT F$ A$
-; - F$ contains a filename with drive like "NAME:0"
-; - A$ is the variable to read record data from
+;Usage: !PRINT "NAME:0" A$          (write record in A$ at current position)
+;       !PRINT "NAME:0" POS 5 A$    (write record in A$ at position 5 - TODO this is a guess)
+;
+;Filename may be specified as a variable (F$) or immediate ("NAME:0").
+;
+;Last argument is variable to read record data from (TODO can this be immediate?)
+;and must be 127 bytes or less.
 ;
     jsr L7BA6           ;TODO this must handle the filename
-    jsr L7BC4           ;TODO ???
+    jsr handle_pos      ;TODO handle possible POS keyword
 
     ;Get the variable that will provide the record data
     jsr ptrget          ;Find variable, sets valtyp and varpnt
