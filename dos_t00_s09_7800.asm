@@ -827,10 +827,11 @@ handle_pos:
     lda (varpnt),y
     sta $7FB2
     ora $7FB3
-    bne L7BE9
-    lda #$08            ;TODO FC% error code for ???
+    bne pos_nonzero
+    lda #$08            ;FC% error code for position out of range
     jmp seq_cmd_error   ;Jump out to finish this command on error
-L7BE9:
+
+pos_nonzero:
     lda $7FB2
     sec
     sbc #$01
@@ -882,8 +883,9 @@ L7C3C:
     cmp $7FBD
     bcc L7C56
 L7C51:
-    lda #$08            ;TODO FC% error code for ???
+    lda #$08            ;FC% error code for position out of range
     jmp seq_cmd_error   ;Jump out to finish this command on error
+
 L7C56:
     lda $7FBB
     sta sector
@@ -905,6 +907,7 @@ _dos_input:
 ;       !INPUT "NAME:0" POS 5 A$    (read record at position 5 into A$ - TODO this is a guess)
 ;
 ;Filename may be specified as a variable (F$) or immediate ("NAME:0").
+;Optional record position (POS) starts at 1, not 0.
 ;Last argument is a variable that will receive the record data.
 ;
     jsr L7BA6           ;TODO this must handle the filename
@@ -964,7 +967,7 @@ _dos_print:
 ;       !PRINT "NAME:0" POS 5 A$    (write record in A$ at position 5 - TODO this is a guess)
 ;
 ;Filename may be specified as a variable (F$) or immediate ("NAME:0").
-;
+;Optional record position (POS) starts at 1, not 0.
 ;Last argument is variable to read record data from (TODO can this be immediate?)
 ;and must be 127 bytes or less.
 ;
