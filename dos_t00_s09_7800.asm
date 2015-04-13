@@ -826,7 +826,7 @@ L7BC4:
     lda (varpnt),y
     sta $7FB2
     ora $7FB3
-    bne $7BE9
+    bne L7BE9
     lda #$08            ;TODO FC% error code for ???
     jmp seq_cmd_error   ;Jump out to finish this command on error
 L7BE9:
