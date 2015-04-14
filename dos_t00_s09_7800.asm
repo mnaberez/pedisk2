@@ -776,7 +776,7 @@ _dos_close:
     lda #$FF
     sta dir_sector
     jsr write_a_sector
-    bne L7BA3           ;Branch if a disk error occurred
+    bne close_disk_err  ;Branch if a disk error occurred
 L7B91:
     lda #$FF
 L7B93:
@@ -786,7 +786,7 @@ L7B93:
     sta latch
     lda #$FF
     jmp seq_cmd_done
-L7BA3:
+close_disk_err:
     jmp restore         ;Restore top 32 bytes of the stack page and return
 
 L7BA6:
@@ -915,35 +915,35 @@ _dos_input:
 
     ;Read the sector from disk
     jsr read_a_sector
-    bne L7CA2           ;Branch if a disk error occurred
+    bne input_disk_err  ;Branch if a disk error occurred
 
     ;Get the variable that will receive the record data
     jsr ptrget          ;Find variable
     bit valtyp          ;Test type of variable (0=numeric, $ff=string)
-    bmi L7C82           ;Branch if variable is a string
+    bmi input_got_str   ;Branch if variable is a string
 
     lda #$09            ;FC% error code for "Not a string"
-L7C7F:
+input_err:
     jmp seq_cmd_error   ;Jump out to finish this command on error
 
-L7C82:
+input_got_str:
     ;Get record length
     lda dir_sector      ;Get length of record (normally 0-127)
 
     ;Check for end of records marker
     cmp #$FF            ;TODO end of records?
-    beq L7C7F           ;If so, branch to error exit
+    beq input_err       ;If so, branch to error exit
 
     ;Check record length is sane
     cmp #$80            ;Compare with 128 (the size of a disk sector)
-    bcc L7C91           ;If less than 128, the record length is valid (0-127),
+    bcc input_len_ok    ;If less than 128, the record length is valid (0-127),
                         ;  so we continue.
 
     ;Record would be longer than 127 bytes
     lda #$0A            ;TODO error code for "Record too long"?
-    bne L7C7F           ;Branch always to error exit
+    bne input_err       ;Branch always to error exit
 
-L7C91:
+input_len_ok:
     ;TODO finish disassembly
     ldy #$00
     sta (varpnt),y
@@ -954,7 +954,8 @@ L7C91:
     lda #$7F
     sta (varpnt),y
     jmp seq_cmd_done
-L7CA2:
+
+input_disk_err:
     jmp restore         ;Restore top 32 bytes of the stack page and return
 
 _dos_print:
@@ -977,27 +978,27 @@ _dos_print:
     ;Get the variable that will provide the record data
     jsr ptrget          ;Find variable, sets valtyp and varpnt
     bit valtyp          ;Test type of variable (0=numeric, $ff=string)
-    bmi L7CB7           ;Branch if variable is a string
+    bmi print_got_str   ;Branch if variable is a string
 
     ;Variable is not a string
     lda #$09            ;FC% error code for "Not a string"
-L7CB4:
+print_err:
     jmp seq_cmd_error   ;Jump out to finish this command on error
 
-L7CB7:
+print_got_str:
     ;Check that the string length is 127 bytes or less
     ldy #$00            ;Y=0 index string length byte
     lda (varpnt),y      ;Get length of string variable
     cmp #$80            ;Compare with 128 (the size of a disk sector)
-    bcc L7CC3           ;If less than 128, the variable will fit as a record,
+    bcc print_str_ok    ;If less than 128, the variable will fit as a record,
                         ;  so we continue.  A sector is 128 bytes, but the first
                         ;  byte is used for the record length.
 
     ;String is longer than 127 bytes, so it won't fit as a record
     lda #$0A            ;TODO error code for "Record too long"?
-    bne L7CB4           ;Branch always to error exit
+    bne print_err       ;Branch always to error exit
 
-L7CC3:
+print_str_ok:
     ;String is valid as a record, set record length
     sta dir_sector      ;Store the string length in the first byte of
                         ;  the sector buffer
@@ -1014,15 +1015,15 @@ L7CC3:
     ;The first byte of the sector is the record length, the other 127 bytes
     ;hold the record data.
     ldy #$7E            ;Y = 127 minus 1 to count down string data bytes
-L7CD2:
+print_copy_loop:
     lda (dir_ptr),y     ;Get byte from string data
     sta dir_sector+1,y  ;Store in sector buffer (+1 is for the length byte)
     dey                 ;Decrement Y to move to next string data byte
-    bpl L7CD2           ;Keep going until 127 bytes are copied
+    bpl print_copy_loop ;Keep going until 127 bytes are copied
 
     ;Write the sector to disk
     jsr write_a_sector
-    bne L7CA2           ;Branch if a disk error occurred
+    bne input_disk_err  ;Branch if a disk error occurred
 
     jmp seq_cmd_done
 
@@ -1034,18 +1035,18 @@ _dos_run:
 ;
     jsr load_file
     txa
-    bne L7D10           ;Branch if load failed
-    lda #<L7D0C
+    bne run_disk_err    ;Branch if load failed
+    lda #<run_text
     sta txtptr
-    lda #>L7D0C
+    lda #>run_text
     sta txtptr+1
     ldx #$1F
     sei
-L7CF3:
+run_stack_loop:
     lda wedge_stack,x
     sta $01E0,x
     dex
-    bpl L7CF3
+    bpl run_stack_loop
     ldx wedge_sp
     txs
     cli
@@ -1053,11 +1054,11 @@ L7CF3:
     ldx wedge_x
     lda #$8A            ;CBM BASIC token for RUN
     jmp check_colon
-L7D0C:
+run_text:
     !byte $8a           ;CBM BASIC token for RUN
     !byte 0             ;End of BASIC line
     !byte 0,0           ;End of BASIC program
-L7D10:
+run_disk_err:
     jmp restore         ;Restore top 32 bytes of the stack page and return
 
 _dos_list:
