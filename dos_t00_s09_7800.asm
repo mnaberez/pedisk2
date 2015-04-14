@@ -383,11 +383,12 @@ _dos_sys:
     sta num_sectors     ;Number of sectors to read or write
 
     jsr read_sectors
-    bne L79F3           ;Branch if a disk error occurred
+    bne sys_disk_err    ;Branch if a disk error occurred
     jmp dos_stop
 
-L79F3:
+sys_disk_err:
     jmp restore         ;Restore top 32 bytes of the stack page and return
+
     !byte $B3
     !byte $FA
     rti
