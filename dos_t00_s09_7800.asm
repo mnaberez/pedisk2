@@ -171,7 +171,7 @@ L789A:
     rts
 
 L78A2:
-    lda #$00
+    lda #$00            ;FC% error code for OK
     sta fc_error
 
     lda open_track
@@ -184,7 +184,7 @@ L78A2:
     lda $58
     cmp #$51
     bmi L78C0
-    lda #$2B
+    lda #$2B            ;TODO FC% error code for ??
     sta fc_error
     rts
 
