@@ -903,11 +903,11 @@ _dos_input:
 ;Read a record from an open sequential (SEQ) file.
 ;See _dos_open for a description of sequential files.
 ;
-;Usage: !INPUT "NAME:0" A$          (read record at current position into A$)
-;       !INPUT "NAME:0" POS 5 A$    (read record at position 5 into A$ - TODO this is a guess)
+;Usage: !INPUT "NAME:0" A$        (read record at current position into A$)
+;       !INPUT "NAME:0" POS A$    (read record at position in FI% into A$)
 ;
 ;Filename may be specified as a variable (F$) or immediate ("NAME:0").
-;Optional record position (POS) starts at 1, not 0.
+;Optional POS keyword sets position to value in FI% (starts at 1, not 0)
 ;Last argument is a variable that will receive the record data.
 ;
     jsr L7BA6           ;TODO this must handle the filename
@@ -963,11 +963,11 @@ _dos_print:
 ;Write a record to an open sequential (SEQ) file.
 ;See _dos_open for a description of sequential files.
 ;
-;Usage: !PRINT "NAME:0" A$          (write record in A$ at current position)
-;       !PRINT "NAME:0" POS 5 A$    (write record in A$ at position 5 - TODO this is a guess)
+;Usage: !PRINT "NAME:0" A$        (write record in A$ at current position)
+;       !PRINT "NAME:0" POS A$    (write record in A$ at position in FI%)
 ;
 ;Filename may be specified as a variable (F$) or immediate ("NAME:0").
-;Optional record position (POS) starts at 1, not 0.
+;Optional POS keyword sets position to value in FI% (starts at 1, not 0)
 ;Last argument is variable to read record data from (TODO can this be immediate?)
 ;and must be 127 bytes or less.
 ;
