@@ -40,6 +40,7 @@ num_sectors = dos+$0796 ;Number of sectors to read or write
 dir_entry   = dos+$07a0 ;16 byte buffer for a directory entry
 wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
 drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename
+fi_pos      = dos+$07b2 ;2 bytes for record position used with FI% variable
 fc_error    = dos+$07b5 ;Error code that will be set in FC% variable
 linget      = $b8f6     ;BASIC Fetch integer (usually a line number)
 ptrget      = $c12b     ;BASIC Find a variable
@@ -639,8 +640,8 @@ L7AE0:
 L7AE8:
     lda #$00
 L7AEA:
-    sta $7FB2
-    sta $7FB3
+    sta fi_pos
+    sta fi_pos+1
 L7AF0:
     sta fc_error
     lda dir_entry+$0c   ;File track number
@@ -651,13 +652,13 @@ L7AF0:
                         ;Fall through into seq_cmd_done
 
 seq_cmd_done:
-    ;Set variable FI% to value in $7FB2/$7FB3
+    ;Set variable FI% to value in fi_pos/fi_pos+1
     jsr ptrget_fi       ;Find variable FI%
     ldy #$00
-    lda $7FB3
+    lda fi_pos+1
     sta (varpnt),y
     iny
-    lda $7FB2
+    lda fi_pos
     sta (varpnt),y
 
     ;Set variable FC% to value in fc_error
@@ -823,21 +824,21 @@ handle_pos:
     jsr ptrget_fi       ;Find variable FI%
     ldy #$00
     lda (varpnt),y
-    sta $7FB3
+    sta fi_pos+1
     iny
     lda (varpnt),y
-    sta $7FB2
-    ora $7FB3
+    sta fi_pos
+    ora fi_pos+1
     bne pos_nonzero
     lda #$08            ;FC% error code for position out of range
     jmp seq_cmd_error   ;Jump out to finish this command on error
 
 pos_nonzero:
-    lda $7FB2
+    lda fi_pos
     sec
     sbc #$01
     sta $5E
-    lda $7FB3
+    lda fi_pos+1
     sbc #$00
     sta $5F
     lda #$1C            ;TODO 28 sectors per track?
@@ -863,9 +864,9 @@ L7C1C:
     jmp L7C3C
 
 no_pos_keyword:
-    inc $7FB2
+    inc fi_pos
     bne L7C2A
-    inc $7FB3
+    inc fi_pos+1
 L7C2A:
     inc $7FBB
     lda $7FBB
