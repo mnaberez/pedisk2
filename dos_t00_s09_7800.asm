@@ -639,10 +639,8 @@ L7AE0:
     bpl L7AE0
 L7AE8:
     lda #$00
-L7AEA:
     sta fi_pos
     sta fi_pos+1
-L7AF0:
     sta fc_error
     lda dir_entry+$0c   ;File track number
     sta $7FBA
@@ -781,7 +779,6 @@ _dos_close:
     bne close_disk_err  ;Branch if a disk error occurred
 L7B91:
     lda #$FF
-L7B93:
     sta dir_entry
     sta fc_error
     lda #$00
