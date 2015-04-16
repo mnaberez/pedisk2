@@ -126,7 +126,7 @@ L7857:
     lda #$00
     sta dir_entry+$0b   ;TODO ??
     jsr L78A2
-    bne save_done
+    bne save_done       ;Branch if an error occurred
     lda fc_error
     beq L786A
 
@@ -583,8 +583,8 @@ open_new:
 open_create:
     ;Create a new file on disk
     jsr L78A2
-    bne L7B2C
-    beq L7AE8
+    bne open_create_err ;Branch if an error occurred
+    beq open_done       ;Branch always
 
 open_handle_len:
     jsr ptrget          ;Find variable
@@ -637,7 +637,8 @@ L7AE0:
     sta dir_entry,y
     dey
     bpl L7AE0
-L7AE8:
+
+open_done:
     lda #$00
     sta fi_pos
     sta fi_pos+1
@@ -676,7 +677,8 @@ L7B22:
     dex
     dey
     bpl L7B22
-L7B2C:
+
+open_create_err:
     jmp restore         ;Restore top 32 bytes of the stack page and return
 
 file_num_to_xy:
