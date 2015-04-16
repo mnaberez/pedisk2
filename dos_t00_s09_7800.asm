@@ -766,7 +766,7 @@ _dos_close:
 ;
 ;Filename may be specified as a variable (F$) or immediate ("NAME:0").
 ;
-    jsr L7BA6           ;TODO this must handle the filename
+    jsr handle_filename ;TODO this must handle the filename
 
     ldy #$00
     lda (txtptr),y      ;Peek at next byte of BASIC text
@@ -791,7 +791,7 @@ L7B93:
 close_disk_err:
     jmp restore         ;Restore top 32 bytes of the stack page and return
 
-L7BA6:
+handle_filename:
 ;TODO called from _dos_print, _dos_open, _dos_close
     jsr get_file_num    ;X=file number from filename or $FF if not open
     inx                 ;Increment X to test for $FF
@@ -912,7 +912,7 @@ _dos_input:
 ;Optional POS keyword sets position to value in FI% (starts at 1, not 0)
 ;Last argument is a variable that will receive the record data.
 ;
-    jsr L7BA6           ;TODO this must handle the filename
+    jsr handle_filename ;TODO this must handle the filename
     jsr handle_pos      ;TODO handle possible POS keyword
 
     ;Read the sector from disk
@@ -974,7 +974,7 @@ _dos_print:
 ;Last argument is variable to read record data from (TODO can this be immediate?)
 ;and must be 127 bytes or less.
 ;
-    jsr L7BA6           ;TODO this must handle the filename
+    jsr handle_filename ;TODO this must handle the filename
     jsr handle_pos      ;TODO handle possible POS keyword
 
     ;Get the variable that will provide the record data
