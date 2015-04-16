@@ -809,7 +809,6 @@ L7BB4:
     dey
     bpl L7BB4
     lda #$00
-L7BC0:
     sta fc_error
     rts
 
