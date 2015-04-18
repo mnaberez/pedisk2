@@ -45,8 +45,6 @@ fc_error    = dos+$07b5 ;Error code that will be set in FC% variable
 linget      = $b8f6     ;BASIC Fetch integer (usually a line number)
 ptrget      = $c12b     ;BASIC Find a variable
 
-L3400 = $3400
-
 check_colon    = $EA44
 deselect_drive = $EB0B
 restore        = $EB5E
@@ -390,14 +388,8 @@ _dos_sys:
 sys_disk_err:
     jmp restore         ;Restore top 32 bytes of the stack page and return
 
-    !byte $B3
-    !byte $FA
-    rti
-    brk
-    brk
-    rti
-    jsr L3400
-    !byte $01
+l_79f6: ;dos+$01f6
+    !byte $b3,$fa,$40,$00,$00,$40,$20,$00,$34,$01
 
 dos_stop:
 fi_or_fc:
