@@ -123,10 +123,11 @@ L7857:
 ;
     lda #$00
     sta dir_entry+$0b   ;TODO ??
+
     jsr L78A2
     bne save_done       ;Branch if an error occurred
     lda fc_error
-    beq L786A
+    beq L786A           ;Branch if no error
 
     lda #$06            ;A = 6, TODO error number for ??
     bne save_error      ;Branch always
@@ -170,6 +171,8 @@ L789A:
     rts
 
 L78A2:
+;TODO called from L7857 (monitor save command) and open_create
+;is this create a file?
     lda #$00            ;FC% error code for OK
     sta fc_error
 
