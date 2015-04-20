@@ -810,8 +810,8 @@ handle_pos:
 ;TODO called from _dos_print and _dos_input
     ldy #$00
     lda (txtptr),y      ;Peek at next byte of BASIC text
-    cmp #$B9            ;TODO CBM BASIC token for POS?
-    bne no_pos_keyword
+    cmp #$B9            ;CBM BASIC token for POS
+    bne no_pos_keyword  ;Branch if POS was not specified
 
     jsr chrget          ;Consume the POS token
     jsr ptrget_fi       ;Find variable FI%
