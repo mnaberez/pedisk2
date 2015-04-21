@@ -63,7 +63,6 @@ input_hex_word = $EF08
 get_char_w_stop= $EF59
 edit_memory    = $EF83
 puts           = $EFE7
-chrin          = $FFCF
 chrout         = $FFD2
 
 e_exists = $05 ;File Exists
