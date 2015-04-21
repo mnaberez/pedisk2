@@ -127,7 +127,7 @@ reenter_basic:
 external_cmd:
 ;Load an external command.  External commands are files on the disk
 ;that are named like "*****X", where the last character is the
-;command.  All commands load into $7C00.
+;command.  All commands load into dos+$0400.
 ;
     pha
 
