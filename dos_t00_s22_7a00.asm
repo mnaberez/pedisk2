@@ -122,7 +122,7 @@ reenter_basic:
     pha
     lda #<(restore-1)
     pha
-    jmp restart_dos     ;Clear buf_1 - buf_4 and load DOS again
+    jmp restart_dos     ;Clear open file buffers and load DOS again
 
 external_cmd:
 ;Load an external command.  External commands are files on the disk
