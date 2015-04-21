@@ -58,10 +58,7 @@ write_a_sector = $ED3A
 write_sectors  = $ED3F
 find_file      = $EE33
 load_file      = $EE9E
-not_found      = $EEE6
-input_hex_word = $EF08
 get_char_w_stop= $EF59
-edit_memory    = $EF83
 puts           = $EFE7
 chrout         = $FFD2
 
