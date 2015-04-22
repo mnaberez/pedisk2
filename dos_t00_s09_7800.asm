@@ -252,6 +252,9 @@ L790D:
     rts
 
 L7931:
+;TODO unknown function
+;     called from dos_t01_s01_7c00_p.asm (print directory)
+;     also from dos_t01_s15_7c00_2.asm (copy utility)
     jsr L7948
     ldx #$10
 L7936:
