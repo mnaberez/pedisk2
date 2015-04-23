@@ -153,9 +153,14 @@ ext1:
     rts
 
 input_filename:
+;Prompt the user for a filename like "NAME:0".  Stores the filename
+;in dir_entry and the drive select pattern in drive_sel_f.
+;
+    ;Print "FILE? "
     lda #<enter_file
     ldy #>enter_file
     jsr puts
+
     ldy #$00
 L7AAC:
     jsr chrin
@@ -194,6 +199,10 @@ input_device:
 parse_drive:
 ;Parse an ASCII drive number ("0"-"2") in A and return the
 ;correspoding drive select pattern in A.
+;
+;If the ASCII char in A is out of range, the user will be
+;prompted to enter a new drive number until a number in
+;range is entered.
 ;
     cmp #'0'
     bmi input_device    ;Branch to ask for a new number if < '0'
