@@ -319,7 +319,7 @@ dispatch_token:
 ;
                         ;Dispatch !LIST:
     cpx #$08            ;  Is it the token index for !LIST?
-    beq l_ea84          ;    Yes: dispatch it
+    beq jmp_dos_list    ;    Yes: dispatch it
 
                         ;Dispatch !SAVE:
     cpx #$02            ;  Is it the token index for !SAVE?
@@ -342,7 +342,7 @@ dispatch_token:
     jmp dos_sys         ;else go do !SYS
 
 
-l_ea84:
+jmp_dos_list:
 ;go do !LIST
     jmp dos_list        ;do !LIST
 
