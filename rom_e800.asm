@@ -948,11 +948,11 @@ read_sectors:
 ;  A=$FF means an error occurred and was printed by disk_error.
 ;
     jsr select_drive
-    bne l_ed38          ;Branch if a disk error occurred
+    bne cli_rts         ;Branch if a disk error occurred
 
 l_ece9:
     jsr seek_track
-    bne l_ed38          ;Branch if a disk error occurred
+    bne cli_rts         ;Branch if a disk error occurred
 
 l_ecee:
     lda #$0a
@@ -992,10 +992,10 @@ l_ed05:
     bne l_ed2e          ;Branch to retry if an error occurred
 
     dec num_sectors     ;decrement the requested sector count
-    beq l_ed38          ;if all done just exit
+    beq cli_rts         ;if all done just exit
 
     jsr next_sector_ptr ;increment to next sector and advance target_ptr
-    bcs l_ed38          ;if error just exit
+    bcs cli_rts         ;if error just exit
 
     lda track           ;get the requested track number
     cmp fdc_track       ;requested track register
@@ -1013,7 +1013,7 @@ read_error:
     lda #e_read_err
     jmp disk_error      ;Print "DISK ERROR" with info, deselect drive
 
-l_ed38:
+cli_rts:
     cli                 ;enable interrupts
     rts
 
@@ -1046,11 +1046,11 @@ write_sectors:
 ;  A=$FF means an error occurred and was printed by disk_error.
 ;
     jsr select_drive
-    bne l_ed38
+    bne cli_rts
 
 l_ed44:
     jsr seek_track      ;seek to track with retries
-    bne l_ed38          ;if there was any error just enable interrupts and exit
+    bne cli_rts         ;if there was any error just enable interrupts and exit
 
     lda fdc_cmdst       ;Read the WD1793 status register
     and #%01000000      ;mask 0x00 0000, write protected
@@ -1112,10 +1112,10 @@ l_ed84:
     bne l_ed9d          ;Branch to retry if an error occurred
 
     dec num_sectors     ;decrement the requested sector count
-    beq l_ed38          ;if all done just exit
+    beq cli_rts         ;if all done just exit
 
     jsr next_sector_ptr ;increment to next sector and advance target_ptr
-    bcs l_ed38          ;if error just exit
+    bcs cli_rts         ;if error just exit
 
     lda track           ;get the requested track number
     cmp fdc_track       ;requested track register
