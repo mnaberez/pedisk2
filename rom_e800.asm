@@ -1013,8 +1013,6 @@ read_error:
     lda #e_read_err
     jmp disk_error      ;Print "DISK ERROR" with info, deselect drive
 
-    ;no error exit
-
 l_ed38:
     cli                 ;enable interrupts
     rts
