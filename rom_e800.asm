@@ -567,8 +567,9 @@ select_drive:
 ;  drive_sel: Drive select pattern of drive to select
 ;
 ;Returns:
-;  On success, A=0 and Z flag set.
-;  On failure, A=$FF and Z flag clear (from disk_error).
+;  On success, A=0 and Z flag set (all sectors written)
+;  On error, A=$FF and Z flag clear.  An error message will
+;            be printed by disk_error before returning.
 ;
     lda #0              ;clear A
     sta status          ;clear the WD1793 status register copy
@@ -610,8 +611,9 @@ seek_track:
 ;  track: Requested track number
 ;
 ;Returns:
-;  On success, A=0 and Z flag set
-;  On failure, A=$FF and Z flag clear (from disk_error)
+;  On success, A=0 and Z flag set (seek completed)
+;  On error, A=$FF and Z flag clear.  An error message will
+;            be printed by disk_error before returning.
 ;
     lda #$03            ;set the retry count
     sta retries         ;save the retry count
@@ -944,8 +946,9 @@ read_sectors:
 ;  target_ptr: Pointer to where to write the data in memory
 ;
 ;Returns:
-;  A=0 means success (all sectors read).
-;  A=$FF means an error occurred and was printed by disk_error.
+;  On success, A=0 and Z flag set (all sectors read)
+;  On error, A=$FF and Z flag clear.  An error message will
+;            be printed by disk_error before returning.
 ;
     jsr select_drive
     bne cli_rts         ;Branch if a disk error occurred
@@ -1042,8 +1045,9 @@ write_sectors:
 ;  target_ptr: Pointer to where to write the data in memory
 ;
 ;Returns:
-;  A=0 means success (all sectors written).
-;  A=$FF means an error occurred and was printed by disk_error.
+;  On success, A=0 and Z flag set (all sectors written)
+;  On error, A=$FF and Z flag clear.  An error message will
+;            be printed by disk_error before returning.
 ;
     jsr select_drive
     bne cli_rts
