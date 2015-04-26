@@ -243,7 +243,7 @@ not_stop:
 
 skip_pause:
     dec dir_ptr
-    beq L7D7D
+    beq done
 
     ;Print four spaces
     lda #' '
@@ -253,7 +253,8 @@ skip_pause:
     jsr chrout
 
     jmp loop
-L7D7D:
+
+done:
     rts                 ;Return to PDOS prompt
 
 filler:
