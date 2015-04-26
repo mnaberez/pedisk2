@@ -108,31 +108,7 @@ filler:
 ;above.  They are likely part of another $7C00 overlay that happened
 ;to be in memory when this overlay was saved to disk.
 ;
-    !byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-    stx $3F92
-    inx
-    stx $3F93
-    stx $E982
-fill_1:
-    jsr $3D7D
-    lda #$6C
-    ldy #$3C
-    jsr $EFED
-    lda #$00
-    ldx $3F92
-    jsr $CF83
-    inc $3F92
-    lda #$50
-    cmp $3F92
-    bpl fill_1
-    lda #$00
-    sta $B7
-    lda #$3F
-    sta $B8
-    ldy #$7F
-    lda #$FF
-fill_2:
-    sta ($B7),y
-    dey
-    bpl fill_2
-    !byte $A2
+    !byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$8E,$92,$3F,$E8,$8E,$93,$3F,$8E
+    !byte $82,$E9,$20,$7D,$3D,$A9,$6C,$A0,$3C,$20,$ED,$EF,$A9,$00,$AE,$92
+    !byte $3F,$20,$83,$CF,$EE,$92,$3F,$A9,$50,$CD,$92,$3F,$10,$E4,$A9,$00
+    !byte $85,$B7,$A9,$3F,$85,$B8,$A0,$7F,$A9,$FF,$91,$B7,$88,$10,$FB,$A2
