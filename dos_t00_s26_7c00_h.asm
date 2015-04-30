@@ -138,16 +138,7 @@ finish_menu:
     jmp pdos_prompt     ;Jump out to the PDOS prompt
 
 filler:
-;The bytes from here to the end of the file are not used by the code
-;above.  They are likely part of another $7C00 overlay that happened
-;to be in memory when this overlay was saved to disk.
-;
-    !text $45,"  TYPE TRK SCTR #SCTRS",0
-    !text "SEQ",0
-    !text "IND",0
-    !text "ISM",0
-    !text "BAS",0
-    !text "ASM",0
-    !text "LD ",0
-    !text "TXT",0
-    !byte $4f
+    !byte $45,$20,$20,$54,$59,$50,$45,$20,$54,$52,$4B,$20,$53,$43,$54,$52
+    !byte $20,$23,$53,$43,$54,$52,$53,$00,$53,$45,$51,$00,$49,$4E,$44,$00
+    !byte $49,$53,$4D,$00,$42,$41,$53,$00,$41,$53,$4D,$00,$4C,$44,$20,$00
+    !byte $54,$58,$54,$00,$4F

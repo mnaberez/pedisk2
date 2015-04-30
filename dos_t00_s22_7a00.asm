@@ -415,17 +415,5 @@ file_exists:
     jmp pdos_prompt
 
 filler:
-;The bytes from here to the end of the file are not used by the code
-;above.  They are likely part of another program that happened to be
-;in memory when this overlay was saved to disk.
-;
-    cmp $E981
-    bne fill1
-    rts
-fill1:
-    lda #$03
-    jsr $EC0D
-    dec $7F8C
-    bne $7BD3
-    lda #$10
-    !byte $2C, $A9
+    !byte $CD,$81,$E9,$D0,$01,$60,$A9,$03,$20,$0D,$EC,$CE,$8C,$7F,$D0
+    !byte $D7,$A9,$10,$2C,$A9

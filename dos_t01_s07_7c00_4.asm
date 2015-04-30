@@ -104,10 +104,6 @@ do_read:
     jmp pdos_prompt
 
 filler:
-;The bytes from here to the end of the file are not used by the code
-;above.  They are likely part of another $7C00 overlay that happened
-;to be in memory when this overlay was saved to disk.
-;
     !byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$8E,$92,$3F,$E8,$8E,$93,$3F,$8E
     !byte $82,$E9,$20,$7D,$3D,$A9,$6C,$A0,$3C,$20,$ED,$EF,$A9,$00,$AE,$92
     !byte $3F,$20,$83,$CF,$EE,$92,$3F,$A9,$50,$CD,$92,$3F,$10,$E4,$A9,$00
