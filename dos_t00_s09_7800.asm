@@ -1282,20 +1282,6 @@ L7E56:
     jsr chrget
     jmp restore         ;Restore top 32 bytes of the stack page and return
 
-    !byte $8F
-    sbc $FFF4,x
-    cpy $8C
-    !byte $04
-    sty $1804
-L7E6E:
-    txa
-    bcc L7E6E
-    sbc $FFFF,x
-    sbc $FFFF
-    !byte $FF
-    php
-    dex
-    !byte $1C
-    !byte $12
-    !byte $B2
-    and $B506,y
+filler:
+    !byte $8F,$FD,$F4,$FF,$C4,$8C,$04,$8C,$04,$18,$8A,$90,$FD,$FD,$FF,$FF
+    !byte $ED,$FF,$FF,$FF,$08,$CA,$1C,$12,$B2,$39,$06,$B5
