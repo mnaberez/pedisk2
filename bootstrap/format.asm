@@ -106,7 +106,7 @@ not_other_err:
     jsr puts
 
     ;Fill all 128 bytes of the sector buffer with $FF.
-    ldx #$7F
+    ldx #sector_size-1
     lda #$FF
 fill_ff:
     sta dir_sector,x
