@@ -226,7 +226,7 @@ format_track:
     ;Seek to track (no verify)
     lda track
     sta fdc_data
-    lda #%00010011      ;seek?
+    lda #%00010011
     jsr send_fdc_cmd
 
     lda #$00
