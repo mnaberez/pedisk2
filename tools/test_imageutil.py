@@ -425,10 +425,10 @@ class FilesystemTests(unittest.TestCase):
         img = imageutil.EightInchDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
-        fs.write_ld_file(b'aaaa', 0xaaaa, b'aaaa')
-        fs.write_ld_file(b'bbbb', 0xbbbb, b'bbbb')
-        fs.write_ld_file(b'cccc', 0xcccc, b'cccc')
-        fs.write_ld_file(b'dddd', 0xdddd, b'dddd')
+        fs.write_ld_file(b'aaaa', 0xaaaa, 0xaaab, b'aaaa')
+        fs.write_ld_file(b'bbbb', 0xbbbb, 0xbbbc, b'bbbb')
+        fs.write_ld_file(b'cccc', 0xcccc, 0xcccd, b'cccc')
+        fs.write_ld_file(b'dddd', 0xdddd, 0xddde, b'dddd')
 
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])

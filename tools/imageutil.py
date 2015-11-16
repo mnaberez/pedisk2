@@ -202,7 +202,7 @@ class Filesystem(object):
         available for new files'''
         return self.num_free_sectors * self.image.SECTOR_SIZE
 
-    def write_ld_file(self, filename, load_address, data):
+    def write_ld_file(self, filename, load_address, entry_address, data):
         '''Write a new LD file to the disk'''
         if len(filename) < 1 or len(filename) > 6:
             msg = ('Invalid file: filename %r, must be between '
@@ -244,6 +244,11 @@ class Filesystem(object):
         # write directory entry:
         # filename
         self.image.write(filename)
+        # entry address
+        entry_lo = entry_address & 0xFF
+        self.image.write(bytearray([entry_lo]))
+        entry_hi = entry_address >> 8
+        self.image.write(bytearray([entry_hi]))
         # load address
         load_lo = load_address & 0xFF
         self.image.write(bytearray([load_lo]))
