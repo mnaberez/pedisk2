@@ -115,7 +115,7 @@ class Filesystem(object):
         # write directory header (16 bytes)
         self.image.home()
         self.image.write(diskname) # 8 bytes
-        self.image.write(b'\x00') # number of files
+        self.image.write(b'\x00') # number of used files (includes deleted)
         self.image.write(b'\x00') # next open track (track 0)
         self.image.write(b'\x09') # next open sector (sector 9)
         self.image.write(b'\x20' * 5) # 5 unused bytes, always 0x20
@@ -123,3 +123,34 @@ class Filesystem(object):
         # write 63 directory entries (16 bytes each)
         for i in range(63):
             self.image.write(b'\xff' * 16)
+
+    @property
+    def next_open_ts(self):
+        '''Read the directory header and return the next available track
+        and sector where a new file can be stored.  Raises if the directory
+        header is invalid.  Returns (track, sector).'''
+        self.image.seek(track=0, sector=1)
+        self.image.read(8) # skip diskname
+        self.image.read(1) # skip number of files
+
+        # check track in range of image
+        track = ord(self.image.read(1))
+        if track > (self.image.TRACKS - 1):
+            msg = ('Directory invalid: next available track %d '
+                   'not in range 0-%d' % (track, self.image.TRACKS - 1))
+            raise ValueError(msg)
+
+        # check sector in range of image
+        sector = ord(self.image.read(1))
+        if (sector < 1) or (sector > self.image.SECTORS):
+            msg = ('Directory invalid: next available sector %d '
+                   'not in range 1-%d' % (sector, self.image.SECTORS))
+            raise ValueError(msg)
+
+        # check (track, sector) is not in the directory area
+        if (track == 0) and (sector < 9):
+            msg = ('Directory invalid: next available track %d, sector %d '
+                   'is inside the directory area' % (track, sector))
+            raise ValueError(msg)
+
+        return track, sector

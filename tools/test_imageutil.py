@@ -240,6 +240,107 @@ class FilesystemTests(unittest.TestCase):
         num_files = ord(img.read(1))
         self.assertEqual(num_files, 0)
 
+    # next_open_ts
+
+    def test_next_open_ts_returns_track_0_sector_9_for_fresh_image(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        track, sector = fs.next_open_ts
+        self.assertEqual(track, 0)
+        self.assertEqual(sector, 9)
+
+    def test_next_open_ts_returns_valid_track_and_sector(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        img.seek(track=0, sector=1)
+        img.read(8) # skip diskname
+        img.read(1) # skip number of files
+        img.write(b'\x22') # set next open track
+        img.write(b'\x10') # set next open sector
+        track, sector = fs.next_open_ts
+        self.assertEqual(track, 0x22)
+        self.assertEqual(sector, 0x10)
+
+    def test_next_open_ts_raises_for_track_too_high(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        img.seek(track=0, sector=1)
+        img.read(8) # skip diskname
+        img.read(1) # skip number of files
+        invalid_track = img.TRACKS
+        img.write(bytearray([invalid_track]))
+        try:
+            track, _ = fs.next_open_ts
+            self.fail('nothing raised')
+        except ValueError as exc:
+            self.assertEqual(exc.args[0],
+                'Directory invalid: next available track '
+                '41 not in range 0-40'
+                )
+
+    def test_next_open_ts_raises_for_sector_too_low(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        img.seek(track=0, sector=1)
+        img.read(8) # skip diskname
+        img.read(1) # skip number of files
+        img.read(1) # skip next open track
+        invalid_sector = 0
+        img.write(bytearray([invalid_sector]))
+        try:
+            _, sector = fs.next_open_ts
+            self.fail('nothing raised')
+        except ValueError as exc:
+            self.assertEqual(exc.args[0],
+                'Directory invalid: next available sector '
+                '0 not in range 1-28'
+                )
+
+    def test_next_open_ts_raises_for_sector_too_high(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        img.seek(track=0, sector=1)
+        img.read(8) # skip diskname
+        img.read(1) # skip number of files
+        img.read(1) # skip next open track
+        invalid_sector = img.SECTORS + 1
+        img.write(bytearray([invalid_sector]))
+        try:
+            _, sector = fs.next_open_ts
+            self.fail('nothing raised')
+        except ValueError as exc:
+            self.assertEqual(exc.args[0],
+                'Directory invalid: next available sector '
+                '29 not in range 1-28'
+                )
+
+    def test_next_open_ts_raises_if_it_points_inside_the_dir_area(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        img.seek(track=0, sector=1)
+        img.read(8) # skip diskname
+        img.read(1) # skip number of files
+        img.write(b'\x00') # next open track = 0
+        img.write(b'\x08') # next open sector = 8
+
+        img.read(1) # skip next open track
+        invalid_sector = img.SECTORS + 1
+        img.write(bytearray([invalid_sector]))
+        try:
+            _, sector = fs.next_open_ts
+            self.fail('nothing raised')
+        except ValueError as exc:
+            self.assertEqual(exc.args[0],
+                'Directory invalid: next available track 0, sector 8 '
+                'is inside the directory area'
+                )
+
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
 
