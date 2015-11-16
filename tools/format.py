@@ -1,5 +1,7 @@
 import sys
 
+import imageutil
+
 if len(sys.argv) != 3:
     sys.stderr.write("Usage: peformat.py <5|8> <image.img>\n")
     sys.exit(1)
@@ -7,29 +9,29 @@ if len(sys.argv) != 3:
 disktype, imagename = sys.argv[1:]
 
 if disktype == '8': # 8"
-    tracks = 77 # numbered 0-76
-    sectors = 26 # numbered 1-26
-    sector_size = 128 # bytes
+    img = imageutil.EightInchDiskImage()
 elif disktype == '5': # 5.25"
-    tracks = 41 # numbered 0-40
-    sectors = 28 # numbered 1-28
-    sector_size = 128 # bytes
+    img = imageutil.FiveInchDiskImage()
 else:
     sys.stderr.write("Bad disk type: %r" % disktype)
     sys.exit(1)
 
+# ensure image is initialized to E5
+img.home()
+img.write(b'\xe5' * img.TOTAL_SIZE)
+
+# fill all directory entries
+img.home()
+img.write(b'\xff' * img.SECTOR_SIZE * 8)
+
+# write directory header
+img.home()
+img.write(b'12345678')
+img.write(b'\x00') # number of files
+img.write(b'\x00') # next open track (track 0)
+img.write(b'\x09') # next open sector (sector 9)
+img.write(b'\x20' * 5) # unused bytes, always 0x20
+
+# write image file to disk
 with open(imagename, 'wb') as f:
-    # create image
-    f.write(chr(0xE5) * sector_size * tracks * sectors)
-
-    # fill all directory entries
-    f.seek(0)
-    f.write(chr(0xFF) * sector_size * 8)
-
-    # write directory header
-    f.seek(0)
-    f.write("12345678") # disk name
-    f.write(chr(0x00)) # number of files
-    f.write(chr(0x00)) # next open track (track 0)
-    f.write(chr(0x09)) # next open sector (sector 9)
-    f.write(chr(0x20) * 5) # unused bytes, always $20
+    f.write(img.data)
