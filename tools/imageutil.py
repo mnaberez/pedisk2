@@ -125,7 +125,7 @@ class Filesystem(object):
             self.image.write(b'\xff' * 16)
 
     @property
-    def next_open_ts(self):
+    def next_available_ts(self):
         '''Read the directory header and return the next available track
         and sector where a new file can be stored.  Raises if the directory
         header is invalid.  Returns (track, sector).'''
@@ -154,3 +154,24 @@ class Filesystem(object):
             raise ValueError(msg)
 
         return track, sector
+
+    @property
+    def num_entries_used(self):
+        '''Read the directory header and return the number of file entries
+        used (includes deleted).'''
+        self.image.seek(track=0, sector=1)
+        self.image.read(8) # skip diskname
+        entries_used = ord(self.image.read(1))
+
+        if entries_used > 63:
+            msg = ('Directory invalid: directory entry count byte of %d '
+                   'not in range 0-63' % entries_used)
+            raise ValueError(msg)
+
+        return entries_used
+
+    @property
+    def num_entries_available(self):
+        '''Read the directory header and return the number of file entries
+        still available for new files.'''
+        return 63 - self.num_entries_used
