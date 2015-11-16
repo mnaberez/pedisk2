@@ -90,3 +90,28 @@ class EightInchDiskImage(DiskImage):
     '''8" disk'''
     TRACKS = 77 # tracks numbered 0-76
     SECTORS = 26 # sectors per track numbered 1-26
+
+class Filesystem(object):
+    '''High-level manipulation of the filesystem on a PEDISK disk image'''
+
+    def __init__(self, image):
+        '''image is a DiskImage object'''
+        self.image = image
+
+    def format(self, diskname):
+        '''Completely erase the disk image and write an empty directory'''
+        # ensure image is initialized to E5
+        self.image.home()
+        self.image.write(b'\xe5' * self.image.TOTAL_SIZE)
+
+        # fill all directory entries
+        self.image.home()
+        self.image.write(b'\xff' * self.image.SECTOR_SIZE * 8)
+
+        # write directory header
+        self.image.home()
+        self.image.write(diskname)
+        self.image.write(b'\x00') # number of files
+        self.image.write(b'\x00') # next open track (track 0)
+        self.image.write(b'\x09') # next open sector (sector 9)
+        self.image.write(b'\x20' * 5) # unused bytes, always 0x20
