@@ -100,7 +100,15 @@ class Filesystem(object):
 
     def format(self, diskname):
         '''Completely erase the disk image and write an empty directory'''
-        # ensure image is initialized to E5
+        if len(diskname) > 8:
+            msg = 'Disk name %r is too long, limit is 8 bytes' % diskname
+            raise ValueError(msg)
+
+        # pad diskname with spaces if less than 8 bytes
+        while len(diskname) < 8:
+            diskname += b'\x20'
+
+        # initialize the entire image to 0xE5
         self.image.home()
         self.image.write(b'\xe5' * self.image.TOTAL_SIZE)
 

@@ -209,6 +209,37 @@ class FilesystemTests(unittest.TestCase):
         for i in range(63):
             self.assertEqual(img.read(16), b'\xff' * 16)
 
+    def test_format_raises_for_diskname_too_long(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        try:
+            fs.format(diskname='123456789')
+            self.fail('nothing raised')
+        except ValueError as exc:
+            self.assertEqual(exc.args[0],
+                "Disk name '123456789' is too long, limit is 8 bytes")
+
+    def test_format_pads_diskname_with_spaces(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'12345')
+
+        img.home()
+        expected = b'12345\x20\x20\x20'
+        self.assertEqual(img.read(8), expected)
+        num_files = ord(img.read(1))
+        self.assertEqual(num_files, 0)
+
+    def test_format_allows_empty_diskname(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'')
+        img.home()
+        expected = b'\x20' * 8
+        self.assertEqual(img.read(8), expected)
+        num_files = ord(img.read(1))
+        self.assertEqual(num_files, 0)
+
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
 
