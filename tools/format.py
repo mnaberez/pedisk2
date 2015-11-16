@@ -20,7 +20,7 @@ else:
 
 with open(imagename, 'wb') as f:
     # create image
-    f.write(chr(0xE6) * sector_size * tracks * sectors)
+    f.write(chr(0xE5) * sector_size * tracks * sectors)
 
     # fill all directory entries
     f.seek(0)
