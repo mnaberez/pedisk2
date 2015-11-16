@@ -125,7 +125,7 @@ class Filesystem(object):
             self.image.write(b'\xff' * 16)
 
     @property
-    def next_available_ts(self):
+    def next_free_ts(self):
         '''Read the directory header and return the next available track
         and sector where a new file can be stored.  Raises if the directory
         header is invalid.  Returns (track, sector).'''
@@ -156,7 +156,7 @@ class Filesystem(object):
         return track, sector
 
     @property
-    def num_entries_used(self):
+    def num_used_entries(self):
         '''Read the directory header and return the number of file entries
         used (includes deleted).'''
         self.image.seek(track=0, sector=1)
@@ -171,7 +171,32 @@ class Filesystem(object):
         return entries_used
 
     @property
-    def num_entries_available(self):
-        '''Read the directory header and return the number of file entries
-        still available for new files.'''
-        return 63 - self.num_entries_used
+    def num_free_entries(self):
+        '''Read the directory header and return the number of directory
+        entries available for new files.'''
+        return 63 - self.num_used_entries
+
+    @property
+    def num_free_sectors(self):
+        '''Read the directory header and return the number of sectors
+        available for new files'''
+        track, sector = self.next_free_ts
+
+        # start with 1 (this is the sector return by next_free_ts)
+        free_sectors = 1
+
+        # add all the higher sectors on the same track
+        free_sectors += self.image.SECTORS - sector
+
+        # add all the sectors on all the higher tracks
+        num_empty_tracks = self.image.TRACKS - track - 1
+        free_sectors += num_empty_tracks * self.image.SECTORS
+
+        return free_sectors
+
+    @property
+    def num_free_bytes(self):
+        '''Read the directory header and return the number of bytes
+        available for new files'''
+        return self.num_free_sectors * self.image.SECTOR_SIZE
+
