@@ -104,14 +104,14 @@ class Filesystem(object):
         self.image.home()
         self.image.write(b'\xe5' * self.image.TOTAL_SIZE)
 
-        # fill all directory entries
+        # write directory header (16 bytes)
         self.image.home()
-        self.image.write(b'\xff' * self.image.SECTOR_SIZE * 8)
-
-        # write directory header
-        self.image.home()
-        self.image.write(diskname)
+        self.image.write(diskname) # 8 bytes
         self.image.write(b'\x00') # number of files
         self.image.write(b'\x00') # next open track (track 0)
         self.image.write(b'\x09') # next open sector (sector 9)
-        self.image.write(b'\x20' * 5) # unused bytes, always 0x20
+        self.image.write(b'\x20' * 5) # 5 unused bytes, always 0x20
+
+        # write 63 directory entries (16 bytes each)
+        for i in range(63):
+            self.image.write(b'\xff' * 16)
