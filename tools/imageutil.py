@@ -1,3 +1,5 @@
+import math
+
 class DiskImage(object):
     '''Low-level manipulation of PEDISK disk image data.  Seek to track/
     sector positions with boundary checks and read/write raw data in the
@@ -200,3 +202,86 @@ class Filesystem(object):
         available for new files'''
         return self.num_free_sectors * self.image.SECTOR_SIZE
 
+    def write_ld_file(self, filename, load_address, data):
+        '''Write a new LD file to the disk'''
+        if len(filename) < 1 or len(filename) > 6:
+            msg = ('Invalid file: filename %r, must be between '
+                   '1 and 6 bytes' % filename)
+            raise ValueError(msg)
+
+        # pad filename with spaces if less than 6 bytes
+        while len(filename) < 6:
+            filename += b'\x20'
+
+        # check if load address is sane
+        if (load_address < 0) or (load_address > 0xFFFF):
+            raise ValueError("Invalid load address")
+
+        # check if file will fit on disk
+        if len(data) > self.num_free_bytes:
+            msg = ('Disk full: data is %d bytes, free space is only '
+                   '%d bytes' % (len(data), self.num_free_bytes))
+            raise ValueError(msg)
+
+        # check if file will fit in directory
+        if self.num_free_entries == 0:
+            raise ValueError('Disk full: no entries left in directory')
+
+        # find location for new file
+        track, sector = self.next_free_ts
+
+        # find number of sectors required for file
+        sector_count = len(data) / float(self.image.SECTOR_SIZE)
+        sector_count = int(math.ceil(sector_count))
+
+        # seek to next available entry in the directory
+        used_entries = self.num_used_entries
+        self.image.home()
+        self.image.read(16) # skip past directory header
+        for i in range(used_entries):
+            self.image.read(16) # skip past used entry
+
+        # write directory entry:
+        # filename
+        self.image.write(filename)
+        # load address
+        load_lo = load_address & 0xFF
+        self.image.write(bytearray([load_lo]))
+        load_hi = load_address >> 8
+        self.image.write(bytearray([load_hi]))
+        # file type (0x05 = LD)
+        self.image.write(b'\x05')
+        # unused byte
+        self.image.write(b'\x20')
+        # track number
+        self.image.write(bytearray([track]))
+        # sector number
+        self.image.write(bytearray([sector]))
+        # sector count
+        count_lo = sector_count & 0xFF
+        self.image.write(bytearray([count_lo]))
+        count_hi = sector_count >> 8
+        self.image.write(bytearray([count_hi]))
+
+        # pad data with 0xE5 so it completely fills the sectors
+        while len(data) < (sector_count * self.image.SECTOR_SIZE):
+            data += b'xe5'
+
+        # write file data
+        self.image.seek(track, sector)
+        self.image.write(data)
+
+        # next free track/sector after the file we just wrote
+        track = self.image.track
+        sector = self.image.sector
+
+        # update used entry count and next free track/sector
+        used_entries += 1
+        self.image.home()
+        self.image.read(8) # skip disk name
+        # used entries
+        self.image.write(bytearray([used_entries]))
+        # next open track
+        self.image.write(bytearray([track]))
+        # next open sector
+        self.image.write(bytearray([sector]))

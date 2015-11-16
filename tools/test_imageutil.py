@@ -366,7 +366,7 @@ class FilesystemTests(unittest.TestCase):
         img.read(8) # skip diskname
         img.write(b'\x40') # number of files used = 64
         try:
-            _ = fs.num_used_entries
+            fs.num_used_entries
             self.fail('nothing raised')
         except ValueError as exc:
             self.assertEqual(exc.args[0],
@@ -418,6 +418,17 @@ class FilesystemTests(unittest.TestCase):
 
         self.assertEqual(fs.num_free_bytes, free_bytes)
 
+    # write_ld_file
+
+    # TODO write tests
+    def test_write_ld_file(self):
+        img = imageutil.EightInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        fs.write_ld_file(b'aaaa', 0xaaaa, b'aaaa')
+        fs.write_ld_file(b'bbbb', 0xbbbb, b'bbbb')
+        fs.write_ld_file(b'cccc', 0xcccc, b'cccc')
+        fs.write_ld_file(b'dddd', 0xdddd, b'dddd')
 
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
