@@ -157,6 +157,58 @@ class DiskImageTests(unittest.TestCase):
         except ValueError as exc:
             self.assertEqual(exc.args[0], "Read past end of disk")
 
+class FilesystemTests(unittest.TestCase):
+
+    # format
+
+    def test_format_fills_entire_disk_with_e5(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        # fill disk with some byte that should be overwritten
+        img.write(b'\xab' * img.TOTAL_SIZE)
+        # seek somewhere to ensure format starts at track 0, sector 1
+        img.seek(track=15, sector=1)
+        fs.format(b'12345678')
+
+        expected = b'\xe5' * img.SECTOR_SIZE
+        # check track 0 after directory area
+        img.seek(track=0, sector=9)
+        for sector in range(9, img.SECTORS+1):
+                data = img.read(img.SECTOR_SIZE)
+                self.assertEqual(data, expected)
+        # check all tracks after track 0
+        img.seek(track=1, sector=1)
+        for track in range(1, img.TRACKS):
+            for sector in range(img.SECTORS):
+                data = img.read(img.SECTOR_SIZE)
+                self.assertEqual(data, expected)
+
+    def test_format_writes_directory(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        # fill track 0 with some byte that will be overwritten
+        img.write(b'\xab' * (img.SECTOR_SIZE * img.SECTORS))
+        # seek somewhere to ensure format starts at track 0, sector 1
+        img.seek(track=15, sector=1)
+        fs.format(b'12345678')
+
+        # directory header
+        img.home()
+        diskname = img.read(8)
+        self.assertEqual(diskname, b'12345678')
+        num_files = ord(img.read(1))
+        self.assertEqual(num_files, 0)
+        next_open_track = ord(img.read(1))
+        self.assertEqual(next_open_track, 0)
+        next_open_sector = ord(img.read(1))
+        self.assertEqual(next_open_sector, 9)
+        unused_area = img.read(5)
+        self.assertEqual(unused_area, b'\x20' * 5)
+
+        # directory entries
+        for i in range(63):
+            self.assertEqual(img.read(16), b'\xff' * 16)
+
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
 
