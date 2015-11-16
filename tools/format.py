@@ -1,9 +1,14 @@
+'''
+Format a PEDISK disk image
+Usage: peformat.py <5|8> <image.img>
+'''
+
 import sys
 
 import imageutil
 
 if len(sys.argv) != 3:
-    sys.stderr.write("Usage: peformat.py <5|8> <image.img>\n")
+    sys.stderr.write(__doc__)
     sys.exit(1)
 
 disktype, imagename = sys.argv[1:]
