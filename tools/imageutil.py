@@ -252,10 +252,8 @@ class Filesystem(object):
         self.image.write(b'\x05')
         # unused byte
         self.image.write(b'\x20')
-        # track number
-        self.image.write(bytearray([track]))
-        # sector number
-        self.image.write(bytearray([sector]))
+        # track and sector number
+        self.image.write(bytearray([track, sector]))
         # sector count
         self.image.write(bytearray(_low_high(sector_count)))
 
@@ -277,10 +275,8 @@ class Filesystem(object):
         self.image.read(8) # skip disk name
         # used entries
         self.image.write(bytearray([used_entries]))
-        # next open track
-        self.image.write(bytearray([track]))
-        # next open sector
-        self.image.write(bytearray([sector]))
+        # next open track and sector
+        self.image.write(bytearray([track, sector]))
 
 def _low_high(num):
     '''Split an unsigned 16-bit number into two 8-bit numbers: (low, high)'''
