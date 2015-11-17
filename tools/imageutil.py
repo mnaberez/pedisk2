@@ -212,7 +212,7 @@ class Filesystem(object):
     def write_ld_file(self, filename, load_address, entry_address, data):
         '''Write a new LD file to the disk'''
         if len(filename) < 1 or len(filename) > 6:
-            msg = ('Invalid file: filename %r, must be between '
+            msg = ('Invalid file: filename %r is not be between '
                    '1 and 6 bytes' % filename)
             raise ValueError(msg)
 

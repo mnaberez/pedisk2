@@ -407,15 +407,19 @@ class FilesystemTests(unittest.TestCase):
 
     # write_ld_file
 
-    # TODO write tests
-    def test_write_ld_file(self):
-        img = imageutil.EightInchDiskImage()
+    def test_write_ld_file_raises_for_filename_bad_length(self):
+        img = imageutil.FiveInchDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
-        fs.write_ld_file(b'aaaa', 0xaaaa, 0xaaab, b'aaaa')
-        fs.write_ld_file(b'bbbb', 0xbbbb, 0xbbbc, b'bbbb')
-        fs.write_ld_file(b'cccc', 0xcccc, 0xcccd, b'cccc')
-        fs.write_ld_file(b'dddd', 0xdddd, 0xddde, b'dddd')
+
+        try:
+            for name in (b'', b'1234567'):
+                fs.write_ld_file(name, 0, 0, b'')
+            self.fail('nothing raised')
+        except ValueError as exc:
+            self.assertEqual(exc.args[0],
+                'Invalid file: filename %r is not be '
+                'between 1 and 6 bytes' % name)
 
 class _low_highTests(unittest.TestCase):
     def test_raises_for_num_out_of_range(self):
