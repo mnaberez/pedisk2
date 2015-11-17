@@ -118,9 +118,8 @@ class Filesystem(object):
         self.image.write(b'\x09') # next open sector (sector 9)
         self.image.write(b'\x20' * 5) # 5 unused bytes, always 0x20
 
-        # write 63 directory entries (16 bytes each)
-        for i in range(63):
-            self.image.write(b'\xff' * 16)
+        # write directory entries (63 entries of 16 bytes each)
+        self.image.write(b'\xff' * 63 * 16)
 
     @property
     def next_free_ts(self):
@@ -205,11 +204,7 @@ class Filesystem(object):
                    '1 and 6 bytes' % filename)
             raise ValueError(msg)
 
-        # check if load address is sane
-        if (load_address < 0) or (load_address > 0xFFFF):
-            raise ValueError("Invalid load address")
-
-        # check if file will fit on disk
+        # check if file will fit in free sectors left on disk
         if len(data) > self.num_free_bytes:
             msg = ('Disk full: data is %d bytes, free space is only '
                    '%d bytes' % (len(data), self.num_free_bytes))
