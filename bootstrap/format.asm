@@ -1,3 +1,6 @@
+;Format an 8" disk in the PEDISK and write a directory to it.
+;No system files are written so the disk will not be bootable.
+
 fdc          = $e980    ;WD1793 Floppy Disk Controller
 fdc_cmdst    = fdc+0    ;  Command/status register
 fdc_track    = fdc+1    ;  Track register
