@@ -41,6 +41,11 @@ bas_eol:
     !byte $00,$00       ;End of BASIC program
 
 init:
+    ;Print 'DISK FORMAT FOR PEDISK 8" (SINGLE DENSITY)'
+    lda #<eight_inch_msg
+    ldy #>eight_inch_msg
+    jsr puts
+
     ;Init track 0, sector 1
     ldx #0
     stx track
@@ -476,6 +481,9 @@ track_done_wait:
     bne track_done_wait
     cli
     rts
+
+eight_inch_msg:
+    !text "DISK FORMAT FOR PEDISK 8",$22," (SINGLE DENSITY)",$0d,0
 
 protected_msg:
     !text "WRITE PROTECT ERROR",$0d,0
