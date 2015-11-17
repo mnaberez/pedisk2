@@ -107,8 +107,7 @@ class Filesystem(object):
             raise ValueError(msg)
 
         # pad diskname with spaces if less than 8 bytes
-        while len(diskname) < 8:
-            diskname += b'\x20'
+        diskname = diskname.ljust(8, b'\x20')
 
         # initialize the entire image to 0xE5
         self.image.home()
@@ -210,8 +209,7 @@ class Filesystem(object):
             raise ValueError(msg)
 
         # pad filename with spaces if less than 6 bytes
-        while len(filename) < 6:
-            filename += b'\x20'
+        filename = filename.ljust(6, b'\x20')
 
         # check if load address is sane
         if (load_address < 0) or (load_address > 0xFFFF):
@@ -258,8 +256,7 @@ class Filesystem(object):
         self.image.write(bytearray(_low_high(sector_count)))
 
         # pad data with 0xE5 so it completely fills the sectors
-        while len(data) < (sector_count * self.image.SECTOR_SIZE):
-            data += b'xe5'
+        data = data.ljust(sector_count * self.image.SECTOR_SIZE, b'\xe5')
 
         # write file data
         self.image.seek(track, sector)
