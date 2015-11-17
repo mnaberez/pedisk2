@@ -28,7 +28,7 @@ else:
 
 # format the image
 fs = imageutil.Filesystem(img)
-fs.format(diskname=b'boot')
+fs.format(diskname=b'BOOTDISK')
 
 # write the special boot file into the image
 data = bytearray()
