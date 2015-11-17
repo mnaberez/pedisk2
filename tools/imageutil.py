@@ -239,40 +239,29 @@ class Filesystem(object):
         for i in range(used_entries):
             self.image.read(16) # skip past used entry
 
-        # write directory entry:
-        # filename
+        # write directory entry
         self.image.write(filename)
-        # entry address
         self.image.write(bytearray(_low_high(entry_address)))
-        # load address
         self.image.write(bytearray(_low_high(load_address)))
-        # file type (0x05 = LD)
-        self.image.write(b'\x05')
-        # unused byte
-        self.image.write(b'\x20')
-        # track and sector number
+        self.image.write(b'\x05') # file type 0x05 = LD
+        self.image.write(b'\x20') # unused byte, always 0x20
         self.image.write(bytearray([track, sector]))
-        # sector count
         self.image.write(bytearray(_low_high(sector_count)))
 
-        # pad data with 0xE5 so it completely fills the sectors
+        # write file padded with 0xE5 so it completely fills the sectors
         data = data.ljust(sector_count * self.image.SECTOR_SIZE, b'\xe5')
-
-        # write file data
         self.image.seek(track, sector)
         self.image.write(data)
 
         # next free track/sector after the file we just wrote
         track = self.image.track
         sector = self.image.sector
-
-        # update used entry count and next free track/sector
         used_entries += 1
+
+        # update directory header
         self.image.home()
         self.image.read(8) # skip disk name
-        # used entries
         self.image.write(bytearray([used_entries]))
-        # next open track and sector
         self.image.write(bytearray([track, sector]))
 
 def _low_high(num):
