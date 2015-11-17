@@ -245,15 +245,9 @@ class Filesystem(object):
         # filename
         self.image.write(filename)
         # entry address
-        entry_lo = entry_address & 0xFF
-        self.image.write(bytearray([entry_lo]))
-        entry_hi = entry_address >> 8
-        self.image.write(bytearray([entry_hi]))
+        self.image.write(bytearray(_low_high(entry_address)))
         # load address
-        load_lo = load_address & 0xFF
-        self.image.write(bytearray([load_lo]))
-        load_hi = load_address >> 8
-        self.image.write(bytearray([load_hi]))
+        self.image.write(bytearray(_low_high(load_address)))
         # file type (0x05 = LD)
         self.image.write(b'\x05')
         # unused byte
@@ -263,10 +257,7 @@ class Filesystem(object):
         # sector number
         self.image.write(bytearray([sector]))
         # sector count
-        count_lo = sector_count & 0xFF
-        self.image.write(bytearray([count_lo]))
-        count_hi = sector_count >> 8
-        self.image.write(bytearray([count_hi]))
+        self.image.write(bytearray(_low_high(sector_count)))
 
         # pad data with 0xE5 so it completely fills the sectors
         while len(data) < (sector_count * self.image.SECTOR_SIZE):
@@ -290,3 +281,11 @@ class Filesystem(object):
         self.image.write(bytearray([track]))
         # next open sector
         self.image.write(bytearray([sector]))
+
+def _low_high(num):
+    '''Split an unsigned 16-bit number into two 8-bit numbers: (low, high)'''
+    if num < 0 or num > 65535:
+        raise ValueError('Expected 0-65535, got %r' % num)
+    low = num & 0xFF
+    high = num >> 8
+    return low, high

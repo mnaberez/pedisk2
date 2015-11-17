@@ -430,6 +430,22 @@ class FilesystemTests(unittest.TestCase):
         fs.write_ld_file(b'cccc', 0xcccc, 0xcccd, b'cccc')
         fs.write_ld_file(b'dddd', 0xdddd, 0xddde, b'dddd')
 
+class _low_highTests(unittest.TestCase):
+    def test_raises_for_num_out_of_range(self):
+        for num in (-1, 65536):
+            try:
+                imageutil._low_high(num)
+                self.fail('nothing raised')
+            except ValueError as exc:
+                self.assertEqual(exc.args[0],
+                    'Expected 0-65535, got %r' % num)
+
+    def test_splits_16bit_into_two_8bit(self):
+        num = 0xABCD
+        lo, hi = imageutil._low_high(num)
+        self.assertEqual(lo, 0xCD)
+        self.assertEqual(hi, 0xAB)
+
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
 
