@@ -130,15 +130,16 @@ class Filesystem(object):
         self.image.read(8) # skip diskname
         self.image.read(1) # skip number of files
 
-        # check track in range of image
         track = ord(self.image.read(1))
+        sector = ord(self.image.read(1))
+
+        # check track in range of image
         if track > (self.image.TRACKS - 1):
             msg = ('Directory invalid: next available track %d '
                    'not in range 0-%d' % (track, self.image.TRACKS - 1))
             raise ValueError(msg)
 
         # check sector in range of image
-        sector = ord(self.image.read(1))
         if (sector < 1) or (sector > self.image.SECTORS):
             msg = ('Directory invalid: next available sector %d '
                    'not in range 1-%d' % (sector, self.image.SECTORS))
