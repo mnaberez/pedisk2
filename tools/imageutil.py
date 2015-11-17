@@ -209,6 +209,18 @@ class Filesystem(object):
         available for new files'''
         return self.num_free_sectors * self.image.SECTOR_SIZE
 
+    def list_dir(self):
+        '''Read the directory and return a list of active filenames'''
+        self.image.home()
+        self.image.read(16) # skip past directory header
+        filenames = []
+        for i in range(63):
+            entry = self.image.read(16)
+            filename = entry[0:6]
+            if filename[0] != 0xFF: # 0xFF means deleted
+                filenames.append(filename)
+        return filenames
+
     def write_ld_file(self, filename, load_address, entry_address, data):
         '''Write a new LD file to the disk'''
         if len(filename) < 1 or len(filename) > 6:

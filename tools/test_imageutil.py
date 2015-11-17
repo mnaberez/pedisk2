@@ -421,6 +421,28 @@ class FilesystemTests(unittest.TestCase):
                 'Invalid file: filename %r is not be '
                 'between 1 and 6 bytes' % name)
 
+    # TODO finish tests for write_ld_file
+
+    # list_dir
+
+    def test_list_dir_returns_empty_for_fresh_disk(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        self.assertEqual(fs.list_dir(), [])
+
+    def test_list_dir_returns_only_active_filenames(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        img.home()
+        img.read(16) # skip directory header
+        img.write(b'a-file'.ljust(16, b'\x00'))    # "a-file"
+        img.write(b'\xff-file'.ljust(16, b'\x00')) # deleted
+        img.write(b'c-file'.ljust(16, b'\x00'))    # "c-file"
+        self.assertEqual(fs.list_dir(),
+            [bytearray(b'a-file'), bytearray(b'c-file')])
+
 class _low_highTests(unittest.TestCase):
     def test_raises_for_num_out_of_range(self):
         for num in (-1, 65536):
