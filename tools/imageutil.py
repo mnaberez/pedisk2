@@ -106,16 +106,13 @@ class Filesystem(object):
             msg = 'Disk name %r is too long, limit is 8 bytes' % diskname
             raise ValueError(msg)
 
-        # pad diskname with spaces if less than 8 bytes
-        diskname = diskname.ljust(8, b'\x20')
-
         # initialize the entire image to 0xE5
         self.image.home()
         self.image.write(b'\xe5' * self.image.TOTAL_SIZE)
 
         # write directory header (16 bytes)
         self.image.home()
-        self.image.write(diskname) # 8 bytes
+        self.image.write(diskname.ljust(8, b'\x20')) # 8 bytes
         self.image.write(b'\x00') # number of used files (includes deleted)
         self.image.write(b'\x00') # next open track (track 0)
         self.image.write(b'\x09') # next open sector (sector 9)
@@ -208,9 +205,6 @@ class Filesystem(object):
                    '1 and 6 bytes' % filename)
             raise ValueError(msg)
 
-        # pad filename with spaces if less than 6 bytes
-        filename = filename.ljust(6, b'\x20')
-
         # check if load address is sane
         if (load_address < 0) or (load_address > 0xFFFF):
             raise ValueError("Invalid load address")
@@ -240,7 +234,7 @@ class Filesystem(object):
             self.image.read(16) # skip past used entry
 
         # write directory entry
-        self.image.write(filename)
+        self.image.write(filename.ljust(6, b'\x20'))
         self.image.write(bytearray(_low_high(entry_address)))
         self.image.write(bytearray(_low_high(load_address)))
         self.image.write(b'\x05') # file type 0x05 = LD
