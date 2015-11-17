@@ -41,14 +41,16 @@ bas_eol:
     !byte $00,$00       ;End of BASIC program
 
 init:
-    ;Init track and sector
+    ;Init track 0, sector 1
     ldx #0
     stx track
+    stx fdc_track
     inx
     stx sector
     stx fdc_sector
 
     ;Select drive 0
+    ldx #0
     lda drive_selects,x ;Get pattern to select drive 0
     sta drive_sel
     jsr select_drive    ;Select drive using pattern in drive_sel
