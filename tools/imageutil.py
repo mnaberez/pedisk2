@@ -167,6 +167,17 @@ class Filesystem(object):
 
         return entries_used
 
+    def seek_to_free_entry(self):
+        '''Seek to the next free directory entry.  Raises an
+        error if no more entries are available.'''
+        if self.num_free_entries == 0:
+            raise ValueError('Disk full: no entries left in directory')
+
+        self.image.home()
+        self.image.read(16) # skip past directory header
+        for i in range(63):
+            self.image.read(16) # skip past used entry
+
     @property
     def num_free_entries(self):
         '''Read the directory header and return the number of directory
@@ -210,10 +221,6 @@ class Filesystem(object):
                    '%d bytes' % (len(data), self.num_free_bytes))
             raise ValueError(msg)
 
-        # check if file will fit in directory
-        if self.num_free_entries == 0:
-            raise ValueError('Disk full: no entries left in directory')
-
         # find location for new file
         track, sector = self.next_free_ts
 
@@ -221,14 +228,11 @@ class Filesystem(object):
         sector_count = len(data) / float(self.image.SECTOR_SIZE)
         sector_count = int(math.ceil(sector_count))
 
-        # seek to next available entry in the directory
+        # remember number of used entries before this new file
         used_entries = self.num_used_entries
-        self.image.home()
-        self.image.read(16) # skip past directory header
-        for i in range(used_entries):
-            self.image.read(16) # skip past used entry
 
         # write directory entry
+        self.seek_to_free_entry()
         self.image.write(filename.ljust(6, b'\x20'))
         self.image.write(bytearray(_low_high(entry_address)))
         self.image.write(bytearray(_low_high(load_address)))
