@@ -78,15 +78,22 @@ not_protected:
                         ;     ---- -x-- track 0
                         ;     ---- ---x busy
     cmp #%00000100      ;Compare with only track 0 flag set
-    beq not_other_err   ;Branch if at track 0 and no error
+    beq start_format    ;Branch if at track 0 and no error
 
-    ;Print "OTHER ERROR" and exit
+    ;Print "OTHER ERROR: ##" and exit
+    pha
     lda #<other_err_msg
     ldy #>other_err_msg
     jsr puts
+    pla
+    tax                 ;Low byte of number to print = A
+    lda #$00            ;High byte of number to print = 0
+    jsr linprt          ;Print 256*A + X in decimal
+    lda #$0d
+    jsr chrout
     jmp deselect_and_exit
 
-not_other_err:
+start_format:
     ;Format all tracks on the disk
     jsr format
 
@@ -472,7 +479,7 @@ protected_msg:
     !text "WRITE PROTECT ERROR",$0d,0
 
 other_err_msg:
-    !text "OTHER ERROR",$0d,0
+    !text "OTHER ERROR: ",0
 
 format_track_msg:
     !text $91,"FORMAT TRACK",0
