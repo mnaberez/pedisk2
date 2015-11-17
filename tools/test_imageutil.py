@@ -34,38 +34,25 @@ class DiskImageTests(unittest.TestCase):
 
     # seek
 
-    def test_seek_raises_for_track_too_low(self):
+    def test_seek_raises_for_track_out_of_range(self):
         img = imageutil.FiveInchDiskImage()
-        try:
-            img.seek(track=-1, sector=1)
-            self.fail('nothing raised')
-        except ValueError as exc:
-            self.assertEqual(exc.args[0], 'Track -1 not in range 0-40')
+        for t in (-1, img.TRACKS):
+            try:
+                img.seek(track=t, sector=1)
+                self.fail('nothing raised')
+            except ValueError as exc:
+                self.assertEqual(exc.args[0],
+                    'Track %d not in range 0-%d' % (t, img.TRACKS-1))
 
-    def test_seek_raises_for_track_too_high(self):
+    def test_seek_raises_for_sector_out_of_range(self):
         img = imageutil.FiveInchDiskImage()
-        try:
-            img.seek(track=41, sector=1)
-            self.fail('nothing raised')
-        except ValueError as exc:
-            self.assertEqual(exc.args[0], 'Track 41 not in range 0-40')
-
-    def test_seek_raises_for_sector_too_low(self):
-        img = imageutil.FiveInchDiskImage()
-        try:
-            img.seek(track=0, sector=0)
-            self.fail('nothing raised')
-        except ValueError as exc:
-            self.assertEqual(exc.args[0], 'Sector 0 not in range 1-28')
-
-    def test_seek_raises_for_sector_too_high(self):
-        img = imageutil.FiveInchDiskImage()
-        try:
-            img.seek(track=0, sector=29)
-            self.fail('nothing raised')
-        except ValueError as exc:
-            self.assertEqual(exc.args[0],
-                'Sector 29 not in range 1-28')
+        for s in (0, img.SECTORS+1):
+            try:
+                img.seek(track=0, sector=s)
+                self.fail('nothing raised')
+            except ValueError as exc:
+                self.assertEqual(exc.args[0],
+                    'Sector %d not in range 1-%d' % (s, img.SECTORS))
 
     # write
 
