@@ -418,7 +418,7 @@ class FilesystemTests(unittest.TestCase):
             self.fail('nothing raised')
         except ValueError as exc:
             self.assertEqual(exc.args[0],
-                'Invalid file: filename %r is not be '
+                'Invalid filename: %r is not '
                 'between 1 and 6 bytes' % name)
 
     # TODO finish tests for write_ld_file

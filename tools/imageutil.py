@@ -248,11 +248,6 @@ class Filesystem(object):
             )
 
     def write_file(self, filename, filetype, size, load_address, data):
-        if len(filename) < 1 or len(filename) > 6:
-            msg = ('Invalid file: filename %r is not be between '
-                   '1 and 6 bytes' % filename)
-            raise ValueError(msg)
-
         # check if file will fit in free sectors left on disk
         if len(data) > self.num_free_bytes:
             msg = ('Disk full: data is %d bytes, free space is only '
@@ -349,6 +344,7 @@ class DirectoryEntry(object):
             )
 
     def to_bytes(self):
+        self._validate()
         data = bytearray()
         data.extend(self.filename.ljust(6, b'\x20'))
         data.extend(_low_high(self.size))
@@ -362,3 +358,9 @@ class DirectoryEntry(object):
     @property
     def active(self):
         return self.filename[0] != 0xFF
+
+    def _validate(self):
+        if len(self.filename) < 1 or len(self.filename) > 6:
+            msg = ('Invalid filename: %r is not between '
+                   '1 and 6 bytes' % self.filename)
+            raise ValueError(msg)
