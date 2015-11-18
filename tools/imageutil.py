@@ -261,9 +261,6 @@ class Filesystem(object):
         sector_count = len(data) / float(self.image.SECTOR_SIZE)
         sector_count = int(math.ceil(sector_count))
 
-        # remember number of used entries before this new file
-        used_entries = self.num_used_entries
-
         # write directory entry
         self.seek_to_free_entry()
         entry = DirectoryEntry(
@@ -285,9 +282,9 @@ class Filesystem(object):
         # next free track/sector after the file we just wrote
         track = self.image.track
         sector = self.image.sector
-        used_entries += 1
 
         # update directory header
+        used_entries = self.num_used_entries + 1
         self.image.home()
         self.image.read(8) # skip disk name
         self.image.write(bytearray([used_entries]))
