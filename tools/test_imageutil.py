@@ -423,6 +423,21 @@ class FilesystemTests(unittest.TestCase):
 
     # TODO finish tests for write_ld_file
 
+    # read_dir
+
+    def test_read_dir_returns_all_dir_entries(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        img.home()
+        img.read(16) # skip directory header
+        img.write(b'a-file'.ljust(16, b'\x00'))
+        entries = fs.read_dir()
+        self.assertEqual(len(entries), 63)
+        self.assertEqual(entries[0].filename, b'a-file')
+        for i in range(1, 63):
+            self.assertEqual(entries[i].filename, b'\xff' * 6)
+
     # list_dir
 
     def test_list_dir_returns_empty_for_fresh_disk(self):
