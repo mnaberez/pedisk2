@@ -459,6 +459,13 @@ class _low_highTests(unittest.TestCase):
         self.assertEqual(lo, 0xCD)
         self.assertEqual(hi, 0xAB)
 
+class FileTypesTest(unittest.TestCase):
+    def test_returns_number_by_name(self):
+        self.assertEqual(imageutil.FileTypes.LD, 5)
+
+    def test_name_of_returns_name_of_number(self):
+        self.assertEqual(imageutil.FileTypes.name_of(5), "LD")
+
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
 

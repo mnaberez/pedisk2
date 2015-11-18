@@ -210,20 +210,44 @@ class Filesystem(object):
         available for new files'''
         return self.num_free_sectors * self.image.SECTOR_SIZE
 
+    def read_dir(self):
+        self.image.home()
+        self.image.read(16) # skip directory header
+        entries = []
+        for i in range(63):
+            data = self.image.read(16)
+            entry = DirectoryEntry.from_bytes(data)
+            entries.append(entry)
+        return entries
+
     def list_dir(self):
         '''Read the directory and return a list of active filenames'''
-        self.image.home()
-        self.image.read(16) # skip past directory header
-        filenames = []
-        for i in range(63):
-            entry = self.image.read(16)
-            filename = entry[0:6]
-            if filename[0] != 0xFF: # 0xFF means deleted
-                filenames.append(filename)
-        return filenames
+        return [ e.filename for e in self.read_dir() if e.active ]
+
+    def get_entry(self, filename):
+        filename = filename.ljust(6, b'\x20')
+        for entry in self.read_dir():
+            if (entry.filename == filename) and entry.active:
+                return DirectoryEntry.from_bytes(data)
+        raise Exception("File %r not found" % filename)
+
+    def read_file(self, filename):
+        entry = self.get_entry(filename)
+        self.image.seek(track=entry.track, sector=entry.sector)
+        bytesize = entry.sector_count * self.image.SECTOR_SIZE
+        return self.image.read(bytesize)
 
     def write_ld_file(self, filename, load_address, entry_address, data):
         '''Write a new LD file to the disk'''
+        return self.write_file(
+            filename=filename,
+            filetype=FileTypes.LD,
+            size=entry_address, # pedisk abuses size field for LD type only
+            load_address=load_address,
+            data=data
+            )
+
+    def write_file(self, filename, filetype, size, load_address, data):
         if len(filename) < 1 or len(filename) > 6:
             msg = ('Invalid file: filename %r is not be between '
                    '1 and 6 bytes' % filename)
@@ -247,13 +271,16 @@ class Filesystem(object):
 
         # write directory entry
         self.seek_to_free_entry()
-        self.image.write(filename.ljust(6, b'\x20'))
-        self.image.write(bytearray(_low_high(entry_address)))
-        self.image.write(bytearray(_low_high(load_address)))
-        self.image.write(b'\x05') # file type 0x05 = LD
-        self.image.write(b'\x20') # unused byte, always 0x20
-        self.image.write(bytearray([track, sector]))
-        self.image.write(bytearray(_low_high(sector_count)))
+        entry = DirectoryEntry(
+            filename=filename,
+            size=size,
+            load_address=load_address,
+            filetype=filetype,
+            track=track,
+            sector=sector,
+            sector_count=sector_count
+            )
+        self.image.write(entry.to_bytes())
 
         # write file padded with 0xE5 so it completely fills the sectors
         data = data.ljust(sector_count * self.image.SECTOR_SIZE, b'\xe5')
@@ -278,3 +305,60 @@ def _low_high(num):
     low = num & 0xFF
     high = num >> 8
     return low, high
+
+class FileTypes(object):
+    '''File types supported by the PEDISK file system'''
+    SEQ = 0x00
+    IND = 0x01
+    ISM = 0x02
+    BAS = 0x03
+    ASM = 0x04
+    LD  = 0x05
+    TXT = 0x06
+    OBJ = 0x07
+
+    @classmethod
+    def name_of(klass, number):
+        '''Get the string name for a file type (e.g. "BAS" for 3)'''
+        for k, v in klass.__dict__.items():
+            if not k.startswith('_') and v == number:
+                return k
+        raise IndexError('File type number not found: %r' % number)
+
+class DirectoryEntry(object):
+    def __init__(self, filename, filetype, size,
+                 load_address, track, sector, sector_count):
+        self.filename = filename            # 6 bytes
+        self.filetype = filetype            # 1 byte
+        self.size = size                    # 2 bytes
+        self.load_address = load_address    # 2 bytes
+        self.track = track                  # 1 byte
+        self.sector = sector                # 1 byte
+        self.sector_count = sector_count    # 2 bytes
+                                            # +1 unused = 16 bytes
+    @classmethod
+    def from_bytes(klass, data):
+        return klass(
+            filename=data[0:6],
+            size=data[6] + (data[7] << 8),
+            load_address=data[8] + (data[9] << 8),
+            filetype=data[10],
+            track=data[12],
+            sector=data[13],
+            sector_count=data[14] + (data[15] << 8)
+            )
+
+    def to_bytes(self):
+        data = bytearray()
+        data.extend(self.filename.ljust(6, b'\x20'))
+        data.extend(_low_high(self.size))
+        data.extend(_low_high(self.load_address))
+        data.append(self.filetype)
+        data.append(0x20) # unused byte, always 0x20
+        data.extend([self.track, self.sector])
+        data.extend(_low_high(self.sector_count))
+        return data
+
+    @property
+    def active(self):
+        return self.filename[0] != 0xFF

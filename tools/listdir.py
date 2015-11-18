@@ -26,4 +26,4 @@ with open(imagename, 'rb') as f:
 
 fs = imageutil.Filesystem(img)
 for filename in fs.list_dir():
-    print(filename)
+    print(filename.decode('utf-8'))
