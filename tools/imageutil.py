@@ -174,9 +174,10 @@ class Filesystem(object):
         if self.num_free_entries == 0:
             raise ValueError('Disk full: no entries left in directory')
 
+        used_entries = self.num_used_entries
         self.image.home()
         self.image.read(16) # skip past directory header
-        for i in range(63):
+        for i in range(used_entries):
             self.image.read(16) # skip past used entry
 
     @property
