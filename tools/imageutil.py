@@ -73,14 +73,14 @@ class DiskImage(object):
         if self.sector_offset == self.SECTOR_SIZE:
             self.sector_offset = 0
             self.sector += 1
-        if self.sector > self.SECTORS:
-            self.track += 1
-            self.sector = 1
-        if self.track == self.TRACKS:
-            wrapped = True
-            self.data_offset = 0
-            self.track = 0
-            self.sector = 1
+            if self.sector > self.SECTORS:
+                self.sector = 1
+                self.track += 1
+                if self.track == self.TRACKS:
+                    wrapped = True
+                    self.data_offset = 0
+                    self.track = 0
+                    self.sector = 1
         return wrapped
 
 class FiveInchDiskImage(DiskImage):
