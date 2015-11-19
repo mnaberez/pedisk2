@@ -99,6 +99,7 @@ class DiskImageTests(unittest.TestCase):
         data = bytearray(b'\x42' * (img.SECTOR_SIZE + 1))
         try:
             img.write(data)
+            self.fail('nothing raised')
         except ValueError as exc:
             self.assertEqual(exc.args[0], "Wrote past end of disk")
 
@@ -141,6 +142,7 @@ class DiskImageTests(unittest.TestCase):
         img.seek(track=40, sector=28)
         try:
             img.read(img.SECTOR_SIZE + 1)
+            self.fail('nothing raised')
         except ValueError as exc:
             self.assertEqual(exc.args[0], "Read past end of disk")
 
@@ -469,7 +471,7 @@ class FilesystemTests(unittest.TestCase):
             self.fail('nothing raised')
         except ValueError as exc:
             self.assertEqual(exc.args[0],
-                "File b'notfound' not found")
+                "File %r not found" % b'notfound')
 
     def test_read_entry_returns_entry_for_filename(self):
         img = imageutil.FiveInchDiskImage()
@@ -492,6 +494,64 @@ class FilesystemTests(unittest.TestCase):
         img.write(b'a\x20\x20\x20\x20\x20'.ljust(16, b'\x00')) # "a"
         entry = fs.read_entry(b'a')
         self.assertEqual(entry.filename, b'a\x20\x20\x20\x20\x20')
+
+    # read_file
+
+    def test_read_file_raises_for_file_not_found(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        try:
+            fs.read_file(b'notfound')
+            self.fail('nothing raised')
+        except ValueError as exc:
+            self.assertEqual(exc.args[0],
+                "File %r not found" % b'notfound')
+
+    def test_read_file_reads_exact_size_for_not_type_5(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        # write directory entry
+        img.home()
+        img.read(16) # skip directory header
+        entry = (b'hello '    + # filename
+                 b'\x42\x01'  + # file size = 322 bytes
+                 b'\x00\x00'  + # load address
+                 b'\x00'      + # file type = 0 (SEQ)
+                 b'\x00'      + # unused byte
+                 b'\x02\x03'  + # track 2, sector 3
+                 b'\x03\x00')   # 3 sectors on disk
+        img.write(entry)
+        # write contents
+        img.seek(track=2, sector=3)
+        contents = b'Contents of the file'.ljust(322, b'.')
+        img.write(contents)
+        # should read only 322 bytes
+        self.assertEqual(fs.read_file(b'hello'), contents)
+
+    def test_read_file_reads_sector_count_for_type_5_only(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        # write directory entry
+        img.home()
+        img.read(16) # skip directory header
+        entry = (b'strtrk'    + # filename
+                 b'\x42\x01'  + # file size = 322 bytes
+                 b'\x00\x00'  + # load address
+                 b'\x05'      + # file type = 5 (LD)
+                 b'\x00'      + # unused byte
+                 b'\x02\x03'  + # track 2, sector 3
+                 b'\x03\x00')   # 3 sectors on disk
+        img.write(entry)
+        # write contents
+        img.seek(track=2, sector=3)
+        contents = b'Contents of the file'.ljust(322, b'.')
+        img.write(contents)
+        # should read the full 3 sectors
+        expected = contents.ljust(3 * 128, b'\xe5')
+        self.assertEqual(fs.read_file(b'strtrk'), expected)
 
 class _low_highTests(unittest.TestCase):
     def test_raises_for_num_out_of_range(self):

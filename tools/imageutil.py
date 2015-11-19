@@ -239,11 +239,13 @@ class Filesystem(object):
     def read_file(self, filename):
         '''Read the contents of the file with the given filename.  An
         exception is raised if the file is not found.'''
-        filename = filename.ljust(6, b'\x20')
         entry = self.read_entry(filename)
         self.image.seek(track=entry.track, sector=entry.sector)
-        bytesize = entry.sector_count * self.image.SECTOR_SIZE
-        return self.image.read(bytesize)
+        if entry.filetype == FileTypes.LD:
+            size = entry.sector_count * self.image.SECTOR_SIZE
+            return self.image.read(size)
+        else:
+            return self.image.read(entry.size)
 
     def write_ld_file(self, filename, load_address, entry_address, data):
         '''Write a new LD file to the disk'''
