@@ -247,16 +247,6 @@ class Filesystem(object):
         else:
             return self.image.read(entry.size)
 
-    def write_ld_file(self, filename, load_address, entry_address, data):
-        '''Write a new LD file to the disk'''
-        return self.write_file(
-            filename=filename,
-            filetype=FileTypes.LD,
-            size=entry_address, # pedisk abuses size field for LD type only
-            load_address=load_address,
-            data=data
-            )
-
     def write_file(self, filename, filetype, size, load_address, data):
         # check if file will fit in free sectors left on disk
         if len(data) > self.num_free_bytes:

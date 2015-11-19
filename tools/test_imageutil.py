@@ -407,24 +407,6 @@ class FilesystemTests(unittest.TestCase):
 
         self.assertEqual(fs.num_free_bytes, free_bytes)
 
-    # write_ld_file
-
-    def test_write_ld_file_raises_for_filename_bad_length(self):
-        img = imageutil.FiveInchDiskImage()
-        fs = imageutil.Filesystem(img)
-        fs.format(diskname=b'fresh')
-
-        try:
-            for name in (b'', b'1234567'):
-                fs.write_ld_file(name, 0, 0, b'')
-            self.fail('nothing raised')
-        except ValueError as exc:
-            self.assertEqual(exc.args[0],
-                'Invalid filename: %r is not '
-                'between 1 and 6 bytes' % name)
-
-    # TODO finish tests for write_ld_file
-
     # list_dir
 
     def test_list_dir_returns_empty_for_fresh_disk(self):

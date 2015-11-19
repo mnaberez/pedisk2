@@ -36,7 +36,8 @@ with open('../bin/dos_t00_s09_7800.bin', 'rb') as f:
     data.extend(f.read())
 with open('../bin/dos_t00_s22_7a00.bin', 'rb') as f:
     data.extend(f.read())
-fs.write_ld_file(b'******', 0x7800, 0x7800, data)
+fs.write_file(filename=b'******', filetype=imageutil.FileTypes.LD,
+    load_address=0x7800, entry_address=0x7800, data=data)
 
 # write all the other files into the image
 filenames = [
@@ -59,7 +60,9 @@ for filename in filenames:
     with open(filename, 'rb') as f:
         data = f.read()
         name = bytearray([42,42,42,42,42,ord(menu_key)]) # "*****H"
-        fs.write_ld_file(name, load_address, entry_address, data)
+        fs.write_file(filename=name, filetype=imageutil.FileTypes.LD,
+            load_address=load_address, entry_address=entry_address,
+            data=data)
 
 # save image file
 with open(imagename, 'wb') as f:
