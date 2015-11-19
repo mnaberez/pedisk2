@@ -423,21 +423,6 @@ class FilesystemTests(unittest.TestCase):
 
     # TODO finish tests for write_ld_file
 
-    # read_dir
-
-    def test_read_dir_returns_all_dir_entries(self):
-        img = imageutil.FiveInchDiskImage()
-        fs = imageutil.Filesystem(img)
-        fs.format(diskname=b'fresh')
-        img.home()
-        img.read(16) # skip directory header
-        img.write(b'a-file'.ljust(16, b'\x00'))
-        entries = fs.read_dir()
-        self.assertEqual(len(entries), 63)
-        self.assertEqual(entries[0].filename, b'a-file')
-        for i in range(1, 63):
-            self.assertEqual(entries[i].filename, b'\xff' * 6)
-
     # list_dir
 
     def test_list_dir_returns_empty_for_fresh_disk(self):
@@ -452,11 +437,61 @@ class FilesystemTests(unittest.TestCase):
         fs.format(diskname=b'fresh')
         img.home()
         img.read(16) # skip directory header
-        img.write(b'a-file'.ljust(16, b'\x00'))    # "a-file"
-        img.write(b'\xff-file'.ljust(16, b'\x00')) # deleted
-        img.write(b'c-file'.ljust(16, b'\x00'))    # "c-file"
+        img.write(b'aaaaaa'.ljust(16, b'\x00'))    # "aaaaaa"
+        img.write(b'\xffbbbbb'.ljust(16, b'\x00')) # deleted
+        img.write(b'cccccc'.ljust(16, b'\x00'))    # "cccccc"
         self.assertEqual(fs.list_dir(),
-            [bytearray(b'a-file'), bytearray(b'c-file')])
+            [bytearray(b'aaaaaa'), bytearray(b'cccccc')])
+
+    # read_dir
+
+    def test_read_dir_returns_all_dir_entries(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        img.home()
+        img.read(16) # skip directory header
+        img.write(b'aaaaaa'.ljust(16, b'\x00'))
+        entries = fs.read_dir()
+        self.assertEqual(len(entries), 63)
+        self.assertEqual(entries[0].filename, b'aaaaaa')
+        for i in range(1, 63):
+            self.assertEqual(entries[i].filename, b'\xff' * 6)
+
+    # read_entry
+
+    def test_read_entry_raises_for_file_not_found(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        try:
+            fs.read_entry(b'notfound')
+            self.fail('nothing raised')
+        except ValueError as exc:
+            self.assertEqual(exc.args[0],
+                "File b'notfound' not found")
+
+    def test_read_entry_returns_entry_for_filename(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        img.home()
+        img.read(16) # skip directory header
+        img.write(b'aaaaaa'.ljust(16, b'\x00'))    # "aaaaaa"
+        img.write(b'\xffbbbbb'.ljust(16, b'\x00')) # deleted
+        img.write(b'cccccc'.ljust(16, b'\x00'))    # "cccccc"
+        entry = fs.read_entry(b'cccccc')
+        self.assertEqual(entry.filename, b'cccccc')
+
+    def test_read_entry_pads_filename_with_spaces_if_needed(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        img.home()
+        img.read(16) # skip directory header
+        img.write(b'a\x20\x20\x20\x20\x20'.ljust(16, b'\x00')) # "a"
+        entry = fs.read_entry(b'a')
+        self.assertEqual(entry.filename, b'a\x20\x20\x20\x20\x20')
 
 class _low_highTests(unittest.TestCase):
     def test_raises_for_num_out_of_range(self):

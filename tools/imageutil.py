@@ -210,7 +210,13 @@ class Filesystem(object):
         available for new files'''
         return self.num_free_sectors * self.image.SECTOR_SIZE
 
+    def list_dir(self):
+        '''Read the directory and return a list of active filenames'''
+        return [ e.filename for e in self.read_dir() if e.active ]
+
     def read_dir(self):
+        '''Read the directory and return all entries.  This includes
+        deleted and unused entries.'''
         self.image.home()
         self.image.read(16) # skip directory header
         entries = []
@@ -220,19 +226,21 @@ class Filesystem(object):
             entries.append(entry)
         return entries
 
-    def list_dir(self):
-        '''Read the directory and return a list of active filenames'''
-        return [ e.filename for e in self.read_dir() if e.active ]
-
-    def get_entry(self, filename):
+    def read_entry(self, filename):
+        '''Read the directory and return the entry for the given filename.
+        The entry can be a deleted or unused one.  An exception is raised
+        if the file is not found'''
         filename = filename.ljust(6, b'\x20')
         for entry in self.read_dir():
-            if (entry.filename == filename) and entry.active:
-                return DirectoryEntry.from_bytes(data)
-        raise Exception("File %r not found" % filename)
+            if entry.filename == filename:
+                return entry
+        raise ValueError("File %r not found" % filename)
 
     def read_file(self, filename):
-        entry = self.get_entry(filename)
+        '''Read the contents of the file with the given filename.  An
+        exception is raised if the file is not found.'''
+        filename = filename.ljust(6, b'\x20')
+        entry = self.read_entry(filename)
         self.image.seek(track=entry.track, sector=entry.sector)
         bytesize = entry.sector_count * self.image.SECTOR_SIZE
         return self.image.read(bytesize)
