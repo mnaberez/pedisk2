@@ -624,6 +624,24 @@ class FilesystemTests(unittest.TestCase):
         img.read(16 + 16 + 16) # skip header + 2 used entries
         self.assertEqual(b'newnew', img.read(6))
 
+    def test_write_file_rewrites_count_of_used_entries(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'foo')
+        # use the first two directory entries
+        img.home()
+        img.read(8) # skip past disk name in header
+        # write a nonsensical used entry count in the header
+        img.write(b'\x33')
+        self.assertEqual(fs.num_used_entries, 0x33)
+        # write two files
+        fs.write_file(b'foo', imageutil.FileTypes.SEQ,
+            load_address=0, size=5, data=b'12345')
+        fs.write_file(b'bar', imageutil.FileTypes.SEQ,
+            load_address=0, size=5, data=b'12345')
+        # used file count should be two
+        self.assertEqual(fs.num_used_entries, 2)
+
 class _low_highTests(unittest.TestCase):
     def test_raises_for_num_out_of_range(self):
         for num in (-1, 65536):

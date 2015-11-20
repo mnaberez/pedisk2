@@ -135,7 +135,7 @@ class Filesystem(object):
         '''Read the directory header and return the next available track
         and sector where a new file can be stored.  Raises if the directory
         header is invalid.  Returns (track, sector).'''
-        self.image.seek(track=0, sector=1)
+        self.image.home()
         self.image.read(8) # skip diskname
         self.image.read(1) # skip number of files
 
@@ -166,7 +166,7 @@ class Filesystem(object):
     def num_used_entries(self):
         '''Read the directory header and return the number of file entries
         used (includes deleted).'''
-        self.image.seek(track=0, sector=1)
+        self.image.home()
         self.image.read(8) # skip diskname
         entries_used = ord(self.image.read(1))
 
@@ -309,7 +309,7 @@ class Filesystem(object):
         sector = self.image.sector
 
         # update directory header
-        used_entries = self.num_used_entries + 1
+        used_entries = len(self.list_dir())
         self.image.home()
         self.image.read(8) # skip disk name
         self.image.write(bytearray([used_entries]))
