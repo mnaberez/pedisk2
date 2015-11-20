@@ -588,6 +588,37 @@ class FilesystemTests(unittest.TestCase):
         expected = contents.ljust(3 * 128, b'\xe5')
         self.assertEqual(fs.read_file(b'strtrk'), expected)
 
+    # file_exists
+
+    def test_file_exists_returns_False_if_name_not_in_dir(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'foo')
+        self.assertFalse(fs.file_exists(b'strtrk'))
+
+    def test_file_exists_returns_True_if_name_in_dir(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'foo')
+        img.home()
+        img.read(16) # skip past directory header
+        img.write(b'strtrk'.ljust(16, b'\x00'))
+        self.assertTrue(fs.file_exists(b'strtrk'))
+
+    def test_file_exists_pads_filename_with_spaces(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'foo')
+        img.home()
+        img.read(16) # skip past directory header
+        img.write(b'hi'.ljust(6, b'\x20').ljust(16, b'\x00'))
+        self.assertTrue(fs.file_exists(b'hi'))
+
+    def file_exists(self, filename):
+        '''Read the directory and return True if the given filename
+        already exists'''
+        return filename.ljust(6, b'\x20') in self.list_dir()
+
     # write_file
 
     def test_write_file_raises_if_no_entry_free(self):

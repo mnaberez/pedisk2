@@ -261,6 +261,11 @@ class Filesystem(object):
                 return entry
         raise ValueError("File %r not found" % filename)
 
+    def file_exists(self, filename):
+        '''Read the directory and return True if the given filename
+        already exists as an active filename'''
+        return filename.ljust(6, b'\x20') in self.list_dir()
+
     def read_file(self, filename):
         '''Read the contents of the file with the given filename.  An
         exception is raised if the file is not found.'''
