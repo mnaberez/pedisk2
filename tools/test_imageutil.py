@@ -146,6 +146,20 @@ class DiskImageTests(unittest.TestCase):
         except ValueError as exc:
             self.assertEqual(exc.args[0], "Read past end of disk")
 
+    # peek
+
+    def test_peek_reads_bytes_without_changing_pointers(self):
+        img = imageutil.FiveInchDiskImage()
+        img.home()
+        t, s = img.track, img.sector
+        so, do = img.sector_offset, img.data_offset
+        img.peek(100)
+        self.assertEqual(img.track, t)
+        self.assertEqual(img.sector, s)
+        self.assertEqual(img.sector_offset, so)
+        self.assertEqual(img.data_offset, do)
+
+
 class FilesystemTests(unittest.TestCase):
 
     # format
@@ -573,6 +587,42 @@ class FilesystemTests(unittest.TestCase):
         # should read the full 3 sectors
         expected = contents.ljust(3 * 128, b'\xe5')
         self.assertEqual(fs.read_file(b'strtrk'), expected)
+
+    # write_file
+
+    def test_write_file_raises_if_no_entry_free(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'foo')
+        img.home()
+        img.read(16) # skip past directory header
+        used_entry = b'\x20' * 16
+        full_directory = used_entry * 63
+        img.write(full_directory)
+        try:
+            fs.write_file(b'foo', imageutil.FileTypes.SEQ,
+                load_address=0, size=5, data="12345")
+            self.fail('nothing raised')
+        except ValueError as exc:
+            self.assertEqual(exc.args[0],
+                'Disk full: no entries left in directory')
+
+    def test_write_file_uses_first_unused_dir_entry(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'foo')
+        # use the first two directory entries
+        img.home()
+        img.read(16) # skip past directory header
+        used_entry = b'\x20' * 16
+        img.write(used_entry * 2)
+        # write the new file
+        fs.write_file(b'newnew', imageutil.FileTypes.SEQ,
+            load_address=0, size=5, data=b'12345')
+        # the new file should be in the third entry
+        img.home()
+        img.read(16 + 16 + 16) # skip header + 2 used entries
+        self.assertEqual(b'newnew', img.read(6))
 
 class _low_highTests(unittest.TestCase):
     def test_raises_for_num_out_of_range(self):

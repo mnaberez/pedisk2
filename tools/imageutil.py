@@ -55,6 +55,17 @@ class DiskImage(object):
             wrapped = self._incr()
         return data
 
+    def peek(self, numbytes):
+        '''Read a bytearray of arbitrary length starting at the current
+        position as read() does, but leave all pointers unchanged.'''
+        t, s = self.track, self.sector
+        so, do = self.sector_offset, self.data_offset
+        data = self.read(numbytes)
+
+        self.track, self.sector = t, s
+        self.sector_offset, self.data_offset = so, do
+        return data
+
     def _validate_ts(self, track, sector):
         '''Raise ValueError if track/sector is out of range'''
         if (track < 0) or (track >= self.TRACKS):
@@ -166,17 +177,16 @@ class Filesystem(object):
 
         return entries_used
 
-    def seek_to_free_entry(self):
+    def _seek_to_free_entry(self):
         '''Seek to the next free directory entry.  Raises an
         error if no more entries are available.'''
-        if self.num_free_entries == 0:
-            raise ValueError('Disk full: no entries left in directory')
-
-        used_entries = self.num_used_entries
         self.image.home()
         self.image.read(16) # skip past directory header
-        for i in range(used_entries):
-            self.image.read(16) # skip past used entry
+        for i in range(63):
+            if self.image.peek(1) == b'\xFF': # first byte of filename
+                return
+            self.image.read(16) # advance to next entry
+        raise ValueError('Disk full: no entries left in directory')
 
     @property
     def num_free_entries(self):
@@ -277,7 +287,7 @@ class Filesystem(object):
         sector_count = int(math.ceil(sector_count))
 
         # write directory entry
-        self.seek_to_free_entry()
+        self._seek_to_free_entry()
         entry = DirectoryEntry(
             filename=filename,
             size=size,
