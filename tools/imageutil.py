@@ -102,9 +102,7 @@ class Filesystem(object):
 
     def format(self, diskname):
         '''Completely erase the disk image and write an empty directory'''
-        if len(diskname) > 8:
-            msg = 'Disk name %r is too long, limit is 8 bytes' % diskname
-            raise ValueError(msg)
+        self._validate_diskname(diskname)
 
         # initialize the entire image to 0xE5
         self.image.home()
@@ -209,6 +207,23 @@ class Filesystem(object):
         '''Read the directory header and return the number of bytes
         available for new files'''
         return self.num_free_sectors * self.image.SECTOR_SIZE
+
+    @property
+    def diskname(self):
+        '''Read the directory header and return the name of the disk'''
+        self.image.home()
+        return self.image.read(8)
+
+    def rename_disk(self, diskname):
+        '''Rename the disk'''
+        self._validate_diskname(diskname)
+        self.image.home()
+        self.image.write(diskname.ljust(8, b'\x20'))
+
+    def _validate_diskname(self, diskname):
+        if len(diskname) > 8:
+            msg = 'Disk name %r is too long, limit is 8 bytes' % diskname
+            raise ValueError(msg)
 
     def list_dir(self):
         '''Read the directory and return a list of active filenames'''

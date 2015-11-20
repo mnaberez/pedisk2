@@ -201,12 +201,13 @@ class FilesystemTests(unittest.TestCase):
     def test_format_raises_for_diskname_too_long(self):
         img = imageutil.FiveInchDiskImage()
         fs = imageutil.Filesystem(img)
+        diskname = b'123456789'
         try:
-            fs.format(diskname='123456789')
+            fs.format(diskname=diskname)
             self.fail('nothing raised')
         except ValueError as exc:
             self.assertEqual(exc.args[0],
-                "Disk name '123456789' is too long, limit is 8 bytes")
+                "Disk name %r is too long, limit is 8 bytes" % diskname)
 
     def test_format_pads_diskname_with_spaces(self):
         img = imageutil.FiveInchDiskImage()
@@ -406,6 +407,44 @@ class FilesystemTests(unittest.TestCase):
         free_bytes = free_sectors * img.SECTOR_SIZE
 
         self.assertEqual(fs.num_free_bytes, free_bytes)
+
+    # diskname
+
+    def test_diskname_returns_disk_name(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'abcdefgh')
+        self.assertEqual(fs.diskname, b'abcdefgh')
+
+    # rename_disk
+
+    def test_rename_disk_renames_disk(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'12345678')
+        fs.rename_disk(b'abcdefgh')
+        img.home()
+        self.assertEqual(img.read(8), b'abcdefgh')
+
+    def test_rename_disk_pads_diskname_with_spaces(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'12345678')
+        fs.rename_disk(b'abcd')
+        img.home()
+        self.assertEqual(img.read(8), b'abcd\x20\x20\x20\x20')
+
+    def test_rename_disks_raises_for_diskname_too_long(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'abc')
+        diskname = b'123456789'
+        try:
+            fs.rename_disk(diskname)
+            self.fail('nothing raised')
+        except ValueError as exc:
+            self.assertEqual(exc.args[0],
+                "Disk name %r is too long, limit is 8 bytes" % diskname)
 
     # list_dir
 
