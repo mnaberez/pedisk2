@@ -277,7 +277,8 @@ class Filesystem(object):
         else:
             return self.image.read(entry.size)
 
-    def write_file(self, filename, filetype, size, load_address, data):
+    def write_file(self, filename, filetype, data,
+                    load_address, entry_address=None):
         if self.file_exists(filename):
             raise ValueError('File %r already exists' % filename)
 
@@ -285,6 +286,16 @@ class Filesystem(object):
             msg = ('Disk full: data is %d bytes, free space is only '
                    '%d bytes' % (len(data), self.num_free_bytes))
             raise ValueError(msg)
+
+        # pedisk abuses the size field as the entry address on type LD only
+        if filetype == FileTypes.LD:
+            if entry_address is None:
+                raise ValueError("Entry address is required for type LD")
+            size_or_entry = entry_address
+        else:
+            if entry_address is not None:
+                raise ValueError("Entry address is only valid for type LD")
+            size_or_entry = len(data)
 
         # find location for new file
         track, sector = self.next_free_ts
@@ -297,7 +308,7 @@ class Filesystem(object):
         self._seek_to_free_entry()
         entry = DirectoryEntry(
             filename=filename,
-            size=size,
+            size=size_or_entry,
             load_address=load_address,
             filetype=filetype,
             track=track,
@@ -319,8 +330,7 @@ class Filesystem(object):
         used_entries = len(self.list_dir())
         self.image.home()
         self.image.read(8) # skip disk name
-        self.image.write(bytearray([used_entries]))
-        self.image.write(bytearray([track, sector]))
+        self.image.write(bytearray([used_entries, track, sector]))
 
 def _low_high(num):
     '''Split an unsigned 16-bit number into two 8-bit numbers: (low, high)'''
@@ -352,14 +362,15 @@ class FileTypes(object):
 class DirectoryEntry(object):
     def __init__(self, filename, filetype, size,
                  load_address, track, sector, sector_count):
-        self.filename = filename            # 6 bytes
-        self.filetype = filetype            # 1 byte
-        self.size = size                    # 2 bytes
-        self.load_address = load_address    # 2 bytes
-        self.track = track                  # 1 byte
-        self.sector = sector                # 1 byte
-        self.sector_count = sector_count    # 2 bytes
-                                            # +1 unused = 16 bytes
+        self.filename = filename            # $00-$05: 6 bytes
+        self.size = size                    # $06-$07: 2 bytes
+        self.load_address = load_address    # $08-$09: 2 bytes
+        self.filetype = filetype            # $0A:     1 byte
+                                            # $0B:     1 byte (unused)
+        self.track = track                  # $0C:     1 byte track
+        self.sector = sector                # $0D:     1 byte sector
+        self.sector_count = sector_count    # $0E-0F:  2 bytes sector count
+                                            #          = 16 bytes total
     @classmethod
     def from_bytes(klass, data):
         return klass(

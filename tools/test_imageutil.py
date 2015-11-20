@@ -543,7 +543,7 @@ class FilesystemTests(unittest.TestCase):
             self.assertEqual(exc.args[0],
                 "File %r not found" % b'notfound')
 
-    def test_read_file_reads_exact_size_for_not_type_5(self):
+    def test_read_file_reads_exact_size_for_not_type_LD(self):
         img = imageutil.FiveInchDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
@@ -565,7 +565,7 @@ class FilesystemTests(unittest.TestCase):
         # should read only 322 bytes
         self.assertEqual(fs.read_file(b'hello'), contents)
 
-    def test_read_file_reads_sector_count_for_type_5_only(self):
+    def test_read_file_reads_sector_count_for_type_LD_only(self):
         img = imageutil.FiveInchDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
@@ -622,10 +622,10 @@ class FilesystemTests(unittest.TestCase):
         fs.format(diskname=b'foo')
         filename = b'strtrk'
         fs.write_file(filename, imageutil.FileTypes.SEQ,
-            load_address=0, size=5, data=b'12345')
+            load_address=0, data=b'12345')
         try:
             fs.write_file(filename, imageutil.FileTypes.SEQ,
-                load_address=0, size=5, data=b'12345')
+                load_address=0, data=b'12345')
             self.fail('nothing raised')
         except ValueError as exc:
             self.assertEqual(exc.args[0],
@@ -642,7 +642,7 @@ class FilesystemTests(unittest.TestCase):
         img.write(full_directory)
         try:
             fs.write_file(b'foo', imageutil.FileTypes.SEQ,
-                load_address=0, size=5, data=b'12345')
+                load_address=0, data=b'12345')
             self.fail('nothing raised')
         except ValueError as exc:
             self.assertEqual(exc.args[0],
@@ -659,7 +659,7 @@ class FilesystemTests(unittest.TestCase):
         img.write(used_entry * 2)
         # write the new file
         fs.write_file(b'newnew', imageutil.FileTypes.SEQ,
-            load_address=0, size=5, data=b'12345')
+            load_address=0, data=b'12345')
         # the new file should be in the third entry
         img.home()
         img.read(16 + 16 + 16) # skip header + 2 used entries
@@ -677,11 +677,43 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.num_used_entries, 0x33)
         # write two files
         fs.write_file(b'foo', imageutil.FileTypes.SEQ,
-            load_address=0, size=5, data=b'12345')
+            load_address=0, data=b'12345')
         fs.write_file(b'bar', imageutil.FileTypes.SEQ,
-            load_address=0, size=5, data=b'12345')
+            load_address=0, data=b'12345')
         # used file count should be two
         self.assertEqual(fs.num_used_entries, 2)
+
+    def test_write_file_sets_size_from_length_of_data_for_not_type_LD(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'foo')
+        # write SEQ file with data 40,000 bytes long
+        fs.write_file(b'lotofa', imageutil.FileTypes.SEQ,
+            load_address=0, data=b'a' * 0x9c40)
+        # check directory entry
+        img.home()
+        img.read(16) # skip directory header
+        entry = img.read(16)
+        # size = 40,000 (0x9c40)
+        self.assertEqual(entry[6:8], bytearray([0x40, 0x9c]))
+        # sector count = 313 (0x0139)
+        self.assertEqual(entry[14:16], bytearray([0x39, 0x01]))
+
+    def test_write_file_sets_size_to_entry_address_for_type_LD_only(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'foo')
+        # write SEQ file with data 40,000 bytes long
+        fs.write_file(b'lotofa', imageutil.FileTypes.LD,
+            load_address=0x0401, entry_address=0x0415, data=b'a' * 0x9c40)
+        # check directory entry
+        img.home()
+        img.read(16) # skip directory header
+        entry = img.read(16)
+        # size field is abused as entry address; entry address = 0x415
+        self.assertEqual(entry[6:8], bytearray([0x15, 0x04]))
+        # sector count = 313 (0x0139)
+        self.assertEqual(entry[14:16], bytearray([0x39, 0x01]))
 
 class _low_highTests(unittest.TestCase):
     def test_raises_for_num_out_of_range(self):
