@@ -185,7 +185,7 @@ L7D17:
     cpx #$09
     bmi erase_dir_loop
 
-    ;All directory sectors except the first one has been filled
+    ;All directory sectors except the first one have been filled
     ;with $FF (track 0, sectors 2-8).  Only the first directory
     ;sector (track 0, sector 1) needs to be written now.
 
