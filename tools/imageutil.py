@@ -278,7 +278,9 @@ class Filesystem(object):
             return self.image.read(entry.size)
 
     def write_file(self, filename, filetype, size, load_address, data):
-        # check if file will fit in free sectors left on disk
+        if self.file_exists(filename):
+            raise ValueError('File %r already exists' % filename)
+
         if len(data) > self.num_free_bytes:
             msg = ('Disk full: data is %d bytes, free space is only '
                    '%d bytes' % (len(data), self.num_free_bytes))

@@ -614,12 +614,22 @@ class FilesystemTests(unittest.TestCase):
         img.write(b'hi'.ljust(6, b'\x20').ljust(16, b'\x00'))
         self.assertTrue(fs.file_exists(b'hi'))
 
-    def file_exists(self, filename):
-        '''Read the directory and return True if the given filename
-        already exists'''
-        return filename.ljust(6, b'\x20') in self.list_dir()
-
     # write_file
+
+    def test_write_file_raises_if_file_already_exists(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'foo')
+        filename = b'strtrk'
+        fs.write_file(filename, imageutil.FileTypes.SEQ,
+            load_address=0, size=5, data=b'12345')
+        try:
+            fs.write_file(filename, imageutil.FileTypes.SEQ,
+                load_address=0, size=5, data=b'12345')
+            self.fail('nothing raised')
+        except ValueError as exc:
+            self.assertEqual(exc.args[0],
+                'File %r already exists' % filename)
 
     def test_write_file_raises_if_no_entry_free(self):
         img = imageutil.FiveInchDiskImage()
@@ -632,7 +642,7 @@ class FilesystemTests(unittest.TestCase):
         img.write(full_directory)
         try:
             fs.write_file(b'foo', imageutil.FileTypes.SEQ,
-                load_address=0, size=5, data="12345")
+                load_address=0, size=5, data=b'12345')
             self.fail('nothing raised')
         except ValueError as exc:
             self.assertEqual(exc.args[0],
