@@ -10,7 +10,7 @@ import shutil
 import sys
 import tempfile
 
-FILES = {'bootstrap/format.asm':   None,
+FILES = {'bootstrap/format8.asm':  None,
          'dos_t00_s09_7800.asm':   'bin/dos_t00_s09_7800.bin',
          'dos_t00_s22_7a00.asm':   'bin/dos_t00_s22_7a00.bin',
          'dos_t00_s26_7c00_h.asm': 'bin/dos_t00_s26_7c00_h.bin',
