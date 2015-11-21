@@ -293,8 +293,6 @@ class Filesystem(object):
                 raise ValueError("Entry address is required for type LD")
             size_or_entry = entry_address
         else:
-            if entry_address is not None:
-                raise ValueError("Entry address is only valid for type LD")
             size_or_entry = len(data)
 
         # find location for new file
@@ -394,6 +392,10 @@ class DirectoryEntry(object):
         data.extend([self.track, self.sector])
         data.extend(_low_high(self.sector_count))
         return data
+
+    @property
+    def entry_address(self):
+        return self.size  # size is abused for entry_address on type LD only
 
     @property
     def active(self):

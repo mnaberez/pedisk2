@@ -34,17 +34,17 @@ else:
     sys.stderr.write("Bad disk type: %r" % desttype)
     sys.exit(1)
 destfs = imageutil.Filesystem(destimg)
-destfs.format(b'DISKNAME')
+destfs.format(srcfs.diskname)
 
 # copy files from source into destination
-for filename in srcfs.list_dir():
-    entry = srcfs.get_entry(filename)
+for filename in srcfs.read_dir():
+    entry = srcfs.read_entry(filename)
     data = srcfs.read_file(filename)
     destfs.write_file(
         filename=entry.filename,
         filetype=entry.filetype,
-        size=entry.size,
         load_address=entry.load_address,
+        entry_address=entry.entry_address,
         data=data
         )
 
