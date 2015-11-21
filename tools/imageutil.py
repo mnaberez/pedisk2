@@ -21,12 +21,13 @@ class DiskImage(object):
         '''Seek to the given track/sector position.  As with the IBM 3740
         numbering, tracks are 0-based, sectors are 1-based.'''
         self._validate_ts(track, sector)
-        self.track = 0
-        self.sector = 1
+        self.track = track
+        self.sector = sector
         self.sector_offset = 0
-        self.data_offset = 0
-        while (self.track != track) or (self.sector != sector):
-            self._incr()
+        self.data_offset = (
+            (track * self.SECTORS * self.SECTOR_SIZE) +
+            ((sector - 1) * self.SECTOR_SIZE)
+            )
 
     def write(self, data):
         '''Write a bytearray of arbitrary length starting at the current
