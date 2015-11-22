@@ -282,89 +282,25 @@ class FilesystemTests(unittest.TestCase):
         img.home()
         img.read(8) # skip diskname
         img.read(1) # skip number of files
-        img.write(b'\x22') # set next open track
-        img.write(b'\x10') # set next open sector
+        img.write(b'\x22') # set next free track
+        img.write(b'\x10') # set next free sector
         track, sector = fs.next_free_ts
         self.assertEqual(track, 0x22)
         self.assertEqual(sector, 0x10)
 
-    def test_next_free_ts_raises_for_track_too_high(self):
+    def test_next_free_ts_returns_invalid_track_and_sector(self):
         img = imageutil.FiveInchDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
         img.read(8) # skip diskname
         img.read(1) # skip number of files
-        invalid_track = img.TRACKS
-        img.write(bytearray([invalid_track]))
-        try:
-            track, _ = fs.next_free_ts
-            self.fail('nothing raised')
-        except ValueError as exc:
-            self.assertEqual(exc.args[0],
-                'Directory invalid: next available track '
-                '41 not in range 0-40'
-                )
-
-    def test_next_free_ts_raises_for_sector_too_low(self):
-        img = imageutil.FiveInchDiskImage()
-        fs = imageutil.Filesystem(img)
-        fs.format(diskname=b'fresh')
-        img.home()
-        img.read(8) # skip diskname
-        img.read(1) # skip number of files
-        img.read(1) # skip next open track
-        invalid_sector = 0
-        img.write(bytearray([invalid_sector]))
-        try:
-            _, sector = fs.next_free_ts
-            self.fail('nothing raised')
-        except ValueError as exc:
-            self.assertEqual(exc.args[0],
-                'Directory invalid: next available sector '
-                '0 not in range 1-28'
-                )
-
-    def test_next_free_ts_raises_for_sector_too_high(self):
-        img = imageutil.FiveInchDiskImage()
-        fs = imageutil.Filesystem(img)
-        fs.format(diskname=b'fresh')
-        img.home()
-        img.read(8) # skip diskname
-        img.read(1) # skip number of files
-        img.read(1) # skip next open track
-        invalid_sector = img.SECTORS + 1
-        img.write(bytearray([invalid_sector]))
-        try:
-            _, sector = fs.next_free_ts
-            self.fail('nothing raised')
-        except ValueError as exc:
-            self.assertEqual(exc.args[0],
-                'Directory invalid: next available sector '
-                '29 not in range 1-28'
-                )
-
-    def test_next_free_ts_raises_if_it_points_inside_the_dir_area(self):
-        img = imageutil.FiveInchDiskImage()
-        fs = imageutil.Filesystem(img)
-        fs.format(diskname=b'fresh')
-        img.home()
-        img.read(8) # skip diskname
-        img.read(1) # skip number of files
-        img.write(b'\x00') # next open track = 0
-        img.write(b'\x08') # next open sector = 8
-
-        img.read(1) # skip next open track
-        invalid_sector = img.SECTORS + 1
-        img.write(bytearray([invalid_sector]))
-        try:
-            _, sector = fs.next_free_ts
-            self.fail('nothing raised')
-        except ValueError as exc:
-            self.assertEqual(exc.args[0],
-                'Directory invalid: next available track 0, sector 8 '
-                'is inside the directory area'
-                )
+        # pedisk appears to set track out of range when disk is full
+        img.write(b'\xFD') # set next free track to an invalid one
+        img.write(b'\xFE') # set next free sector to an invalid one
+        track, sector = fs.next_free_ts
+        self.assertEqual(track, 0xFD)
+        self.assertEqual(sector, 0xFE)
 
     # num_used_entries
 
@@ -383,21 +319,15 @@ class FilesystemTests(unittest.TestCase):
         img.write(b'\x2a') # number of files used = 42
         self.assertEqual(fs.num_used_entries, 42)
 
-    def test_num_entries_raises_for_invalid_count(self):
+    def test_num_used_entries_returns_invalid_count(self):
         img = imageutil.FiveInchDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
         img.read(8) # skip diskname
-        img.write(b'\x40') # number of files used = 64
-        try:
-            fs.num_used_entries
-            self.fail('nothing raised')
-        except ValueError as exc:
-            self.assertEqual(exc.args[0],
-                'Directory invalid: directory entry count byte '
-                'of 64 not in range 0-63'
-                )
+        # pedisk behavior when all entries are used is not known
+        img.write(b'\xFD') # set number of files to invalid
+        self.assertEqual(fs.num_used_entries, 0xFD)
 
     # num_free_entries
 
@@ -416,6 +346,15 @@ class FilesystemTests(unittest.TestCase):
         img.write(b'\x2a') # number of files used = 42
         self.assertEqual(fs.num_free_entries, 21)
 
+    def test_num_free_entries_returns_0_for_invalid_count(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        img.home()
+        img.read(8) # skip diskname
+        img.write(b'\x46') # number of files used = 70 (too high)
+        self.assertEqual(fs.num_free_entries, 0)
+
     # num_free_sectors
 
     def test_num_free_sectors_returns_all_but_dir_for_fresh_image(self):
@@ -428,6 +367,38 @@ class FilesystemTests(unittest.TestCase):
         free_sectors = total_sectors - dir_sectors
 
         self.assertEqual(fs.num_free_sectors, free_sectors)
+
+    def test_num_free_sectors_returns_0_if_free_track_too_high(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        img.home()
+        img.read(8) # skip diskname
+        img.read(1) # skip number of files
+        img.write(bytearray([img.TRACKS])) # free track = last + 1
+        self.assertEqual(fs.num_free_sectors, 0)
+
+    def test_num_free_sectors_returns_0_if_free_sector_too_low(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        img.home()
+        img.read(8) # skip diskname
+        img.read(1) # skip number of files
+        img.write(b'\x02') # free track = track 2
+        img.write(b'\x00') # free sector = 0 (invalid, sectors start at 1)
+        self.assertEqual(fs.num_free_sectors, 0)
+
+    def test_num_free_sectors_returns_0_if_free_sector_too_high(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        img.home()
+        img.read(8) # skip diskname
+        img.read(1) # skip number of files
+        img.write(b'\x02') # free track = track 2
+        img.write(bytearray([img.SECTORS + 1])) # free sector = last + 1
+        self.assertEqual(fs.num_free_sectors, 0)
 
     # num_free_bytes
 
@@ -735,6 +706,24 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(entry[6:8], bytearray([0x15, 0x04]))
         # sector count = 313 (0x0139)
         self.assertEqual(entry[14:16], bytearray([0x39, 0x01]))
+
+    def test_write_file_writes_to_very_end_of_disk(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'foo')
+        img.home()
+        img.read(8) # skip disk name
+        img.read(1) # skip number of used files
+        last_ts = (img.TRACKS - 1, img.SECTORS)
+        img.write(bytearray(last_ts)) # next free t/s = the last t/s
+        self.assertEqual(fs.num_free_bytes, img.SECTOR_SIZE)
+        data = b'a'*img.SECTOR_SIZE
+        fs.write_file(b'ending', imageutil.FileTypes.SEQ,
+            load_address=0x0401, data=data)
+        self.assertEqual(img.data[-len(data):], data)
+        # no more free sectors so next free t/s is an invalid track
+        last_track_plus_one = img.TRACKS
+        self.assertEqual(fs.next_free_ts, (last_track_plus_one, 1,))
 
 class _low_highTests(unittest.TestCase):
     def test_raises_for_num_out_of_range(self):

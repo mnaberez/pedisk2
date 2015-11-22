@@ -133,34 +133,12 @@ class Filesystem(object):
     @property
     def next_free_ts(self):
         '''Read the directory header and return the next available track
-        and sector where a new file can be stored.  Raises if the directory
-        header is invalid.  Returns (track, sector).'''
+        and sector where a new file can be stored.  This can be an invalid
+        sector if the disk is full.  Returns (track, sector).'''
         self.image.home()
         self.image.read(8) # skip diskname
         self.image.read(1) # skip number of files
-
-        track = ord(self.image.read(1))
-        sector = ord(self.image.read(1))
-
-        # check track in range of image
-        if track > (self.image.TRACKS - 1):
-            msg = ('Directory invalid: next available track %d '
-                   'not in range 0-%d' % (track, self.image.TRACKS - 1))
-            raise ValueError(msg)
-
-        # check sector in range of image
-        if (sector < 1) or (sector > self.image.SECTORS):
-            msg = ('Directory invalid: next available sector %d '
-                   'not in range 1-%d' % (sector, self.image.SECTORS))
-            raise ValueError(msg)
-
-        # check (track, sector) is not in the directory area
-        if (track == 0) and (sector < 9):
-            msg = ('Directory invalid: next available track %d, sector %d '
-                   'is inside the directory area' % (track, sector))
-            raise ValueError(msg)
-
-        return track, sector
+        return tuple(self.image.read(2))
 
     @property
     def num_used_entries(self):
@@ -168,14 +146,7 @@ class Filesystem(object):
         used (includes deleted).'''
         self.image.home()
         self.image.read(8) # skip diskname
-        entries_used = ord(self.image.read(1))
-
-        if entries_used > 63:
-            msg = ('Directory invalid: directory entry count byte of %d '
-                   'not in range 0-63' % entries_used)
-            raise ValueError(msg)
-
-        return entries_used
+        return self.image.read(1)[0]
 
     def _seek_to_free_entry(self):
         '''Seek to the next free directory entry.  Raises an
@@ -192,13 +163,20 @@ class Filesystem(object):
     def num_free_entries(self):
         '''Read the directory header and return the number of directory
         entries available for new files.'''
-        return 63 - self.num_used_entries
+        return max(0, 63 - self.num_used_entries)
 
     @property
     def num_free_sectors(self):
         '''Read the directory header and return the number of sectors
-        available for new files'''
+        available for new files.  If the next free track/sector in the
+        directory header is invalid, 0 is returned.'''
         track, sector = self.next_free_ts
+
+        # pedisk may set track out of range if it fills the entire disk
+        if (track >= self.image.TRACKS):
+            return 0
+        if (sector < 1) or (sector > self.image.SECTORS):
+            return 0
 
         # start with 1 (this is the sector return by next_free_ts)
         free_sectors = 1
@@ -215,7 +193,8 @@ class Filesystem(object):
     @property
     def num_free_bytes(self):
         '''Read the directory header and return the number of bytes
-        available for new files'''
+        available for new files.  If the next free track/sector in the
+        directory header is invalid, 0 is returned.'''
         return self.num_free_sectors * self.image.SECTOR_SIZE
 
     @property
@@ -320,9 +299,14 @@ class Filesystem(object):
         self.image.seek(track, sector)
         self.image.write(data)
 
-        # next free track/sector after the file we just wrote
-        track = self.image.track
-        sector = self.image.sector
+        # find the next free track/sector after the file we just wrote
+        if self.image.track < track:
+            # we wrote the very last sector on disk and the pointer wrapped.
+            # there's not another free t/s, so we choose an invalid one
+            # (last track + 1), which seems to be what the pedisk does also.
+            track, sector = self.image.TRACKS, 1
+        else:
+            track, sector = self.image.track, self.image.sector
 
         # update directory header
         used_entries = len(self.list_dir())
