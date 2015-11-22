@@ -59,12 +59,11 @@ class DiskImage(object):
     def peek(self, numbytes):
         '''Read a bytearray of arbitrary length starting at the current
         position as read() does, but leave all pointers unchanged.'''
-        t, s = self.track, self.sector
-        so, do = self.sector_offset, self.data_offset
-        data = self.read(numbytes)
-
-        self.track, self.sector = t, s
-        self.sector_offset, self.data_offset = so, do
+        start = self.data_offset
+        end = start + numbytes
+        data = self.data[start:end]
+        if len(data) != numbytes:
+            raise ValueError("Read past end of disk")
         return data
 
     def _validate_ts(self, track, sector):

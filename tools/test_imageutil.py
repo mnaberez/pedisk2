@@ -159,6 +159,27 @@ class DiskImageTests(unittest.TestCase):
         self.assertEqual(img.sector_offset, so)
         self.assertEqual(img.data_offset, do)
 
+    def test_peek_reads_to_very_end_of_disk(self):
+        img = imageutil.FiveInchDiskImage()
+        t, s = img.TRACKS - 1, img.SECTORS
+        img.seek(t, s)
+        so, do = img.sector_offset, img.data_offset
+        img.peek(128)
+        self.assertEqual(img.track, t)
+        self.assertEqual(img.sector, s)
+        self.assertEqual(img.sector_offset, so)
+        self.assertEqual(img.data_offset, do)
+
+    def test_peek_raises_if_past_end_of_disk(self):
+        img = imageutil.FiveInchDiskImage()
+        t, s = img.TRACKS - 1, img.SECTORS
+        img.seek(t, s)
+        try:
+            img.peek(128 + 1)
+            self.fail('nothing raised')
+        except ValueError as exc:
+            self.assertEqual(exc.args[0], 'Read past end of disk')
+
 
 class FilesystemTests(unittest.TestCase):
 
