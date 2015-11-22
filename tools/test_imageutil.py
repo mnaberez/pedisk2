@@ -757,6 +757,34 @@ class FilesystemTests(unittest.TestCase):
         last_track_plus_one = img.TRACKS
         self.assertEqual(fs.next_free_ts, (last_track_plus_one, 1,))
 
+    def test_write_file_allows_writing_an_empty_non_LD_file(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'foo')
+        for name in (b'a', b'c'):
+            fs.write_file(name, imageutil.FileTypes.SEQ,
+                load_address=0x0080, data=b'')
+            entry = fs.read_entry(name)
+            self.assertEqual(entry.size, 0)
+            self.assertEqual(entry.sector_count, 0)
+            self.assertEqual(entry.track, 0)
+            self.assertEqual(entry.sector, 9)
+            self.assertEqual(fs.next_free_ts, (0, 9))
+
+    def test_write_file_allows_writing_an_empty_LD_file(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'foo')
+        for name in (b'a', b'c'):
+            fs.write_file(name, imageutil.FileTypes.LD,
+                load_address=0x0080, entry_address=0xc000, data=b'')
+            entry = fs.read_entry(name)
+            self.assertEqual(entry.size, 0xc000) # entry address
+            self.assertEqual(entry.sector_count, 0)
+            self.assertEqual(entry.track, 0)
+            self.assertEqual(entry.sector, 9)
+            self.assertEqual(fs.next_free_ts, (0, 9))
+
 class _low_highTests(unittest.TestCase):
     def test_raises_for_num_out_of_range(self):
         for num in (-1, 65536):
