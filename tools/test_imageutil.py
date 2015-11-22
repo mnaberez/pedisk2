@@ -719,8 +719,28 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.num_free_bytes, img.SECTOR_SIZE)
         data = b'a'*img.SECTOR_SIZE
         fs.write_file(b'ending', imageutil.FileTypes.SEQ,
-            load_address=0x0401, data=data)
+            load_address=0x0080, data=data)
         self.assertEqual(img.data[-len(data):], data)
+        # no more free sectors so next free t/s is an invalid track
+        last_track_plus_one = img.TRACKS
+        self.assertEqual(fs.next_free_ts, (last_track_plus_one, 1,))
+
+    def test_write_file_allows_writing_the_largest_possible_file(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'foo')
+        # write the largest possible file
+        max_sectors = fs.num_free_sectors
+        data = b'a' * (max_sectors * img.SECTOR_SIZE)
+        fs.write_file(b'biggie', imageutil.FileTypes.SEQ,
+            load_address=0x0080, data=data)
+        self.assertEqual(img.data[-len(data):], data)
+        # check directory entry
+        entry = fs.read_entry(b'biggie')
+        self.assertEqual(entry.sector_count, max_sectors)
+        # the actual size of the data is larger than the size field,
+        # so the size field is capped at its max value.
+        self.assertEqual(entry.size, 0xFFFF)
         # no more free sectors so next free t/s is an invalid track
         last_track_plus_one = img.TRACKS
         self.assertEqual(fs.next_free_ts, (last_track_plus_one, 1,))

@@ -300,13 +300,13 @@ class Filesystem(object):
         self.image.write(data)
 
         # find the next free track/sector after the file we just wrote
-        if self.image.track < track:
+        track = self.image.track
+        sector = self.image.sector
+        if (track, sector) == (0, 1):
             # we wrote the very last sector on disk and the pointer wrapped.
             # there's not another free t/s, so we choose an invalid one
             # (last track + 1), which seems to be what the pedisk does also.
-            track, sector = self.image.TRACKS, 1
-        else:
-            track, sector = self.image.track, self.image.sector
+            track = self.image.TRACKS
 
         # update directory header
         used_entries = len(self.list_dir())
@@ -369,7 +369,7 @@ class DirectoryEntry(object):
         self._validate()
         data = bytearray()
         data.extend(self.filename.ljust(6, b'\x20'))
-        data.extend(_low_high(self.size))
+        data.extend(_low_high(min(0xFFFF, self.size)))
         data.extend(_low_high(self.load_address))
         data.append(self.filetype)
         data.append(0x20) # unused byte, always 0x20
