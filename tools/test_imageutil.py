@@ -580,6 +580,18 @@ class FilesystemTests(unittest.TestCase):
         expected = contents.ljust(3 * 128, b'\xe5')
         self.assertEqual(fs.read_file(b'strtrk'), expected)
 
+    def test_read_file_allows_reading_the_largest_possible_file(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'foo')
+        # write the largest possible file
+        max_sectors = fs.num_free_sectors
+        data = b'a' * (max_sectors * img.SECTOR_SIZE)
+        fs.write_file(b'biggie', imageutil.FileTypes.SEQ,
+            load_address=0x0080, data=data)
+        # read it back
+        self.assertEqual(fs.read_file(b'biggie'), data)
+
     # file_exists
 
     def test_file_exists_returns_False_if_name_not_in_dir(self):

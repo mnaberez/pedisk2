@@ -250,9 +250,14 @@ class Filesystem(object):
         exception is raised if the file is not found.'''
         entry = self.read_entry(filename)
         self.image.seek(track=entry.track, sector=entry.sector)
+        size_of_sectors = entry.sector_count * self.image.SECTOR_SIZE
         if entry.filetype == FileTypes.LD:
-            size = entry.sector_count * self.image.SECTOR_SIZE
-            return self.image.read(size)
+            # for LD files only, the size field is used as the entry address.
+            return self.image.read(size_of_sectors)
+        elif entry.size == 0xFFFF:
+            # the file can be much larger than the size field.  if the size
+            # field is maxed out, return all the file's sectors on disk.
+            return self.image.read(size_of_sectors)
         else:
             return self.image.read(entry.size)
 
