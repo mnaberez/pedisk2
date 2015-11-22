@@ -37,16 +37,16 @@ destfs = imageutil.Filesystem(destimg)
 destfs.format(srcfs.diskname)
 
 # copy files from source into destination
-for filename in srcfs.read_dir():
-    entry = srcfs.read_entry(filename)
-    data = srcfs.read_file(filename)
-    destfs.write_file(
-        filename=entry.filename,
-        filetype=entry.filetype,
-        load_address=entry.load_address,
-        entry_address=entry.entry_address,
-        data=data
-        )
+for entry in srcfs.read_dir():
+    if entry.active:
+        data = srcfs.read_file(entry.filename)
+        destfs.write_file(
+            filename=entry.filename,
+            filetype=entry.filetype,
+            load_address=entry.load_address,
+            entry_address=entry.entry_address,
+            data=data
+            )
 
 # write destination image
 with open(destname, 'wb') as f:
