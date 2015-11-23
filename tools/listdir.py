@@ -26,7 +26,7 @@ def print_dir(fs, out=sys.stdout):
     out.write("Filename Type Load  Entry Trk,Sec #Secs Size\n")
 
     for entry in fs.read_dir():
-        if not entry.active:
+        if not entry.used:
             continue
 
         typename = imageutil.FileTypes.name_of(entry.filetype)
@@ -37,16 +37,25 @@ def print_dir(fs, out=sys.stdout):
             entry_addr = " ---"
             size = str(entry.size)
 
-        cols = (
-            entry.filename.decode("utf-8").ljust(9),
+        warnings_msg = ''
+        if entry.deleted:
+            warnings_msg = '<Deleted>'
+        expected_size = fs.file_size(entry.filename)
+        actual_size = len(fs.read_file(entry.filename))
+        if expected_size != actual_size:
+            warnings_msg += "<Truncated to %d bytes>" % actual_size
+
+        cols = [
+            entry.filename.decode("utf-8", errors='replace').ljust(9),
             typename.ljust(5),
             "$%04X " % entry.load_address,
             entry_addr.ljust(6),
             ("%d,%d" % (entry.track, entry.sector)).ljust(8),
             str(entry.sector_count).ljust(6),
-            size,
-            )
-        out.write(''.join(cols) + "\n")
+            str(size).ljust(8),
+            warnings_msg
+            ]
+        out.write(u''.join(cols) + "\n")
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:

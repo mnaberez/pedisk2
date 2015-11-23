@@ -254,6 +254,16 @@ class Filesystem(object):
         already exists as an active filename'''
         return filename.ljust(6, b'\x20') in self.list_dir()
 
+    def file_size(self, filename):
+        '''Read the directory and return the size of the file in bytes.
+        This may be less than the actual data returned by read_file()
+        if the directory is inconsistent.'''
+        entry = self.read_entry(filename)
+        if (entry.filetype == FileTypes.LD) or (entry.size == 0xFFFF):
+            return entry.sector_count * self.image.SECTOR_SIZE
+        else:
+            return entry.size
+
     def read_file(self, filename):
         '''Read the contents of the file with the given filename and
         return it in a bytearray.  An exception is raised if the file
@@ -359,6 +369,7 @@ class FileTypes(object):
     LD  = 0x05
     TXT = 0x06
     OBJ = 0x07
+    UNUSED = 0xFF
 
     @classmethod
     def name_of(klass, number):

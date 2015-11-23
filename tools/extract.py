@@ -20,18 +20,21 @@ def read_image(filename):
     return img
 
 def modern_filename(entry):
-    f = entry.filename.decode('utf-8').strip()
+    f = entry.filename.decode('utf-8', errors='ignore').strip()
     f += '.' + imageutil.FileTypes.name_of(entry.filetype)
     f = f.replace('*', '_').replace('?', '_').lower()
     return f
 
 def extract_files(fs, output_dir):
     for entry in fs.read_dir():
-        if not entry.active:
+        if not entry.used:
             continue
         data = fs.read_file(entry.filename)
 
         filename = os.path.join(output_dir, modern_filename(entry))
+        if entry.deleted:
+            filename += '.deleted'
+
         with open(filename, 'wb') as f:
             f.write(data)
 
