@@ -29,7 +29,8 @@ L0406:
     !text " START ADDRESS ? ",$04
     !text " END ADDRESS   ? ",$04
 L0476:
-    jsr $0479
+    jsr L0479
+L0479:
     lda #$20
     jsr L0406
     rts
