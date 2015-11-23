@@ -592,6 +592,40 @@ class FilesystemTests(unittest.TestCase):
         # read it back
         self.assertEqual(fs.read_file(b'biggie'), data)
 
+    def test_read_file_returns_empty_for_zero_length_file(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        # write directory entry
+        img.home()
+        img.read(16) # skip directory header
+        entry = (b'strtrk'    + # filename
+                 b'\x00\x00'  + # file size = 0 bytes
+                 b'\x00\x00'  + # load address
+                 b'\x05'      + # file type = 5 (LD)
+                 b'\x00'      + # unused byte
+                 b'\x02\x03'  + # track 2, sector 3
+                 b'\x00\x00')   # 0 sectors on disk
+        img.write(entry)
+        self.assertEqual(fs.read_file(b'strtrk'), b'')
+
+    def test_read_file_returns_empty_for_invalid_track_sector(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        # write directory entry
+        img.home()
+        img.read(16) # skip directory header
+        entry = (b'strtrk'    + # filename
+                 b'\x05\x00'  + # file size = 5 bytes
+                 b'\x00\x00'  + # load address
+                 b'\x05'      + # file type = 5 (LD)
+                 b'\x00'      + # unused byte
+                 b'\xFF\x03'  + # track 255, sector 3
+                 b'\x01\x00')   # 1 sector on disk
+        img.write(entry)
+        self.assertEqual(fs.read_file(b'strtrk'), b'')
+
     # file_exists
 
     def test_file_exists_returns_False_if_name_not_in_dir(self):

@@ -165,30 +165,38 @@ class Filesystem(object):
         entries available for new files.'''
         return max(0, 63 - self.num_used_entries)
 
+    def _is_valid_ts(self, track, sector):
+        '''Returns True if the track, sector are valid for the image'''
+        if (track < 0) or (track >= self.image.TRACKS):
+            return False
+        if (sector < 1) or (sector > self.image.SECTORS):
+            return False
+        return True
+
+    def _num_sectors_from_ts(self, track, sector):
+        '''Find the number of sectors in the image from the given track,
+        sector to the end of the image'''
+        if not self._is_valid_ts(track, sector):
+            return 0
+
+        # start with 1 (this is the sector number given in the args)
+        num_sectors = 1
+
+        # add all the higher sectors on the same track
+        num_sectors += self.image.SECTORS - sector
+
+        # add all the sectors on all the higher tracks
+        num_empty_tracks = self.image.TRACKS - track - 1
+        num_sectors += num_empty_tracks * self.image.SECTORS
+
+        return num_sectors
+
     @property
     def num_free_sectors(self):
         '''Read the directory header and return the number of sectors
         available for new files.  If the next free track/sector in the
         directory header is invalid, 0 is returned.'''
-        track, sector = self.next_free_ts
-
-        # pedisk may set track out of range if it fills the entire disk
-        if (track >= self.image.TRACKS):
-            return 0
-        if (sector < 1) or (sector > self.image.SECTORS):
-            return 0
-
-        # start with 1 (this is the sector return by next_free_ts)
-        free_sectors = 1
-
-        # add all the higher sectors on the same track
-        free_sectors += self.image.SECTORS - sector
-
-        # add all the sectors on all the higher tracks
-        num_empty_tracks = self.image.TRACKS - track - 1
-        free_sectors += num_empty_tracks * self.image.SECTORS
-
-        return free_sectors
+        return self._num_sectors_from_ts(*self.next_free_ts)
 
     @property
     def num_free_bytes(self):
@@ -246,11 +254,23 @@ class Filesystem(object):
         return filename.ljust(6, b'\x20') in self.list_dir()
 
     def read_file(self, filename):
-        '''Read the contents of the file with the given filename.  An
-        exception is raised if the file is not found.'''
+        '''Read the contents of the file with the given filename and
+        return it in a bytearray.  An exception is raised if the file
+        is not found.  The length of the data returned may be shorter
+        than claimed in the directory entry.  This is because it is
+        possible for the directory to become inconsistent if the PEDISK
+        runs out of space while writing the file.'''
         entry = self.read_entry(filename)
-        self.image.seek(track=entry.track, sector=entry.sector)
-        size_of_sectors = entry.sector_count * self.image.SECTOR_SIZE
+
+        sector_count = min(
+            entry.sector_count,
+            self._num_sectors_from_ts(entry.track, entry.sector)
+            )
+        size_of_sectors = sector_count * self.image.SECTOR_SIZE
+        if size_of_sectors == 0:
+            return bytearray()
+
+        self.image.seek(entry.track, entry.sector)
         if entry.filetype == FileTypes.LD:
             # for LD files only, the size field is used as the entry address.
             return self.image.read(size_of_sectors)
@@ -259,7 +279,7 @@ class Filesystem(object):
             # field is maxed out, return all the file's sectors on disk.
             return self.image.read(size_of_sectors)
         else:
-            return self.image.read(entry.size)
+            return self.image.read(min(size_of_sectors, entry.size))
 
     def write_file(self, filename, filetype, data,
                     load_address, entry_address=None):
