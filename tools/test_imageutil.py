@@ -703,23 +703,56 @@ class FilesystemTests(unittest.TestCase):
         img.read(16 + 16 + 16) # skip header + 2 used entries
         self.assertEqual(b'newnew', img.read(6))
 
+    def test_write_file_does_not_use_entry_of_deleted_file(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'foo')
+        # use the first directory entry for a deleted file
+        img.home()
+        img.read(16) # skip directory header
+        entry = (b'strtr\xff' + # filename (\xff means deleted)
+                 b'\x42\x01'  + # file size = 322 bytes
+                 b'\x00\x00'  + # load address
+                 b'\x00'      + # file type = 0 (SEQ)
+                 b'\x00'      + # unused byte
+                 b'\x02\x03'  + # track 2, sector 3
+                 b'\x03\x00')   # 3 sectors on disk
+        img.write(entry)
+        # write the new file
+        fs.write_file(b'newnew', imageutil.FileTypes.SEQ,
+            load_address=0, data=b'12345')
+        # new file should be in the second entry
+        img.home()
+        img.read(16 + 16) # skip header + first entry
+        self.assertEqual(b'newnew', img.read(6))
+
     def test_write_file_rewrites_count_of_used_entries(self):
         img = imageutil.FiveInchDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
-        # use the first two directory entries
+        # write a nonsensical used entry count in the header
         img.home()
         img.read(8) # skip past disk name in header
-        # write a nonsensical used entry count in the header
         img.write(b'\x33')
         self.assertEqual(fs.num_used_entries, 0x33)
+        # use the first directory entry for a deleted file
+        img.home()
+        img.read(16) # skip directory header
+        entry = (b'strtr\xff' + # filename (\xff means deleted)
+                 b'\x42\x01'  + # file size = 322 bytes
+                 b'\x00\x00'  + # load address
+                 b'\x00'      + # file type = 0 (SEQ)
+                 b'\x00'      + # unused byte
+                 b'\x02\x03'  + # track 2, sector 3
+                 b'\x03\x00')   # 3 sectors on disk
+        img.write(entry)
         # write two files
         fs.write_file(b'foo', imageutil.FileTypes.SEQ,
             load_address=0, data=b'12345')
         fs.write_file(b'bar', imageutil.FileTypes.SEQ,
             load_address=0, data=b'12345')
-        # used file count should be two
-        self.assertEqual(fs.num_used_entries, 2)
+        # used file entry should be three
+        self.assertEqual(fs.num_used_entries, 3)
 
     def test_write_file_sets_size_from_length_of_data_for_not_type_LD(self):
         img = imageutil.FiveInchDiskImage()

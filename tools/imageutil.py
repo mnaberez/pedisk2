@@ -345,7 +345,7 @@ class Filesystem(object):
             track = self.image.TRACKS
 
         # update directory header
-        used_entries = len(self.list_dir())
+        used_entries = len([e for e in self.read_dir() if e.used])
         self.image.home()
         self.image.read(8) # skip disk name
         self.image.write(bytearray([used_entries, track, sector]))
