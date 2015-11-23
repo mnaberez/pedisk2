@@ -1,24 +1,31 @@
-LFFCF = $FFCF
-LFFD2 = $FFD2
+chrin = $FFCF
+chrout = $FFD2
 
     * = $0400
 
     jmp L04E2
-L0403:
-    jmp LFFCF
-L0406:
-    jmp LFFD2
+
+jmp_chrin:
+    jmp chrin
+
+jmp_chrout:
+    jmp chrout
+
+banner:
     !byte $93
     !text " PET MEMORY TEST PROGRAM ",$0d
     !text " CGRS MICROTECH,INC. ",$0d
     !text " LANGHORNE,PA. 19047 ",$0d,$0a,$04
     !text " START ADDRESS ? ",$04
     !text " END ADDRESS   ? ",$04
-L0476:
-    jsr L0479
-L0479:
+
+jsr_spc_out:
+    jsr spc_out
+
+spc_out:
+;Print a space character
     lda #$20
-    jsr L0406
+    jsr jmp_chrout
     rts
 
 L047F:
@@ -38,7 +45,7 @@ L048A:
     bcc L0493
     adc #$06
 L0493:
-    jsr L0406
+    jsr jmp_chrout
     rts
 
 L0497:
@@ -47,7 +54,7 @@ L0499:
     lda ($22),y
     cmp #$04
     beq L04A5
-    jsr L0406
+    jsr jmp_chrout
     iny
     bne L0499
 L04A5:
@@ -65,7 +72,7 @@ L04A6:
     rts
 
 L04B5:
-    jsr L0403
+    jsr jmp_chrin
     cmp #$30
     bcc L04C8
     cmp #$3A
@@ -76,10 +83,10 @@ L04B5:
     bcc L04D7
 L04C8:
     lda #$3F
-    jsr L0406
+    jsr jmp_chrout
     lda #$08
-    jsr L0406
-    jsr L0406
+    jsr jmp_chrout
+    jsr jmp_chrout
     bne L04B5
 L04D7:
     adc #$09
@@ -87,9 +94,9 @@ L04D9:
     and #$0F
     rts
 
-L04DC:
+cr_out:
     lda #$0D
-    jsr L0406
+    jsr jmp_chrout
     rts
 
 L04E2:
@@ -99,7 +106,7 @@ L04E2:
     lda #$04
     sta $23
     jsr L0497
-    jsr L04DC
+    jsr cr_out
     lda #$52
     sta $22
     lda #$04
@@ -109,7 +116,7 @@ L04E2:
     sta $25
     jsr L04A6
     sta $24
-    jsr L04DC
+    jsr cr_out
     lda #$64
     sta $22
     lda #$04
@@ -119,19 +126,19 @@ L04E2:
     sta $27
     jsr L04A6
     sta $26
-    jsr L04DC
+    jsr cr_out
 L0521:
     ldx #$00
     stx $22
     jsr L0545
-    jsr L04DC
+    jsr cr_out
     lda #$31
-    jsr L0406
-    jsr L0476
+    jsr jmp_chrout
+    jsr jsr_spc_out
     inc $22
     jsr L0545
     lda #$32
-    jsr L0406
+    jsr jmp_chrout
     clc
     bcc L0521
 L0540:
@@ -212,22 +219,22 @@ L05AE:
     pha
     lda #$44
 L05B1:
-    jsr L0406
-    jsr L0476
+    jsr jmp_chrout
+    jsr jsr_spc_out
     lda $29
     jsr L047F
     lda $28
     jsr L047F
-    jsr L0476
+    jsr jsr_spc_out
     pla
     jsr L047F
-    jsr L0476
+    jsr jsr_spc_out
     tya
     jsr L047F
-    jsr L0476
+    jsr jsr_spc_out
     lda $22
     jsr L047F
-    jsr L04DC
+    jsr cr_out
     rts
 
 L05DB:
