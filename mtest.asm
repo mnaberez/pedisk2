@@ -24,7 +24,7 @@ jsr_spc_out:
 
 spc_out:
 ;Print a space character
-    lda #$20
+    lda #' '
     jsr jmp_chrout
     rts
 
@@ -82,7 +82,7 @@ L04B5:
     cmp #$47
     bcc L04D7
 L04C8:
-    lda #$3F
+    lda #'?'
     jsr jmp_chrout
     lda #$08
     jsr jmp_chrout
@@ -132,12 +132,12 @@ L0521:
     stx $22
     jsr L0545
     jsr cr_out
-    lda #$31
+    lda #'1'
     jsr jmp_chrout
     jsr jsr_spc_out
     inc $22
     jsr L0545
-    lda #$32
+    lda #'2'
     jsr jmp_chrout
     clc
     bcc L0521
@@ -217,7 +217,7 @@ L05A9:
     bne L05B1
 L05AE:
     pha
-    lda #$44
+    lda #'D'
 L05B1:
     jsr jmp_chrout
     jsr jsr_spc_out
