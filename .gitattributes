@@ -1,0 +1,5 @@
+*.bas binary
+*.bin binary
+*.img binary
+*.ld binary
+*.prg binary
