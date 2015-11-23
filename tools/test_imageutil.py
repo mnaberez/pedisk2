@@ -467,7 +467,7 @@ class FilesystemTests(unittest.TestCase):
         img.home()
         img.read(16) # skip directory header
         img.write(b'aaaaaa'.ljust(16, b'\x00'))    # "aaaaaa"
-        img.write(b'\xffbbbbb'.ljust(16, b'\x00')) # deleted
+        img.write(b'bbbbb\xff'.ljust(16, b'\x00')) # deleted
         img.write(b'cccccc'.ljust(16, b'\x00'))    # "cccccc"
         self.assertEqual(fs.list_dir(),
             [bytearray(b'aaaaaa'), bytearray(b'cccccc')])

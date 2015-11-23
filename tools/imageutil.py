@@ -154,7 +154,8 @@ class Filesystem(object):
         self.image.home()
         self.image.read(16) # skip past directory header
         for i in range(63):
-            if self.image.peek(1) == b'\xFF': # first byte of filename
+            entry = DirectoryEntry.from_bytes(self.image.peek(16))
+            if not entry.used:
                 return
             self.image.read(16) # advance to next entry
         raise ValueError('Disk full: no entries left in directory')
@@ -349,6 +350,7 @@ def _low_high(num):
 
 class FileTypes(object):
     '''File types supported by the PEDISK file system'''
+    UNUSED = 0xFF
     SEQ = 0x00
     IND = 0x01
     ISM = 0x02
@@ -407,8 +409,16 @@ class DirectoryEntry(object):
         return self.size  # size is abused for entry_address on type LD only
 
     @property
+    def used(self):
+        return self.filetype != FileTypes.UNUSED
+
+    @property
     def active(self):
-        return self.filename[0] != 0xFF
+        return self.used and (not self.deleted)
+
+    @property
+    def deleted(self):
+        return self.used and (self.filename[5] == 0xFF)
 
     def _validate(self):
         if len(self.filename) < 1 or len(self.filename) > 6:
