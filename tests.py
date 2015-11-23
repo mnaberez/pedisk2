@@ -22,6 +22,7 @@ FILES = {'bootstrap/format8.asm':  None,
          'dos_t01_s19_7c00_1.asm': 'bin/dos_t01_s19_7c00_1.bin',
          'dos_t01_s25_7c00_d.asm': 'bin/dos_t01_s25_7c00_d.bin',
          'dos_t01_s28_7c00_n.asm': 'bin/dos_t01_s28_7c00_n.bin',
+         'mtest.asm':              'bin/mtest.ld',
          'rom_e800.asm':           'bin/rom_e800.bin',
         }
 
