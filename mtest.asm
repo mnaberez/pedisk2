@@ -20,66 +20,12 @@ LFFD2           = $FFD2
         jmp     L04E2
 L0403:  jmp     LFFCF
 L0406:  jmp     LFFD2
-        !byte   $93
-        jsr     L4550
-        !byte   $54
-        jsr     L454D
-        eor     $524F
-        eor     $5420,y
-        eor     $53
-        !byte   $54
-        jsr     L5250
-        !byte   $4F
-        !byte   $47
-        !byte   $52
-        eor     ($4D,x)
-        jsr     L200D
-        !byte   $43
-        !byte   $47
-        !byte   $52
-        !byte   $53
-        jsr     L494D
-        !byte   $43
-        !byte   $52
-        !byte   $4F
-        !byte   $54
-        eor     $43
-        pha
-        bit     $4E49
-        !byte   $43
-        rol     $0D20
-        jsr     L414C
-        lsr     $4847
-        !byte   $4F
-        !byte   $52
-        lsr     $2C45
-        bvc     L0488
-        rol     $3120
-        and     $3430,y
-        !byte   $37
-        jsr     L0A0D
-        !byte   $04
-        jsr     L5453
-        eor     ($52,x)
-        !byte   $54
-        jsr     L4441
-        !byte   $44
-        !byte   $52
-        eor     $53
-        !byte   $53
-        jsr     L203F
-        !byte   $04
-        jsr     L4E45
-        !byte   $44
-        jsr     L4441
-        !byte   $44
-        !byte   $52
-        eor     $53
-        !byte   $53
-        jsr     L2020
-        !byte   $3F
-        !byte   $20
-        !byte   $04
+        !byte $93
+        !text " PET MEMORY TEST PROGRAM ",$0d
+        !text " CGRS MICROTECH,INC. ",$0d
+        !text " LANGHORNE,PA. 19047 ",$0d,$0a,$04
+        !text " START ADDRESS ? ",$04
+        !text " END ADDRESS   ? ",$04
 L0476:  jsr     $0479
         lda     #$20
         jsr     L0406
@@ -258,16 +204,8 @@ L05DB:  lda     $24
         lda     $25
         sta     $29
         rts
-        ora     $0D0D
-        ora     $0D0D
-        ora     $0D0D
-        ora     $0D0D
-        ora     $0D0D
-        ora     $0D0D
-        ora     $4343
-        !byte   $52
-        !byte   $53
-        !byte   $2F
-        eor     ($53,x)
-        !byte   $4D
-        !byte   $20
+
+filler:
+    !byte $0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d
+    !byte $0d,$0d,$0d,$0d
+    !text "CCRS/ASM "  ;not a typo: "CCGRS" not "CGRS"
