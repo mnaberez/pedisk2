@@ -33,6 +33,7 @@ L0476:
     lda #$20
     jsr L0406
     rts
+
 L047F:
     pha
     lsr ;a
@@ -52,6 +53,7 @@ L048A:
 L0493:
     jsr L0406
     rts
+
 L0497:
     ldy #$00
 L0499:
@@ -63,6 +65,7 @@ L0499:
     bne L0499
 L04A5:
     rts
+
 L04A6:
     jsr L04B5
     asl ;a
@@ -73,6 +76,7 @@ L04A6:
     jsr L04B5
     ora $22
     rts
+
 L04B5:
     jsr L0403
     cmp #$30
@@ -95,10 +99,12 @@ L04D7:
 L04D9:
     and #$0F
     rts
+
 L04DC:
     lda #$0D
     jsr L0406
     rts
+
 L04E2:
     cld
     lda #$09
@@ -145,6 +151,7 @@ L0540:
     inc $23
     bne L054B
     rts
+
 L0545:
     ldy #$00
     ldx #$00
@@ -196,6 +203,7 @@ L058C:
     ldy #$00
 L0597:
     rts
+
 L0598:
     inc $28
     bne L059E
@@ -208,6 +216,7 @@ L059E:
     cmp $29
 L05A8:
     rts
+
 L05A9:
     pha
     lda #$49
@@ -233,6 +242,7 @@ L05B1:
     jsr L047F
     jsr L04DC
     rts
+
 L05DB:
     lda $24
     sta $28
