@@ -25,10 +25,7 @@ def print_dir(fs, out=sys.stdout):
     out.write("Bytes Free = %d\n" % fs.num_free_bytes)
     out.write("Filename Type Load  Entry Trk,Sec #Secs Size\n")
 
-    for entry in fs.read_dir():
-        if not entry.used:
-            continue
-
+    for entry in [ e for e in fs.read_dir() if e.used ]:
         typename = imageutil.FileTypes.name_of(entry.filetype)
         if entry.filetype == imageutil.FileTypes.LD:
             entry_addr = "$%04X" % entry.size
