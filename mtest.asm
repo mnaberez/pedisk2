@@ -3,7 +3,7 @@ chrout = $FFD2
 
     * = $0400
 
-    jmp L04E2
+    jmp start
 
 jmp_chrin:
     jmp chrin
@@ -16,7 +16,9 @@ banner:
     !text " PET MEMORY TEST PROGRAM ",$0d
     !text " CGRS MICROTECH,INC. ",$0d
     !text " LANGHORNE,PA. 19047 ",$0d,$0a,$04
+ask_start_addr:
     !text " START ADDRESS ? ",$04
+ask_end_addr:
     !text " END ADDRESS   ? ",$04
 
 jsr_spc_out:
@@ -28,7 +30,8 @@ spc_out:
     jsr jmp_chrout
     rts
 
-L047F:
+hex_byte_out:
+;Print the byte in A as a two-digit hex number
     pha
     lsr ;a
     lsr ;a
@@ -40,7 +43,7 @@ L0488:
     and #$0F
 L048A:
     clc
-    adc #$30
+    adc #'0'
     cmp #$3A
     bcc L0493
     adc #$06
@@ -48,7 +51,9 @@ L0493:
     jsr jmp_chrout
     rts
 
-L0497:
+msg_out:
+;Print the message at ($22).
+;Message is terminated with $04 byte.
     ldy #$00
 L0499:
     lda ($22),y
@@ -60,26 +65,31 @@ L0499:
 L04A5:
     rts
 
-L04A6:
-    jsr L04B5
+input_byte:
+;Get a byte from the user as two hex digits.
+;Stores the byte in $22
+    jsr input_nibble
     asl ;a
     asl ;a
     asl ;a
     asl ;a
     sta $22
-    jsr L04B5
+    jsr input_nibble
     ora $22
     rts
 
-L04B5:
+input_nibble:
+;Get a nibble from the user as one hex digit.
+;Keeps prompting until it gets a char 0-F.
+;Stores the nibble in $22.
     jsr jmp_chrin
-    cmp #$30
+    cmp #'0'
     bcc L04C8
-    cmp #$3A
+    cmp #'9'+1
     bcc L04D9
-    cmp #$41
+    cmp #'A'
     bcc L04C8
-    cmp #$47
+    cmp #'F'+1
     bcc L04D7
 L04C8:
     lda #'?'
@@ -87,7 +97,7 @@ L04C8:
     lda #$08
     jsr jmp_chrout
     jsr jmp_chrout
-    bne L04B5
+    bne input_nibble
 L04D7:
     adc #$09
 L04D9:
@@ -95,38 +105,50 @@ L04D9:
     rts
 
 cr_out:
+;Print a carriage return character
     lda #$0D
     jsr jmp_chrout
     rts
 
-L04E2:
+start:
     cld
-    lda #$09
+
+    ;Print " PET MEMORY TEST " banner
+    lda #<banner
     sta $22
-    lda #$04
+    lda #>banner
     sta $23
-    jsr L0497
+    jsr msg_out
     jsr cr_out
-    lda #$52
+
+    ;Print " START ADDRESS ? " prompt
+    lda #<ask_start_addr
     sta $22
-    lda #$04
+    lda #>ask_start_addr
     sta $23
-    jsr L0497
-    jsr L04A6
+    jsr msg_out
+
+    ;Input start address from user, save in $24-25
+    jsr input_byte
     sta $25
-    jsr L04A6
+    jsr input_byte
     sta $24
     jsr cr_out
-    lda #$64
+
+    ;Print " END ADDRESS   ? " prompt
+    lda #<ask_end_addr
     sta $22
-    lda #$04
+    lda #>ask_end_addr
     sta $23
-    jsr L0497
-    jsr L04A6
+    jsr msg_out
+
+    ;Input end address from user, save in $26-27
+    jsr input_byte
     sta $27
-    jsr L04A6
+    jsr input_byte
     sta $26
     jsr cr_out
+
 L0521:
     ldx #$00
     stx $22
@@ -222,18 +244,18 @@ L05B1:
     jsr jmp_chrout
     jsr jsr_spc_out
     lda $29
-    jsr L047F
+    jsr hex_byte_out
     lda $28
-    jsr L047F
+    jsr hex_byte_out
     jsr jsr_spc_out
     pla
-    jsr L047F
+    jsr hex_byte_out
     jsr jsr_spc_out
     tya
-    jsr L047F
+    jsr hex_byte_out
     jsr jsr_spc_out
     lda $22
-    jsr L047F
+    jsr hex_byte_out
     jsr cr_out
     rts
 
