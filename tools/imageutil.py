@@ -428,6 +428,18 @@ class DirectoryEntry(object):
     def deleted(self):
         return self.used and (self.filename[5] == 0xFF)
 
+    @property
+    def modern_filename(self):
+        '''Convert the filename and filetype of this entry to a single filename
+        more suited for a modern filesystem, e.g. an entry with filename
+        bytearray('STRTRK') and type LD would become "strtrk.ld".'''
+        name = self.filename.decode('utf-8', errors='ignore').strip()
+        name = name.replace('*', '_').replace('?', '_')
+        extension = FileTypes.name_of(self.filetype)
+        if self.deleted:
+            extension += '.deleted'
+        return (name + '.' + extension).lower()
+
     def _validate(self):
         if len(self.filename) < 1 or len(self.filename) > 6:
             msg = ('Invalid filename: %r is not between '
