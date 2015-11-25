@@ -380,13 +380,13 @@ class FileTypes(object):
         raise IndexError('File type number not found: %r' % number)
 
 class DirectoryEntry(object):
-    def __init__(self, filename, filetype, size,
-                 load_address, track, sector, sector_count):
+    def __init__(self, filename, size, load_address, filetype,
+                    track, sector, sector_count, unknown=0x20):
         self.filename = filename            # $00-$05: 6 bytes
         self.size = size                    # $06-$07: 2 bytes
         self.load_address = load_address    # $08-$09: 2 bytes
         self.filetype = filetype            # $0A:     1 byte
-                                            # $0B:     1 byte (unused)
+        self.unknown = unknown              # $0B:     1 byte (unknown purpose)
         self.track = track                  # $0C:     1 byte track
         self.sector = sector                # $0D:     1 byte sector
         self.sector_count = sector_count    # $0E-0F:  2 bytes sector count
@@ -398,6 +398,7 @@ class DirectoryEntry(object):
             size=data[6] + (data[7] << 8),
             load_address=data[8] + (data[9] << 8),
             filetype=data[10],
+            unknown=data[11],
             track=data[12],
             sector=data[13],
             sector_count=data[14] + (data[15] << 8)
@@ -410,7 +411,7 @@ class DirectoryEntry(object):
         data.extend(_low_high(min(0xFFFF, self.size)))
         data.extend(_low_high(self.load_address))
         data.append(self.filetype)
-        data.append(0x20) # unused byte, always 0x20
+        data.append(self.unknown)
         data.extend([self.track, self.sector])
         data.extend(_low_high(self.sector_count))
         return data
