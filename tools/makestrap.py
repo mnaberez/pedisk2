@@ -15,15 +15,16 @@ Usage: makestrap.py <input.img> <output.asm>
 '''
 import sys
 
+import imageutil
+
 if len(sys.argv) != 3:
     sys.stderr.write(__doc__)
     sys.exit(1)
-
 imagename, asmname = sys.argv[1:]
 
 # read first 100 sectors of the image file
-with open(imagename, 'rb') as f:
-    data = bytearray(f.read(100 * 128))
+img = imageutil.DiskImage.read_file(imagename)
+data = img.read(100 * img.SECTOR_SIZE)
 
 # convert it to assembly: "    !byte $00,$ab,$f2,..."
 bytes_stmt = "    !byte " + ','.join([ "$%02x" % d for d in data ])

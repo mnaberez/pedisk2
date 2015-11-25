@@ -1,12 +1,43 @@
 import math
+import os
+
 
 class DiskImage(object):
     '''Low-level manipulation of PEDISK disk image data.  Seek to track/
     sector positions with boundary checks and read/write raw data in the
     image.  This class is abstract.'''
-    SECTOR_SIZE = 128
+    SIZE_IN_INCHES = None  # override in subclass
     TRACKS = None  # override in subclass
     SECTORS = None  # override in subclass
+    SECTOR_SIZE = 128
+
+    @staticmethod
+    def read_file(filename):
+        '''Read an existing disk image file.  The object returned will be
+        an instance of a DiskImage subclass.'''
+        image_size = os.path.getsize(filename)
+        img = DiskImage.make_for_file_size(image_size)
+        with open(filename, 'rb') as f:
+            img.data = bytearray(f.read())
+        return img
+
+    @staticmethod
+    def make_for_file_size(image_size):
+        '''Make a new disk image object for the given image file size.  The
+        object returned will be an instance of a DiskImage subclass.'''
+        for c in DiskImage.__subclasses__():
+            if (c.TRACKS * c.SECTORS * c.SECTOR_SIZE) == image_size:
+                return c()
+        raise Exception("Bad image file size: %r" % image_size)
+
+    @staticmethod
+    def make_for_physical_size(size_in_inches):
+        '''Make a new disk image object for the given physical size.  The
+        object returned will be an instance of a DiskImage subclass.'''
+        for c in DiskImage.__subclasses__():
+            if str(c.SIZE_IN_INCHES)[0] == size_in_inches:
+                return c()
+        raise Exception("Bad physical size: %r" % size_in_inches)
 
     def __init__(self):
         self.TOTAL_SIZE = self.SECTOR_SIZE * self.SECTORS * self.TRACKS
@@ -112,12 +143,12 @@ class DiskImage(object):
         return wrapped
 
 class FiveInchDiskImage(DiskImage):
-    '''5.25" disk'''
+    SIZE_IN_INCHES = 5.25
     TRACKS = 41 # tracks numbered 0-40
     SECTORS = 28 # sectors per track numbered 1-28
 
 class EightInchDiskImage(DiskImage):
-    '''8" disk'''
+    SIZE_IN_INCHES = 8
     TRACKS = 77 # tracks numbered 0-76
     SECTORS = 26 # sectors per track numbered 1-26
 

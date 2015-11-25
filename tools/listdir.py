@@ -2,22 +2,9 @@
 List the directory of a PEDISK disk image
 Usage: list_dir.py <image.img>
 '''
-import os
 import sys
 
 import imageutil
-
-def read_image(filename):
-    size = os.path.getsize(filename)
-    if size == 256256: # 8"
-        img = imageutil.EightInchDiskImage()
-    elif size == 146944: # 5.25"
-        img = imageutil.FiveInchDiskImage()
-    else:
-        raise Exception("Unrecognized image: %r" % filename)
-    with open(filename, 'rb') as f:
-        img.data = bytearray(f.read())
-    return img
 
 def print_dir(fs, out=sys.stdout):
     out.write("Disk Name = %s\n" % fs.diskname.decode('utf-8'))
@@ -61,7 +48,7 @@ if __name__ == '__main__':
             sys.exit(1)
         imagename = sys.argv[1]
 
-        img = read_image(imagename)
+        img = imageutil.DiskImage.read_file(imagename)
         fs = imageutil.Filesystem(img)
         print_dir(fs)
     main()

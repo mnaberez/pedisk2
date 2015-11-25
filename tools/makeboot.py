@@ -16,17 +16,10 @@ if len(sys.argv) != 3:
     sys.stderr.write(__doc__)
     sys.exit(1)
 
-disktype, imagename = sys.argv[1:]
+size_in_inches, imagename = sys.argv[1:]
 
-if disktype == '8': # 8"
-    img = imageutil.EightInchDiskImage()
-elif disktype == '5': # 5.25"
-    img = imageutil.FiveInchDiskImage()
-else:
-    sys.stderr.write("Bad disk type: %r" % disktype)
-    sys.exit(1)
-
-# format the image
+# make and format the image
+img = imageutil.DiskImage.make_for_physical_size(size_in_inches)
 fs = imageutil.Filesystem(img)
 fs.format(diskname=b'BOOTDISK')
 
