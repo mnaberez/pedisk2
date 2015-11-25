@@ -576,65 +576,54 @@ class FilesystemTests(unittest.TestCase):
         entry = fs.read_entry(b'a')
         self.assertEqual(entry.filename, b'a\x20\x20\x20\x20\x20')
 
-    # read_file
+    # read_data
 
-    def test_read_file_raises_for_file_not_found(self):
-        img = imageutil.FiveInchDiskImage()
-        fs = imageutil.Filesystem(img)
-        fs.format(diskname=b'fresh')
-        try:
-            fs.read_file(b'notfound')
-            self.fail('nothing raised')
-        except ValueError as exc:
-            self.assertEqual(exc.args[0],
-                "File %r not found" % b'notfound')
-
-    def test_read_file_reads_exact_size_for_not_type_LD(self):
+    def test_read_data_reads_exact_size_for_not_type_LD(self):
         img = imageutil.FiveInchDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         # write directory entry
         img.home()
         img.read(16) # skip directory header
-        entry = (b'hello '    + # filename
-                 b'\x42\x01'  + # file size = 322 bytes
-                 b'\x00\x00'  + # load address
-                 b'\x00'      + # file type = 0 (SEQ)
-                 b'\x00'      + # unused byte
-                 b'\x02\x03'  + # track 2, sector 3
-                 b'\x03\x00')   # 3 sectors on disk
-        img.write(entry)
+        img.write(b'hello '    + # filename
+                  b'\x42\x01'  + # file size = 322 bytes
+                  b'\x00\x00'  + # load address
+                  b'\x00'      + # file type = 0 (SEQ)
+                  b'\x00'      + # unused byte
+                  b'\x02\x03'  + # track 2, sector 3
+                  b'\x03\x00')   # 3 sectors on disk
         # write contents
         img.seek(track=2, sector=3)
         contents = b'Contents of the file'.ljust(322, b'.')
         img.write(contents)
         # should read only 322 bytes
-        self.assertEqual(fs.read_file(b'hello'), contents)
+        entry = fs.read_entry(b'hello')
+        self.assertEqual(fs.read_data(entry), contents)
 
-    def test_read_file_reads_sector_count_for_type_LD_only(self):
+    def test_read_data_reads_sector_count_for_type_LD_only(self):
         img = imageutil.FiveInchDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         # write directory entry
         img.home()
         img.read(16) # skip directory header
-        entry = (b'strtrk'    + # filename
-                 b'\x42\x01'  + # file size = 322 bytes
-                 b'\x00\x00'  + # load address
-                 b'\x05'      + # file type = 5 (LD)
-                 b'\x00'      + # unused byte
-                 b'\x02\x03'  + # track 2, sector 3
-                 b'\x03\x00')   # 3 sectors on disk
-        img.write(entry)
+        img.write(b'strtrk'    + # filename
+                  b'\x42\x01'  + # file size = 322 bytes
+                  b'\x00\x00'  + # load address
+                  b'\x05'      + # file type = 5 (LD)
+                  b'\x00'      + # unused byte
+                  b'\x02\x03'  + # track 2, sector 3
+                  b'\x03\x00')   # 3 sectors on disk
         # write contents
         img.seek(track=2, sector=3)
         contents = b'Contents of the file'.ljust(322, b'.')
         img.write(contents)
         # should read the full 3 sectors
+        entry = fs.read_entry(b'strtrk')
         expected = contents.ljust(3 * 128, b'\xe5')
-        self.assertEqual(fs.read_file(b'strtrk'), expected)
+        self.assertEqual(fs.read_data(entry), expected)
 
-    def test_read_file_allows_reading_the_largest_possible_file(self):
+    def test_read_data_allows_reading_the_largest_possible_file(self):
         img = imageutil.FiveInchDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
@@ -644,41 +633,76 @@ class FilesystemTests(unittest.TestCase):
         fs.write_file(b'biggie', imageutil.FileTypes.SEQ,
             load_address=0x0080, data=data)
         # read it back
-        self.assertEqual(fs.read_file(b'biggie'), data)
+        entry = fs.read_entry(b'biggie')
+        self.assertEqual(fs.read_data(entry), data)
 
-    def test_read_file_returns_empty_for_zero_length_file(self):
+    def test_read_data_returns_empty_for_zero_length_file(self):
         img = imageutil.FiveInchDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         # write directory entry
         img.home()
         img.read(16) # skip directory header
-        entry = (b'strtrk'    + # filename
-                 b'\x00\x00'  + # file size = 0 bytes
-                 b'\x00\x00'  + # load address
-                 b'\x05'      + # file type = 5 (LD)
-                 b'\x00'      + # unused byte
-                 b'\x02\x03'  + # track 2, sector 3
-                 b'\x00\x00')   # 0 sectors on disk
-        img.write(entry)
-        self.assertEqual(fs.read_file(b'strtrk'), b'')
+        img.write(b'strtrk'    + # filename
+                  b'\x00\x00'  + # file size = 0 bytes
+                  b'\x00\x00'  + # load address
+                  b'\x05'      + # file type = 5 (LD)
+                  b'\x00'      + # unused byte
+                  b'\x02\x03'  + # track 2, sector 3
+                  b'\x00\x00')   # 0 sectors on disk
+        entry = fs.read_entry(b'strtrk')
+        self.assertEqual(fs.read_data(entry), b'')
 
-    def test_read_file_returns_empty_for_invalid_track_sector(self):
+    def test_read_data_returns_empty_for_invalid_track_sector(self):
         img = imageutil.FiveInchDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         # write directory entry
         img.home()
         img.read(16) # skip directory header
-        entry = (b'strtrk'    + # filename
-                 b'\x05\x00'  + # file size = 5 bytes
-                 b'\x00\x00'  + # load address
-                 b'\x05'      + # file type = 5 (LD)
-                 b'\x00'      + # unused byte
-                 b'\xFF\x03'  + # track 255, sector 3
-                 b'\x01\x00')   # 1 sector on disk
-        img.write(entry)
-        self.assertEqual(fs.read_file(b'strtrk'), b'')
+        img.write(b'strtrk'    + # filename
+                  b'\x05\x00'  + # file size = 5 bytes
+                  b'\x00\x00'  + # load address
+                  b'\x05'      + # file type = 5 (LD)
+                  b'\x00'      + # unused byte
+                  b'\xFF\x03'  + # track 255, sector 3
+                  b'\x01\x00')   # 1 sector on disk
+        entry = fs.read_entry(b'strtrk')
+        self.assertEqual(fs.read_data(entry), b'')
+
+    # read_file
+
+    def test_read_file_raises_for_file_not_found(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        try:
+            fs.read_file(b'notfnd')
+            self.fail('nothing raised')
+        except ValueError as exc:
+            self.assertEqual(exc.args[0],
+                "File %r not found" % b'notfnd')
+
+    def test_read_file_returns_data_from_read_data(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        # write directory entry
+        img.home()
+        img.read(16) # skip directory header
+        img.write(b'hello '    + # filename
+                  b'\x42\x01'  + # file size = 322 bytes
+                  b'\x00\x00'  + # load address
+                  b'\x00'      + # file type = 0 (SEQ)
+                  b'\x00'      + # unused byte
+                  b'\x02\x03'  + # track 2, sector 3
+                  b'\x03\x00')   # 3 sectors on disk
+        # write contents
+        img.seek(track=2, sector=3)
+        contents = b'Contents of the file'.ljust(322, b'.')
+        img.write(contents)
+        # should read the contents
+        self.assertEqual(fs.read_file(b'hello'), contents)
 
     # file_exists
 

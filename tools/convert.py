@@ -8,7 +8,7 @@ import imageutil
 
 def copy_files(source_fs, destination_fs):
     for entry in [ e for e in source_fs.read_dir() if e.used ]:
-        data = source_fs.read_file(entry.filename)
+        data = source_fs.read_data(entry)
         destination_fs.write_file(
             filename=entry.filename,
             filetype=entry.filetype,

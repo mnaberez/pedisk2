@@ -25,7 +25,7 @@ def print_dir(fs, out=sys.stdout):
         if entry.deleted:
             warnings_msg = '<Deleted>'
         expected_size = fs.file_size(entry.filename)
-        actual_size = len(fs.read_file(entry.filename))
+        actual_size = len(fs.read_data(entry))
         if expected_size != actual_size:
             warnings_msg += "<Truncated to %d bytes>" % actual_size
 

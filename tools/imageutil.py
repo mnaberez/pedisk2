@@ -254,8 +254,8 @@ class Filesystem(object):
         return [ e.filename for e in self.read_dir() if e.active ]
 
     def read_dir(self):
-        '''Read the directory and return all entries.  This includes
-        deleted and unused entries.'''
+        '''Read the directory and return all file entries as DirectoryEntry
+        objects.  This includes deleted and unused entries.'''
         self.image.home()
         self.image.read(16) # skip directory header
         entries = []
@@ -266,39 +266,20 @@ class Filesystem(object):
         return entries
 
     def read_entry(self, filename):
-        '''Read the directory and return the entry for the given filename.
-        The entry can be a deleted or unused one.  An exception is raised
-        if the file is not found'''
+        '''Read the directory and return a DirectoryEntry for the given
+        filename.  The entry can be a deleted or unused one.  An exception
+        is raised if the file is not found'''
         filename = filename.ljust(6, b'\x20')
         for entry in self.read_dir():
             if entry.filename == filename:
                 return entry
         raise ValueError("File %r not found" % filename)
 
-    def file_exists(self, filename):
-        '''Read the directory and return True if the given filename
-        already exists as an active filename'''
-        return filename.ljust(6, b'\x20') in self.list_dir()
-
-    def file_size(self, filename):
-        '''Read the directory and return the size of the file in bytes.
-        This may be less than the actual data returned by read_file()
-        if the directory is inconsistent.'''
-        entry = self.read_entry(filename)
-        if (entry.filetype == FileTypes.LD) or (entry.size == 0xFFFF):
-            return entry.sector_count * self.image.SECTOR_SIZE
-        else:
-            return entry.size
-
-    def read_file(self, filename):
-        '''Read the contents of the file with the given filename and
-        return it in a bytearray.  An exception is raised if the file
-        is not found.  The length of the data returned may be shorter
-        than claimed in the directory entry.  This is because it is
-        possible for the directory to become inconsistent if the PEDISK
-        runs out of space while writing the file.'''
-        entry = self.read_entry(filename)
-
+    def read_data(self, entry):
+        '''Read the data pointed to by the given DirectoryEntry.  The length
+        of the data returned may be shorter than claimed in the directory entry.
+        This is because it is possible for the directory to become inconsistent
+        if the PEDISK runs out of space while writing the file.'''
         if not self.image.is_valid_ts(entry.track, entry.sector):
             return bytearray()
 
@@ -318,6 +299,28 @@ class Filesystem(object):
             return self.image.read(size_of_sectors)
         else:
             return self.image.read(min(size_of_sectors, entry.size))
+
+    def file_exists(self, filename):
+        '''Read the directory and return True if the given filename
+        already exists as an active filename'''
+        return filename.ljust(6, b'\x20') in self.list_dir()
+
+    def file_size(self, filename):
+        '''Read the directory and return the size of the file in bytes.
+        This may be larger than the actual data returned by read_file()
+        if the directory is inconsistent'''
+        entry = self.read_entry(filename)
+        if (entry.filetype == FileTypes.LD) or (entry.size == 0xFFFF):
+            return entry.sector_count * self.image.SECTOR_SIZE
+        else:
+            return entry.size
+
+    def read_file(self, filename):
+        '''Read the contents of the file with the given filename and
+        return it in a bytearray.  An exception is raised if the file
+        is not found.  See notes in read_data() about size inconsistency.'''
+        entry = self.read_entry(filename)
+        return self.read_data(entry)
 
     def write_file(self, filename, filetype, data,
                     load_address, entry_address=None):

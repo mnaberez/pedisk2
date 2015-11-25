@@ -11,7 +11,7 @@ def extract_files(fs, output_dir):
     for entry in fs.read_dir():
         if not entry.used:
             continue
-        data = fs.read_file(entry.filename)
+        data = fs.read_data(entry)
 
         filename = os.path.join(output_dir, entry.modern_filename)
         with open(filename, 'wb') as f:
