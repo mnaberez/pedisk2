@@ -20,7 +20,7 @@ class DiskImage(object):
     def seek(self, track, sector):
         '''Seek to the given track/sector position.  As with the IBM 3740
         numbering, tracks are 0-based, sectors are 1-based.'''
-        self._validate_ts(track, sector)
+        self.validate_ts(track, sector)
         self.track = track
         self.sector = sector
         self.sector_offset = 0
@@ -66,13 +66,31 @@ class DiskImage(object):
             raise ValueError("Read past end of disk")
         return data
 
-    def _validate_ts(self, track, sector):
-        '''Raise ValueError if track/sector is out of range'''
+    def count_sectors_from(self, track, sector):
+        '''Count the number of sectors in the image from the given track,
+        sector to the end of the image'''
+        self.validate_ts(track, sector)
+        # start with 1 (this is the sector number given in the args)
+        num_sectors = 1
+        # add all the higher sectors on the same track
+        num_sectors += self.SECTORS - sector
+        # add all the sectors on all the higher tracks
+        num_empty_tracks = self.TRACKS - track - 1
+        num_sectors += num_empty_tracks * self.SECTORS
+        return num_sectors
+
+    def is_valid_ts(self, track, sector):
+        '''Returns True if the track, sector are valid for the image'''
         if (track < 0) or (track >= self.TRACKS):
-            msg = 'Track %r not in range 0-%d' % (track, self.TRACKS-1)
-            raise ValueError(msg)
+            return False
         if (sector < 1) or (sector > self.SECTORS):
-            msg = 'Sector %r not in range 1-%d' % (sector, self.SECTORS)
+            return False
+        return True
+
+    def validate_ts(self, track, sector):
+        '''Raise ValueError if track/sector is out of range'''
+        if not self.is_valid_ts(track, sector):
+            msg = 'Invalid track or sector: (%r,%r)' % (track, sector)
             raise ValueError(msg)
 
     def _incr(self):
@@ -166,38 +184,16 @@ class Filesystem(object):
         entries available for new files.'''
         return max(0, 63 - self.num_used_entries)
 
-    def _is_valid_ts(self, track, sector):
-        '''Returns True if the track, sector are valid for the image'''
-        if (track < 0) or (track >= self.image.TRACKS):
-            return False
-        if (sector < 1) or (sector > self.image.SECTORS):
-            return False
-        return True
-
-    def _num_sectors_from_ts(self, track, sector):
-        '''Find the number of sectors in the image from the given track,
-        sector to the end of the image'''
-        if not self._is_valid_ts(track, sector):
-            return 0
-
-        # start with 1 (this is the sector number given in the args)
-        num_sectors = 1
-
-        # add all the higher sectors on the same track
-        num_sectors += self.image.SECTORS - sector
-
-        # add all the sectors on all the higher tracks
-        num_empty_tracks = self.image.TRACKS - track - 1
-        num_sectors += num_empty_tracks * self.image.SECTORS
-
-        return num_sectors
-
     @property
     def num_free_sectors(self):
         '''Read the directory header and return the number of sectors
         available for new files.  If the next free track/sector in the
         directory header is invalid, 0 is returned.'''
-        return self._num_sectors_from_ts(*self.next_free_ts)
+        track, sector = self.next_free_ts
+        if self.image.is_valid_ts(track, sector):
+            return self.image.count_sectors_from(track, sector)
+        else:
+            return 0
 
     @property
     def num_free_bytes(self):
@@ -273,13 +269,14 @@ class Filesystem(object):
         runs out of space while writing the file.'''
         entry = self.read_entry(filename)
 
+        if not self.image.is_valid_ts(entry.track, entry.sector):
+            return bytearray()
+
         sector_count = min(
             entry.sector_count,
-            self._num_sectors_from_ts(entry.track, entry.sector)
+            self.image.count_sectors_from(entry.track, entry.sector)
             )
         size_of_sectors = sector_count * self.image.SECTOR_SIZE
-        if size_of_sectors == 0:
-            return bytearray()
 
         self.image.seek(entry.track, entry.sector)
         if entry.filetype == FileTypes.LD:

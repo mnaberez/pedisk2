@@ -42,7 +42,7 @@ class DiskImageTests(unittest.TestCase):
                 self.fail('nothing raised')
             except ValueError as exc:
                 self.assertEqual(exc.args[0],
-                    'Track %d not in range 0-%d' % (t, img.TRACKS-1))
+                    'Invalid track or sector: (%d,%d)' % (t, 1))
 
     def test_seek_raises_for_sector_out_of_range(self):
         img = imageutil.FiveInchDiskImage()
@@ -52,7 +52,7 @@ class DiskImageTests(unittest.TestCase):
                 self.fail('nothing raised')
             except ValueError as exc:
                 self.assertEqual(exc.args[0],
-                    'Sector %d not in range 1-%d' % (s, img.SECTORS))
+                    'Invalid track or sector: (%d,%d)' % (0, s))
 
     # write
 
