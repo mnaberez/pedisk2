@@ -180,6 +180,60 @@ class DiskImageTests(unittest.TestCase):
         except ValueError as exc:
             self.assertEqual(exc.args[0], 'Read past end of disk')
 
+    # count_sectors_from
+
+    def test_count_sectors_from_returns_full_size_of_image(self):
+        img = imageutil.FiveInchDiskImage()
+        total_sectors = img.TRACKS * img.SECTORS
+        self.assertEqual(img.count_sectors_from(0, 1), total_sectors)
+
+    def test_count_sectors_from_returns_1_sector_at_very_end(self):
+        img = imageutil.FiveInchDiskImage()
+        last_track = img.TRACKS - 1
+        last_sector = img.SECTORS
+        self.assertEqual(img.count_sectors_from(last_track, last_sector), 1)
+
+    def test_count_sectors_raises_for_invalid_track_or_sector(self):
+        img = imageutil.FiveInchDiskImage()
+        try:
+            track = img.TRACKS + 1
+            img.count_sectors_from(track, 1)
+        except ValueError as exc:
+            self.assertEqual(exc.args[0],
+                'Invalid track or sector: (%d,1)' % track, 1)
+
+    # is_valid_ts
+
+    def test_is_valid_ts_validates_track_in_range(self):
+        img = imageutil.FiveInchDiskImage()
+        self.assertTrue(img.is_valid_ts(track=0, sector=1))
+        self.assertTrue(img.is_valid_ts(track=img.TRACKS - 1, sector=1))
+        too_low = -1
+        self.assertFalse(img.is_valid_ts(track=too_low, sector=1))
+        too_high = img.TRACKS
+        self.assertFalse(img.is_valid_ts(track=too_high, sector=1))
+
+    def test_is_valid_ts_validates_sector_in_range(self):
+        img = imageutil.FiveInchDiskImage()
+        self.assertTrue(img.is_valid_ts(track=0, sector=1))
+        self.assertTrue(img.is_valid_ts(track=0, sector=img.SECTORS))
+        too_low = 0
+        self.assertFalse(img.is_valid_ts(track=0, sector=too_low))
+        too_high = img.SECTORS + 1
+        self.assertFalse(img.is_valid_ts(track=0, sector=too_high))
+
+    # validate_ts
+
+    def test_validate_ts_does_nothing_for_valid_ts(self):
+        img = imageutil.FiveInchDiskImage()
+        img.validate_ts(track=0, sector=1)
+
+    def test_validate_ts_raises_for_invalid_ts(self):
+        img = imageutil.FiveInchDiskImage()
+        try:
+            img.validate_ts(track=0, sector=0)
+        except ValueError as exc:
+            self.assertEqual(exc.args[0], 'Invalid track or sector: (0,0)')
 
 class FilesystemTests(unittest.TestCase):
 

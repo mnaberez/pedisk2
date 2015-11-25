@@ -19,7 +19,8 @@ class DiskImage(object):
 
     def seek(self, track, sector):
         '''Seek to the given track/sector position.  As with the IBM 3740
-        numbering, tracks are 0-based, sectors are 1-based.'''
+        numbering, tracks are 0-based, sectors are 1-based.  Raises an
+        error if the track or sector is invalid.'''
         self.validate_ts(track, sector)
         self.track = track
         self.sector = sector
@@ -68,7 +69,8 @@ class DiskImage(object):
 
     def count_sectors_from(self, track, sector):
         '''Count the number of sectors in the image from the given track,
-        sector to the end of the image'''
+        sector to the end of the image, inclusive.  Raises an error if the
+        track or sector is invalid.'''
         self.validate_ts(track, sector)
         # start with 1 (this is the sector number given in the args)
         num_sectors = 1
@@ -81,11 +83,8 @@ class DiskImage(object):
 
     def is_valid_ts(self, track, sector):
         '''Returns True if the track, sector are valid for the image'''
-        if (track < 0) or (track >= self.TRACKS):
-            return False
-        if (sector < 1) or (sector > self.SECTORS):
-            return False
-        return True
+        return ((track >= 0) and (track < self.TRACKS) and
+                (sector >= 1) and (sector <= self.SECTORS))
 
     def validate_ts(self, track, sector):
         '''Raise ValueError if track/sector is out of range'''
