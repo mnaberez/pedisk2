@@ -67,11 +67,12 @@ class DiskImageTests(unittest.TestCase):
     def test_write_spans_sectors_and_tracks(self):
         img = imageutil.FiveInchDiskImage()
         # seek to the last sector of a track
-        img.seek(track=20, sector=28)
+        track = 20
+        img.seek(track=track, sector=img.SECTORS)
         data = bytearray(b'\x42' * (img.SECTOR_SIZE + 1))
         img.write(data)
         # write should have overflowed to first sector of next track
-        self.assertEqual(img.track, 21)
+        self.assertEqual(img.track, track + 1)
         self.assertEqual(img.sector, 1)
         self.assertEqual(img.sector_offset, 1)
         # seek to first byte of the sector
@@ -81,7 +82,7 @@ class DiskImageTests(unittest.TestCase):
     def test_write_allows_writing_to_very_end_of_disk(self):
         img = imageutil.FiveInchDiskImage()
         # fill the last sector on disk but don't overflow
-        img.seek(track=40, sector=28)
+        img.seek(track=img.TRACKS - 1, sector=img.SECTORS)
         data = bytearray(b'\x42' * img.SECTOR_SIZE)
         img.write(data)
         # track/sector pointer should wrap around
@@ -89,13 +90,13 @@ class DiskImageTests(unittest.TestCase):
         self.assertEqual(img.sector, 1)
         self.assertEqual(img.sector_offset, 0)
         # verify sector written
-        img.seek(track=40, sector=28)
+        img.seek(track=img.TRACKS - 1, sector=img.SECTORS)
         self.assertEqual(img.read(img.SECTOR_SIZE), data)
 
     def test_write_raises_if_past_end_of_disk(self):
         img = imageutil.FiveInchDiskImage()
         # seek to the last sector of a track
-        img.seek(track=40, sector=28)
+        img.seek(track=img.TRACKS - 1, sector=img.SECTORS)
         data = bytearray(b'\x42' * (img.SECTOR_SIZE + 1))
         try:
             img.write(data)
@@ -126,7 +127,7 @@ class DiskImageTests(unittest.TestCase):
     def test_read_allows_reading_to_very_end_of_disk(self):
         img = imageutil.FiveInchDiskImage()
         # seek to the last track/sector
-        img.seek(track=40, sector=28)
+        img.seek(track=img.TRACKS - 1, sector=img.SECTORS)
         img.read(img.SECTOR_SIZE)
         # track/sector pointer should wrap around
         self.assertEqual(img.track, 0)
@@ -139,7 +140,7 @@ class DiskImageTests(unittest.TestCase):
     def test_read_raises_if_past_end_of_disk(self):
         img = imageutil.FiveInchDiskImage()
         # seek to the last sector of a track
-        img.seek(track=40, sector=28)
+        img.seek(track=img.TRACKS - 1, sector=img.SECTORS)
         try:
             img.read(img.SECTOR_SIZE + 1)
             self.fail('nothing raised')
