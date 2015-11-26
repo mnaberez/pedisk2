@@ -283,22 +283,13 @@ class Filesystem(object):
         if not self.image.is_valid_ts(entry.track, entry.sector):
             return bytearray()
 
-        sector_count = min(
-            entry.sector_count,
-            self.image.count_sectors_from(entry.track, entry.sector)
-            )
-        size_of_sectors = sector_count * self.image.SECTOR_SIZE
-
         self.image.seek(entry.track, entry.sector)
-        if entry.filetype == FileTypes.LD:
-            # for LD files only, the size field is used as the entry address.
-            return self.image.read(size_of_sectors)
-        elif entry.size == 0xFFFF:
-            # the file can be much larger than the size field.  if the size
-            # field is maxed out, return all the file's sectors on disk.
-            return self.image.read(size_of_sectors)
-        else:
-            return self.image.read(min(size_of_sectors, entry.size))
+        expected_size = self.expected_data_size(entry)
+        largest_possible_size = (
+            self.image.count_sectors_from(entry.track, entry.sector) *
+            self.image.SECTOR_SIZE
+            )
+        return self.image.read(min(expected_size, largest_possible_size))
 
     def expected_data_size(self, entry):
         '''Find the expected size of the data from a DirectoryEntry.  The
