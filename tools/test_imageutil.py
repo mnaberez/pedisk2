@@ -577,9 +577,57 @@ class FilesystemTests(unittest.TestCase):
         entry = fs.read_entry(b'a')
         self.assertEqual(entry.filename, b'a\x20\x20\x20\x20\x20')
 
+    # expected_data_size
+
+    def test_expected_data_size_returns_full_sectors_for_LD_and_SEQ(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        for ftype in (imageutil.FileTypes.LD, imageutil.FileTypes.SEQ):
+            entry = imageutil.DirectoryEntry(
+                        filename=b'strtrk',
+                        load_address=0x0080,
+                        filetype=ftype,
+                        track=0,
+                        sector=9,
+                        size=0x0080,
+                        sector_count=3
+                        )
+            size = 3 * img.SECTOR_SIZE
+            self.assertEqual(fs.expected_data_size(entry), size)
+
+    def test_expected_data_size_returns_size_field_for_BAS(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        entry = imageutil.DirectoryEntry(
+                    filename=b'strtrk',
+                    load_address=0x0401,
+                    filetype=imageutil.FileTypes.BAS,
+                    track=0,
+                    sector=9,
+                    size=42,
+                    sector_count=100
+                    )
+        self.assertEqual(fs.expected_data_size(entry), 42)
+
+    def test_expected_data_size_returns_full_sectors_for_size_0xFFFF(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        entry = imageutil.DirectoryEntry(
+                    filename=b'strtrk',
+                    load_address=0x0401,
+                    filetype=imageutil.FileTypes.ASM,
+                    track=0,
+                    sector=9,
+                    size=0xFFFF,
+                    sector_count=1000
+                    )
+        size = 1000 * img.SECTOR_SIZE
+        self.assertTrue(size > 0xFFFF)
+        self.assertEqual(fs.expected_data_size(entry), size)
+
     # read_data
 
-    def test_read_data_reads_exact_size_for_not_type_LD(self):
+    def test_read_data_reads_exact_size_for_not_LD_not_SEQ(self):
         img = imageutil.FiveInchDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
@@ -589,7 +637,7 @@ class FilesystemTests(unittest.TestCase):
         img.write(b'hello '    + # filename
                   b'\x42\x01'  + # file size = 322 bytes
                   b'\x00\x00'  + # load address
-                  b'\x00'      + # file type = 0 (SEQ)
+                  b'\x03'      + # file type = 0 (BAS)
                   b'\x00'      + # unused byte
                   b'\x02\x03'  + # track 2, sector 3
                   b'\x03\x00')   # 3 sectors on disk
@@ -601,28 +649,29 @@ class FilesystemTests(unittest.TestCase):
         entry = fs.read_entry(b'hello')
         self.assertEqual(fs.read_data(entry), contents)
 
-    def test_read_data_reads_sector_count_for_type_LD_only(self):
-        img = imageutil.FiveInchDiskImage()
-        fs = imageutil.Filesystem(img)
-        fs.format(diskname=b'fresh')
-        # write directory entry
-        img.home()
-        img.read(16) # skip directory header
-        img.write(b'strtrk'    + # filename
-                  b'\x42\x01'  + # file size = 322 bytes
-                  b'\x00\x00'  + # load address
-                  b'\x05'      + # file type = 5 (LD)
-                  b'\x00'      + # unused byte
-                  b'\x02\x03'  + # track 2, sector 3
-                  b'\x03\x00')   # 3 sectors on disk
-        # write contents
-        img.seek(track=2, sector=3)
-        contents = b'Contents of the file'.ljust(322, b'.')
-        img.write(contents)
-        # should read the full 3 sectors
-        entry = fs.read_entry(b'strtrk')
-        expected = contents.ljust(3 * 128, b'\xe5')
-        self.assertEqual(fs.read_data(entry), expected)
+    def test_read_data_reads_sector_count_for_types_LD_and_SEQ(self):
+        for ftype in (imageutil.FileTypes.LD, imageutil.FileTypes.SEQ):
+            img = imageutil.FiveInchDiskImage()
+            fs = imageutil.Filesystem(img)
+            fs.format(diskname=b'fresh')
+            # write directory entry
+            img.home()
+            img.read(16) # skip directory header
+            img.write(b'strtrk')          # filename
+            img.write(b'\x42\x01')        # file size = 322 bytes
+            img.write(b'\x00\x00')        # load address
+            img.write(bytearray([ftype])) # file type
+            img.write(b'\x00')            # unused byte
+            img.write(b'\x02\x03')        # track 2, sector 3
+            img.write(b'\x03\x00')        # 3 sectors on disk
+            # write contents
+            img.seek(track=2, sector=3)
+            contents = b'Contents of the file'.ljust(322, b'.')
+            img.write(contents)
+            # should read the full 3 sectors
+            entry = fs.read_entry(b'strtrk')
+            expected = contents.ljust(3 * 128, b'\xe5')
+            self.assertEqual(fs.read_data(entry), expected)
 
     def test_read_data_allows_reading_the_largest_possible_file(self):
         img = imageutil.FiveInchDiskImage()
@@ -694,7 +743,7 @@ class FilesystemTests(unittest.TestCase):
         img.write(b'hello '    + # filename
                   b'\x42\x01'  + # file size = 322 bytes
                   b'\x00\x00'  + # load address
-                  b'\x00'      + # file type = 0 (SEQ)
+                  b'\x03'      + # file type = 3 (BAS)
                   b'\x00'      + # unused byte
                   b'\x02\x03'  + # track 2, sector 3
                   b'\x03\x00')   # 3 sectors on disk

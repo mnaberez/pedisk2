@@ -14,7 +14,7 @@ def print_dir(fs, out=sys.stdout):
 
     for entry in [ e for e in fs.read_dir() if e.used ]:
         typename = imageutil.FileTypes.name_of(entry.filetype)
-        if entry.filetype == imageutil.FileTypes.LD:
+        if entry.filetype in (imageutil.FileTypes.LD, imageutil.FileTypes.SEQ):
             entry_addr = "$%04X" % entry.size
             size = str(entry.sector_count * fs.image.SECTOR_SIZE)
         else:
