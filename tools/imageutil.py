@@ -268,7 +268,7 @@ class Filesystem(object):
     def read_entry(self, filename):
         '''Read the directory and return a DirectoryEntry for the given
         filename.  The entry can be a deleted or unused one.  An exception
-        is raised if the file is not found'''
+        is raised if the file is not found.'''
         filename = filename.ljust(6, b'\x20')
         for entry in self.read_dir():
             if entry.filename == filename:
@@ -300,20 +300,19 @@ class Filesystem(object):
         else:
             return self.image.read(min(size_of_sectors, entry.size))
 
-    def file_exists(self, filename):
-        '''Read the directory and return True if the given filename
-        already exists as an active filename'''
-        return filename.ljust(6, b'\x20') in self.list_dir()
-
-    def file_size(self, filename):
-        '''Read the directory and return the size of the file in bytes.
-        This may be larger than the actual data returned by read_file()
-        if the directory is inconsistent'''
-        entry = self.read_entry(filename)
+    def expected_data_size(self, entry):
+        '''Find the expected size of the data from a DirectoryEntry.  The
+        actual data returned read_data() should be the same size, but may
+        not be.  See note about inconsistency in read_data().'''
         if (entry.filetype == FileTypes.LD) or (entry.size == 0xFFFF):
             return entry.sector_count * self.image.SECTOR_SIZE
         else:
             return entry.size
+
+    def file_exists(self, filename):
+        '''Read the directory and return True if the given filename
+        already exists as an active filename'''
+        return filename.ljust(6, b'\x20') in self.list_dir()
 
     def read_file(self, filename):
         '''Read the contents of the file with the given filename and
