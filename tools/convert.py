@@ -14,6 +14,7 @@ def copy_files(source_fs, destination_fs):
             filetype=entry.filetype,
             load_address=entry.load_address,
             entry_address=entry.entry_address,
+            unknown=entry.unknown,
             data=data
             )
 
