@@ -14,12 +14,10 @@ def print_dir(fs, out=sys.stdout):
 
     for entry in [ e for e in fs.read_dir() if e.used ]:
         typename = imageutil.FileTypes.name_of(entry.filetype)
-        if entry.filetype in (imageutil.FileTypes.LD, imageutil.FileTypes.SEQ):
-            entry_addr = "$%04X" % entry.size
-            size = str(entry.sector_count * fs.image.SECTOR_SIZE)
-        else:
+        if entry.filetype in (imageutil.FileTypes.ASM, imageutil.FileTypes.BAS):
             entry_addr = " ---"
-            size = str(entry.size)
+        else:
+            entry_addr = "$%04X" % entry.size
 
         warnings_msg = ''
         if entry.deleted:
@@ -36,7 +34,7 @@ def print_dir(fs, out=sys.stdout):
             entry_addr.ljust(6),
             ("%d,%d" % (entry.track, entry.sector)).ljust(8),
             str(entry.sector_count).ljust(6),
-            str(size).ljust(8),
+            str(expected_size).ljust(8),
             warnings_msg
             ]
         out.write(u''.join(cols) + "\n")

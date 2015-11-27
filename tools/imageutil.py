@@ -293,21 +293,15 @@ class Filesystem(object):
 
     def expected_data_size(self, entry):
         '''Find the expected size of the data from a DirectoryEntry.  The
-        actual data returned read_data() should be the same size, but may
+        actual data returned by read_data() should be the same size, but may
         not be.  See note about inconsistency in read_data().'''
         size_of_sectors = entry.sector_count * self.image.SECTOR_SIZE
-        if entry.filetype == FileTypes.LD:
-            # for type LD, the size field is used as the entry address
-            return size_of_sectors
-        elif entry.filetype == FileTypes.SEQ:
-            # for type SEQ, the size and load address are hardcoded to 0x0080
-            return size_of_sectors
-        elif entry.size == 0xFFFF:
-            # the file can be much larger than the size field.  if the size
-            # field is maxed out, return all the file's sectors on disk.
-            return size_of_sectors
-        else:
+        # the size field is confirmed to be used on these file types only
+        if entry.filetype in (FileTypes.ASM, FileTypes.BAS):
+            if entry.size == 0xFFFF: # hit max limit of size field
+                return size_of_sectors
             return entry.size
+        return size_of_sectors
 
     def file_exists(self, filename):
         '''Read the directory and return True if the given filename
