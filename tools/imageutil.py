@@ -1,3 +1,4 @@
+import collections
 import math
 import os
 
@@ -373,6 +374,56 @@ class Filesystem(object):
         self.image.home()
         self.image.read(8) # skip disk name
         self.image.write(bytearray([used_entries, track, sector]))
+
+    def compact(self):
+        '''Compact (and repair) the image.  Deleted and inconsistent files are
+        removed.  If a filename occurs more than once, the last one with
+        consistent data is kept.  Data sectors are compacted to be contiguous
+        so the PEDISK can use all the unused sectors for new files.  Unused
+        sectors are filled to 0xE5.'''
+        # find active entries with consistent data
+        od = collections.OrderedDict() # {filename: (entry, data), ...}
+        for entry in self.read_dir():
+            if entry.active:
+                data = self.read_data(entry)
+                if data and (len(data) == self.expected_data_size(entry)):
+                    od[repr(entry.filename)] = (entry, data,)
+        entries_with_data = od.values() # [(entry, data), ...]
+
+        # clear directory
+        self.image.home()
+        self.image.read(8) # skip disk name
+        self.image.write(bytearray([0])) # number of used files
+        self.image.write(bytearray([0, 9])) # next free t/s
+        self.image.read(5) # skip 5 unknown bytes
+        self.image.write(b'\xff' * 16 * 63) # all file entries
+
+        # rewrite directory and file data
+        for i, (entry, data) in enumerate(entries_with_data):
+            # find free t/s and write the data
+            entry.track, entry.sector = self.next_free_ts
+            self.image.seek(entry.track, entry.sector)
+            # write file padded with 0xE5 so it completely fills the sectors
+            data = data.ljust(
+                entry.sector_count * self.image.SECTOR_SIZE, b'\xe5'
+                )
+            self.image.write(data)
+            free_track, free_sector = self.image.track, self.image.sector
+
+            # update the directory header and write the entry
+            self.image.home()
+            self.image.read(8) # skip disk name
+            self.image.write(bytearray([i + 1])) # number of used files
+            self.image.write(bytearray([free_track, free_sector]))
+            self.image.read(5) # skip 5 unknown bytes
+            self.image.read(16 * i) # skip to this entry
+            self.image.write(entry.to_bytes())
+
+        # clear unused sectors
+        free_track, free_sector = self.next_free_ts
+        sector_count = self.image.count_sectors_from(free_track, free_sector)
+        self.image.seek(free_track, free_sector)
+        self.image.write(b'\xe5' * sector_count * self.image.SECTOR_SIZE)
 
 def _low_high(num):
     '''Split an unsigned 16-bit number into two 8-bit numbers: (low, high)'''

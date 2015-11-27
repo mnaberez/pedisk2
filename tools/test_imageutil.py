@@ -652,7 +652,7 @@ class FilesystemTests(unittest.TestCase):
                   b'\x42\x01'  + # file size = 322 bytes
                   b'\x00\x00'  + # load address
                   b'\x03'      + # file type = 0 (BAS)
-                  b'\x00'      + # unused byte
+                  b'\x00'      + # unknown byte
                   b'\x02\x03'  + # track 2, sector 3
                   b'\x03\x00')   # 3 sectors on disk
         # write contents
@@ -675,7 +675,7 @@ class FilesystemTests(unittest.TestCase):
             img.write(b'\x42\x01')        # file size = 322 bytes
             img.write(b'\x00\x00')        # load address
             img.write(bytearray([ftype])) # file type
-            img.write(b'\x00')            # unused byte
+            img.write(b'\x00')            # unknown byte
             img.write(b'\x02\x03')        # track 2, sector 3
             img.write(b'\x03\x00')        # 3 sectors on disk
             # write contents
@@ -711,7 +711,7 @@ class FilesystemTests(unittest.TestCase):
                   b'\x00\x00'  + # file size = 0 bytes
                   b'\x00\x00'  + # load address
                   b'\x05'      + # file type = 5 (LD)
-                  b'\x00'      + # unused byte
+                  b'\x00'      + # unknown byte
                   b'\x02\x03'  + # track 2, sector 3
                   b'\x00\x00')   # 0 sectors on disk
         entry = fs.read_entry(b'strtrk')
@@ -728,11 +728,32 @@ class FilesystemTests(unittest.TestCase):
                   b'\x05\x00'  + # file size = 5 bytes
                   b'\x00\x00'  + # load address
                   b'\x05'      + # file type = 5 (LD)
-                  b'\x00'      + # unused byte
+                  b'\x00'      + # unknown byte
                   b'\xFF\x03'  + # track 255, sector 3
                   b'\x01\x00')   # 1 sector on disk
         entry = fs.read_entry(b'strtrk')
         self.assertEqual(fs.read_data(entry), b'')
+
+    def test_read_data_does_not_read_more_than_sector_count(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        img.home()
+        img.read(16) # skip directory header
+        # write directory entry
+        img.write(b'strtrk')   # filename
+        # file size is larger than 1 sector
+        size = img.SECTOR_SIZE + 1
+        size_lo, size_hi = (size & 0xFF), (size >> 8)
+        img.write(bytearray([size_lo, size_hi])) # file size
+        img.write(b'\x01\x04') # load address
+        img.write(b'\x03')     # file type = 3 (BAS)
+        img.write(b'\x00')     # unknown byte
+        img.write(b'\x00\x09') # track 0, sector 9
+        # sector count is 1 sector
+        img.write(b'\x01\x00') # 1 sector on disk
+        # read_data() should not return more than 1 sector
+        entry = fs.read_entry(b'strtrk')
+        self.assertEqual(len(fs.read_data(entry)), img.SECTOR_SIZE)
 
     # read_file
 
@@ -758,7 +779,7 @@ class FilesystemTests(unittest.TestCase):
                   b'\x42\x01'  + # file size = 322 bytes
                   b'\x00\x00'  + # load address
                   b'\x03'      + # file type = 3 (BAS)
-                  b'\x00'      + # unused byte
+                  b'\x00'      + # unknown byte
                   b'\x02\x03'  + # track 2, sector 3
                   b'\x03\x00')   # 3 sectors on disk
         # write contents
@@ -856,7 +877,7 @@ class FilesystemTests(unittest.TestCase):
                  b'\x42\x01'  + # file size = 322 bytes
                  b'\x00\x00'  + # load address
                  b'\x00'      + # file type = 0 (SEQ)
-                 b'\x00'      + # unused byte
+                 b'\x00'      + # unknown byte
                  b'\x02\x03'  + # track 2, sector 3
                  b'\x03\x00')   # 3 sectors on disk
         img.write(entry)
@@ -884,7 +905,7 @@ class FilesystemTests(unittest.TestCase):
                  b'\x42\x01'  + # file size = 322 bytes
                  b'\x00\x00'  + # load address
                  b'\x00'      + # file type = 0 (SEQ)
-                 b'\x00'      + # unused byte
+                 b'\x00'      + # unknown byte
                  b'\x02\x03'  + # track 2, sector 3
                  b'\x03\x00')   # 3 sectors on disk
         img.write(entry)
@@ -993,6 +1014,218 @@ class FilesystemTests(unittest.TestCase):
             self.assertEqual(entry.track, 0)
             self.assertEqual(entry.sector, 9)
             self.assertEqual(fs.next_free_ts, (0, 9))
+
+    # compact
+
+    def test_compact_preserves_diskname(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'abcdefgh')
+        fs.compact()
+        self.assertEqual(fs.diskname, b'abcdefgh')
+
+    def test_compact_preserves_unknown_bytes_in_dir_header(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'diskname')
+        img.home()
+        img.read(8 + 1 + 2) # skip diskname, num files, free track, sector
+        img.write(b'vwxyz')
+        fs.compact()
+        img.home()
+        img.read(8 + 1 + 2)
+        self.assertEqual(img.read(5), b'vwxyz')
+
+    def tset_compact_preserves_unknown_byte_in_entry(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'diskname')
+        # write directory
+        img.home()
+        img.read(8) # skip disk name
+        img.write(b'\x02') # number of used entries = 2
+        img.write(b'\x00') # next free track = 0
+        img.write(b'\x0b') # next free sector = 11
+        img.read(5) # skip 5 unknown bytes
+        # write entry
+        img.write(b'readme' + # filename (0xFF means deleted)
+                  b'\x05\x00'  + # file size = 5 bytes
+                  b'\x00\x00'  + # load address
+                  b'\x03'      + # file type = 3 (BAS)
+                  b'\x42'      + # unknown byte = 0x42
+                  b'\x01\x03'  + # track 1, sector 3
+                  b'\x01\x00')   # 1 sector on disk
+        # write file
+        img.seek(track=1, sector=3)
+        img.write(b'Hello')
+        # should preserve the unknown byte
+        fs.compact()
+        self.assertEqual(fs.num_used_entries, 1)
+        entry = fs.read_entry(b'readme')
+        self.assertEqual(entry.unknown, 0x42)
+        self.assertEqual(entry.track, 0)
+        self.assertEqual(entry.sector, 9)
+        self.assertEqual(fs.read_data(entry), b'Hello')
+
+    def test_compact_clears_unused_sectors_to_0xE5(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'diskname')
+        # fill unused sectors with junk
+        track, sector = fs.next_free_ts
+        size = img.count_sectors_from(track, sector) * img.SECTOR_SIZE
+        img.seek(track, sector)
+        img.write(b'a' * size)
+        # compact() should fill unused sectors with 0xE5
+        fs.compact()
+        img.seek(track, sector)
+        self.assertEqual(img.read(size), b'\xe5' * size)
+
+    def test_compact_removes_deleted_files(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'diskname')
+        # write directory
+        img.home()
+        img.read(8) # skip disk name
+        img.write(b'\x02') # number of used entries = 2
+        img.write(b'\x00') # next free track = 0
+        img.write(b'\x0b') # next free sector = 11
+        img.read(5) # skip 5 unknown bytes
+        # write entry for a deleted file
+        img.write(b'readm\xff' + # filename (0xFF means deleted)
+                  b'\x07\x00'  + # file size = 7 bytes
+                  b'\x00\x00'  + # load address
+                  b'\x03'      + # file type = 3 (BAS)
+                  b'\x00'      + # unknown byte
+                  b'\x00\x09'  + # track 0, sector 9
+                  b'\x01\x00')   # 1 sector on disk
+        # write entry for another file
+        img.write(b'readme'    + # filename
+                  b'\x0b\x00'  + # file size = 11 bytes
+                  b'\x00\x00'  + # load address
+                  b'\x03'      + # file type = 3 (BAS)
+                  b'\x00'      + # unknown byte
+                  b'\x00\x0a'  + # track 0, sector 10
+                  b'\x01\x00')   # 1 sector on disk
+        # write first file contents
+        img.seek(track=0, sector=9)
+        img.write(b'Deleted')
+        # write second file contents
+        img.seek(track=0, sector=10)
+        img.write(b'Not Deleted')
+        # should keep the non-deleted file only
+        fs.compact()
+        self.assertEqual(fs.num_used_entries, 1)
+        self.assertEqual(fs.next_free_ts, (0,10))
+        entry = fs.read_entry(b'readme')
+        self.assertEqual(entry.track, 0)
+        self.assertEqual(entry.sector, 9)
+        self.assertEqual(fs.read_data(entry), b'Not Deleted')
+
+    def test_compact_removes_duplicate_filenames(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'diskname')
+        # write directory
+        img.home()
+        img.read(8) # skip disk name
+        img.write(b'\x02') # number of used entries = 2
+        img.write(b'\x00') # next free track = 0
+        img.write(b'\x0b') # next free sector = 11
+        img.read(5) # skip 5 unknown bytes
+        # write entry for a deleted file
+        img.write(b'readme'    + # filename
+                  b'\x05\x00'  + # file size = 5 bytes
+                  b'\x00\x00'  + # load address
+                  b'\x03'      + # file type = 3 (BAS)
+                  b'\x00'      + # unknown byte
+                  b'\x00\x09'  + # track 0, sector 9
+                  b'\x01\x00')   # 1 sector on disk
+        # write entry for another file
+        img.write(b'readme'    + # filename
+                  b'\x06\x00'  + # file size = 6 bytes
+                  b'\x00\x00'  + # load address
+                  b'\x03'      + # file type = 3 (BAS)
+                  b'\x00'      + # unknown byte
+                  b'\x00\x0a'  + # track 0, sector 10
+                  b'\x01\x00')   # 1 sector on disk
+        # write first file data
+        img.seek(track=0, sector=9)
+        img.write(b'First')
+        # write second file data
+        img.seek(track=0, sector=10)
+        img.write(b'Second')
+        # should keep only the second file
+        fs.compact()
+        self.assertEqual(fs.num_used_entries, 1)
+        entry = fs.read_entry(b'readme')
+        self.assertEqual(entry.track, 0)
+        self.assertEqual(entry.sector, 9)
+        self.assertEqual(b'Second', fs.read_data(entry))
+
+    def test_compact_removes_inconsistent_files(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'diskname')
+        # write directory
+        img.home()
+        img.read(8) # skip disk name
+        img.write(b'\x03') # number of used entries = 2
+        img.write(bytearray([img.TRACKS])) # next free track = invalid
+        img.write(b'\x00') # next free sector = 1
+        img.read(5) # skip 5 unknown bytes
+        # write entry for a consistent file
+        img.write(b'cnsist'    + # filename
+                  b'\x0a\x00'  + # file size = 10 bytes
+                  b'\x00\x00'  + # load address
+                  b'\x03'      + # file type = 3 (BAS)
+                  b'\x00'      + # unknown byte
+                  b'\x00\x09'  + # track 0, sector 9
+                  b'\x01\x00')   # 1 sector on disk
+        # write entry for an inconsistent file (no data sectors)
+        img.write(b'nosecs'    + # filename
+                  b'\x05\x00'  + # file size = 5 bytes
+                  b'\x00\x00'  + # load address
+                  b'\x03'      + # file type = 3 (BAS)
+                  b'\x00'      + # unknown byte
+                  b'\x00\x0a'  + # track 0, sector 10
+                  b'\x00\x00')   # 0 sectors on disk
+        # write entry for an inconsistent file (file size zero)
+        img.write(b'zerosz'    + # filename
+                  b'\x00\x00'  + # file size = 0 bytes
+                  b'\x00\x00'  + # load address
+                  b'\x03'      + # file type = 3 (BAS)
+                  b'\x00'      + # unknown byte
+                  b'\x00\x0a'  + # track 0, sector 10
+                  b'\x01\x00')   # 1 sector on disk
+        # write entry for an inconsistent file (too many data sectors)
+        img.write(b'biggie'    + # filename
+                  b'\xff\xff'  + # file size = 65535 bytes
+                  b'\x00\x00'  + # load address
+                  b'\x03'      + # file type = 3 (BAS)
+                  b'\x00'      + # unknown byte
+                  b'\x00\x0b'  + # track 0, sector 11
+                  b'\xff\xff')   # 65535 sectors on disk
+        # write entry for an inconsistent file (t/s invalid)
+        img.write(b'offdsk'    + # filename
+                  b'\x05\x00'  + # file size = 5 bytes
+                  b'\x00\x00'  + # load address
+                  b'\x03'      + # file type = 3 (BAS)
+                  b'\x00'      + # unknown byte
+                  b'\xfe\x01'  + # track 254, sector 1
+                  b'\x01\x00')   # 1 sector on disk
+        # write the consistent file's contents
+        img.seek(track=0, sector=9)
+        img.write(b'Consistent')
+        # should keep the consistent file only
+        fs.compact()
+        self.assertEqual(fs.num_used_entries, 1)
+        self.assertEqual(fs.next_free_ts, (0,10))
+        entry = fs.read_entry(b'cnsist')
+        self.assertEqual(entry.track, 0)
+        self.assertEqual(entry.sector, 9)
+        self.assertEqual(fs.read_data(entry), b'Consistent')
 
 class _low_highTests(unittest.TestCase):
     def test_raises_for_num_out_of_range(self):
