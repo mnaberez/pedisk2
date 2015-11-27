@@ -300,7 +300,8 @@ class Filesystem(object):
         if entry.filetype in (FileTypes.ASM, FileTypes.BAS):
             if entry.size == 0xFFFF: # hit max limit of size field
                 return size_of_sectors
-            return entry.size
+            if entry.size <= size_of_sectors: # ensure size field is valid
+                return entry.size
         return size_of_sectors
 
     def file_exists(self, filename):

@@ -609,6 +609,20 @@ class FilesystemTests(unittest.TestCase):
                     )
         self.assertEqual(fs.expected_data_size(entry), 42)
 
+    def test_expected_data_size_does_not_return_more_than_sector_count(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        entry = imageutil.DirectoryEntry(
+                    filename=b'strtrk',
+                    load_address=0x0401,
+                    filetype=imageutil.FileTypes.BAS,
+                    track=0,
+                    sector=9,
+                    size=img.SECTOR_SIZE+1,
+                    sector_count=1
+                    )
+        self.assertEqual(fs.expected_data_size(entry), img.SECTOR_SIZE)
+
     def test_expected_data_size_returns_full_sectors_for_size_0xFFFF(self):
         img = imageutil.FiveInchDiskImage()
         fs = imageutil.Filesystem(img)
