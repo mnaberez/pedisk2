@@ -53,7 +53,11 @@ bas_eol:
 
 start:
     lda #0
-    sta data_next_trk
+    sta data_next_trk   ;Start at PEDISK track 0
+    lda dn              ;Get current CBM device number
+    bne loop            ;Branch to use current device if there is one
+    lda #8
+    sta dn              ;Default to CBM device number 8
 loop:
     jsr update_filename
     jsr print_filename
@@ -79,17 +83,15 @@ print_loop:
     rts
 
 load_track_file:
-;Load the track data from a CBM program file on unit 8
+;Load the track data from a CBM program file.  This assumes that the
+;current device number (dn) has already been set.
 ;
     lda #0
     sta status          ;Clear status byte
     sta lvflag          ;Set load/Verify select flag: 0 = Load
 
-    lda #8
-    sta dn              ;Device number = 8
     lda #1
     sta sa              ;Secondary address = 1
-
 
     lda #filename_len
     sta fnlen           ;Set length of filename
