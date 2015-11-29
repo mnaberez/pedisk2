@@ -18,19 +18,21 @@
 
 status        = $96       ;Status byte for I/O operations
 lvflag        = $9d       ;LOAD/VERIFY flag (0=load, nonzero=verify)
-target_ptr    = $b7       ;Pointer: PEDISK target address for memory ops **
 fnlen         = $d1       ;Filename length
 sa            = $d3       ;Secondary address
 dn            = $d4       ;Device number
 fnadr         = $da       ;Pointer: Filename address
-dos           = $7800     ;Base address for the RAM-resident portion
+loadop        = $f356     ;BASIC 4 load PRG file without relocating
+chrout        = $ffd2     ;KERNAL write byte to default output (screen)
+
+target_ptr    = $b7       ;Pointer: PEDISK target address for memory ops
+dos           = $7800     ;Base address for the PEDISK RAM-resident portion
 track         = dos+$0792 ;Track number to write to WD1793 (0-76 or $00-4c)
 sector        = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
 num_sectors   = dos+$0796 ;Number of sectors to read or write
-write_sectors = $ed3f     ;Number of sectors to write
-deselect      = $eb0b     ;Deselect drive
-loadop        = $f356     ;BASIC 4 load PRG file without relocating
-chrout        = $ffd2     ;KERNAL write byte to default output (screen)
+rom           = $e800     ;Base address for the PEDISK ROM portion
+deselect      = rom+$030b ;Deselect drive
+write_sectors = rom+$053f ;Write sectors
 
 data          = $0800   ;Base address where track data will be loaded
 data_track    = data+0  ;Track number for the data
