@@ -16,13 +16,20 @@
 ;  $05...   Sector data (128 bytes * count of sectors)
 ;
 
+status        = $96       ;Status byte for I/O operations
+lvflag        = $9d       ;LOAD/VERIFY flag (0=load, nonzero=verify)
 target_ptr    = $b7       ;Pointer: PEDISK target address for memory ops **
+fnlen         = $d1       ;Filename length
+sa            = $d3       ;Secondary address
+dn            = $d4       ;Device number
+fnadr         = $da       ;Filename address pointer
 dos           = $7800     ;Base address for the RAM-resident portion
 track         = dos+$0792 ;Track number to write to WD1793 (0-76 or $00-4c)
 sector        = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
 num_sectors   = dos+$0796 ;Number of sectors to read or write
 write_sectors = $ed3f     ;Number of sectors to write
 deselect      = $eb0b     ;Deselect drive
+loadop        = $f356     ;BASIC 4 load PRG file without relocating
 chrout        = $ffd2     ;KERNAL write byte to default output (screen)
 
 data          = $0800   ;Base address where track data will be loaded
@@ -81,32 +88,30 @@ load_track_file:
 ;Load the track data from a CBM program file on unit 8
 ;
     lda #0
-    sta $96             ;Clear status byte ST
-
-    lda #0
-    sta $9d             ;Set load/Verify select flag: 0 = Load
-
-    lda #filename_len
-    sta $d1             ;Set length of filename = 12 bytes
-
-    lda #<filename
-    sta $da             ;Set low address of filename
-    lda #>filename
-    sta $da+1           ;Set high address of filename
+    sta status          ;Clear status byte
+    sta lvflag          ;Set load/Verify select flag: 0 = Load
 
     lda #8
-    sta $d4             ;Device number = 8
-
+    sta dn              ;Device number = 8
     lda #1
-    sta $d3             ;Secondary address = 1
+    sta sa              ;Secondary address = 1
+
+
+    lda #filename_len
+    sta fnlen           ;Set length of filename
+
+    lda #<filename
+    sta fnadr           ;Set low address of filename
+    lda #>filename
+    sta fnadr+1         ;Set high address of filename
 
     lda #<data
     sta $fb             ;Set low address to load data into
     lda #>data
     sta $fb+1           ;Set high address to load data into
 
-    jsr $f356           ;Load ($f356 address is BASIC 4 specific)
-                        ;  If loading fails, $f356 does not return control.
+    jsr loadop          ;Load the track data file
+                        ;  If loading fails, control does not return here.
                         ;  An error message like "?file not found in 10" will
                         ;  be printed and the BASIC prompt will return.
     rts
