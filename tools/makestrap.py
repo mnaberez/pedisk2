@@ -1,16 +1,17 @@
 '''
-Make a bootstrap image.  The bootstrap image is a D64 image that
-can be written to a 4040 or similar CBM DOS drive.
+Make a bootstrap image.  The bootstrap is a CBM DOS image (e.g. D64) that can
+be written to a CBM drive.  The bootstrap contains all the track data for one
+PEDISK disk and a program to write the tracks to the PEDISK.
 
 Process for bootstrapping the PEDISK with no existing PEDISK media:
  - Run makeboot.py to make a boot disk image
- - Run makestrap.py (this file) to make a bootstrap D64 image from it
- - Write the D64 image to a 4040 drive or similar drive
- - Run the "FORMAT8" program from the 4040 to format a PEDISK 8" disk
- - Run the "BOOTSTRAP" program from the 4040 to write the PEDISK sectors
+ - Run makestrap.py (this file) to make a bootstrap CBM DOS image from it
+ - Write the CBM DOS image to a CBM drive
+ - Run the "FORMAT8" program from the CBM drive to format a PEDISK 8" disk
+ - Run the "BOOTSTRAP" program from the CBM drive to write the PEDISK tracks
  - Boot from the new PEDISK disk with "SYS 59904"
 
-Usage: makestrap.py <input.img> <output.d64>
+Usage: makestrap.py <input.img> <output.d64|output.d80|output.d82>
 '''
 import shutil
 import sys
@@ -46,12 +47,13 @@ def main(argv):
     if len(argv) != 3:
         sys.stderr.write(__doc__)
         sys.exit(1)
-    imagename, d64name = map(os.path.abspath, argv[1:])
+    pedisk_image, cbm_image = map(os.path.abspath, argv[1:])
+    cbm_type = os.path.splitext(cbm_image)[1].lstrip('.').lower() # "d64"
 
     here, tempdir = os.getcwd(), tempfile.mkdtemp()
     os.chdir(tempdir)
     try:
-        extract_tracks_to_prg_files(imagename)
+        extract_tracks_to_prg_files(pedisk_image)
 
         res = os.system("acme -v -f cbm -o format8 '%s'" %
             os.path.join(here, 'bootstrap', 'format8.asm'))
@@ -61,16 +63,17 @@ def main(argv):
             os.path.join(here, 'bootstrap', 'bootstrap.asm'))
         assert res == 0
 
-        res = os.system("c1541 -format bootstrap,pe d64 '%s'" % d64name)
+        res = os.system("c1541 -format bootstrap,pe '%s' '%s'" % (
+            cbm_type, cbm_image))
         assert res == 0
         for filename in os.listdir('.'):
             os.system("c1541 -attach '%s' -write '%s'" %
-                (d64name, filename))
+                (cbm_image, filename))
             assert res == 0
     finally:
         os.chdir(here)
         shutil.rmtree(tempdir)
-    print("D64 file written to %s" % d64name)
+    print("CBM DOS image file written to %s" % cbm_image)
 
 if __name__ == '__main__':
     main(sys.argv)
