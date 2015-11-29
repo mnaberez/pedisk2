@@ -22,7 +22,7 @@ target_ptr    = $b7       ;Pointer: PEDISK target address for memory ops **
 fnlen         = $d1       ;Filename length
 sa            = $d3       ;Secondary address
 dn            = $d4       ;Device number
-fnadr         = $da       ;Filename address pointer
+fnadr         = $da       ;Pointer: Filename address
 dos           = $7800     ;Base address for the RAM-resident portion
 track         = dos+$0792 ;Track number to write to WD1793 (0-76 or $00-4c)
 sector        = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
@@ -61,9 +61,7 @@ loop:
     jsr write_track
     lda data_next_trk
     cmp #$ff
-    beq done
-    jmp loop
-done:
+    bne loop
     rts
 
 print_filename:
