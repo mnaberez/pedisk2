@@ -43,37 +43,36 @@ def extract_tracks_to_prg_files(imagename):
             f.write(bytearray([next_track])) # next track number
             f.write(data) # sector data
 
+def acme(srcfile, outfile):
+    res = os.system("acme -v -f cbm -o '%s' '%s'" % (outfile, srcfile))
+    assert res == 0
+
+def create_cbm_image_from_dir(imagename, dirname):
+    cbm_type = os.path.splitext(imagename)[1].lstrip('.').lower() # "d64"
+    res = os.system("c1541 -format bootstrap,pe '%s' '%s'" % (
+        cbm_type, imagename))
+    assert res == 0
+    for filename in os.listdir(dirname):
+        os.system("c1541 -attach '%s' -write '%s'" % (imagename, filename))
+        assert res == 0
+
 def main(argv):
     if len(argv) != 3:
         sys.stderr.write(__doc__)
         sys.exit(1)
     pedisk_image, cbm_image = map(os.path.abspath, argv[1:])
-    cbm_type = os.path.splitext(cbm_image)[1].lstrip('.').lower() # "d64"
 
     here, tempdir = os.getcwd(), tempfile.mkdtemp()
     os.chdir(tempdir)
     try:
         extract_tracks_to_prg_files(pedisk_image)
-
-        res = os.system("acme -v -f cbm -o format8 '%s'" %
-            os.path.join(here, 'bootstrap', 'format8.asm'))
-        assert res == 0
-
-        res = os.system("acme -v -f cbm -o bootstrap '%s'" %
-            os.path.join(here, 'bootstrap', 'bootstrap.asm'))
-        assert res == 0
-
-        res = os.system("c1541 -format bootstrap,pe '%s' '%s'" % (
-            cbm_type, cbm_image))
-        assert res == 0
-        for filename in os.listdir('.'):
-            os.system("c1541 -attach '%s' -write '%s'" %
-                (cbm_image, filename))
-            assert res == 0
+        acme(os.path.join(here, 'bootstrap', 'format8.asm'), 'format8')
+        acme(os.path.join(here, 'bootstrap', 'bootstrap.asm'), 'bootstrap')
+        create_cbm_image_from_dir(cbm_image, '.')
+        print("CBM DOS image file written to %s" % cbm_image)
     finally:
         os.chdir(here)
         shutil.rmtree(tempdir)
-    print("CBM DOS image file written to %s" % cbm_image)
 
 if __name__ == '__main__':
     main(sys.argv)
