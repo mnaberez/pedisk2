@@ -23,10 +23,7 @@ sector        = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
 num_sectors   = dos+$0796 ;Number of sectors to read or write
 write_sectors = $ed3f     ;Number of sectors to write
 deselect      = $eb0b     ;Deselect drive
-setnam        = $ffbd     ;KERNAL Set filename
-setlfs        = $ffba     ;KERNAL Set logical file
-chrout        = $ffd2     ;KERNAL write by to default output (screen)
-load          = $ffd5     ;KERNAL Load file
+chrout        = $ffd2     ;KERNAL write byte to default output (screen)
 
 data          = $0800   ;Base address where track data will be loaded
 data_track    = data+0  ;Track number for the data
