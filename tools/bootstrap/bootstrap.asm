@@ -29,21 +29,26 @@ bas_eol:
     !byte $00           ;End of BASIC line
     !byte $00,$00       ;End of BASIC program
 
+start:
+    lda #0
+    sta data_next_trk
 loop:
+    jsr update_filename
     jsr print_filename
     jsr load_track_file
-    ;jsr write_track
+    jsr write_track
     lda data_next_trk
     cmp #$ff
     beq done
-    jsr update_filename
     jmp loop
 done:
     rts
 
 print_filename:
+;Print the filename followed by a carriage return
+;
     ldx #0
-msg_loop:
+print_loop:
     txa
     pha
     lda filename,x
@@ -52,13 +57,13 @@ msg_loop:
     tax
     inx
     cpx #filename_len
-    bne msg_loop
+    bne print_loop
     lda #$0d
     jsr chrout
     rts
 
 load_track_file:
-;Load the track data from a CBM program file
+;Load the track data from a CBM program file on unit 8
 ;
     lda #0
     sta $96             ;Clear status byte ST
@@ -92,6 +97,8 @@ load_track_file:
     rts
 
 update_filename:
+;Update the filename with the track number in data_next_trk
+;
     lda data_next_trk
     lsr
     lsr
@@ -108,25 +115,25 @@ update_filename:
     sta filename_end-1
     rts
 hex_chars:
-  !text "0123456789ABCDEF"
+    !text "0123456789ABCDEF"
 
 write_track:
 ;Write the track data to the PEDISK
 ;
     lda data_track
-    sta track
+    sta track               ;Set PEDISK track number
     lda #1
-    sta sector
+    sta sector              ;Set PEDISK sector number
     lda data_sec_cnt
-    sta num_sectors
+    sta num_sectors         ;Set number of sectors to write
     lda #<data_sectors
-    sta target_ptr
+    sta target_ptr          ;Set start address low byte
     lda #>data_sectors
-    sta target_ptr+1
-    jsr write_sectors
-    jsr deselect
+    sta target_ptr+1        ;Set start address high byte
+    jsr write_sectors       ;Write the sectors
+    jsr deselect            ;Deselect the drive
     rts
 
-filename:     !text "TRACK $00"
+filename: !text "TRACK $00"
 filename_end = *
 filename_len = filename_end - filename
