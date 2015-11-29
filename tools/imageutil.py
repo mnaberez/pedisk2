@@ -435,7 +435,6 @@ def _low_high(num):
 
 class FileTypes(object):
     '''File types supported by the PEDISK file system'''
-    UNUSED = 0xFF
     SEQ = 0x00
     IND = 0x01
     ISM = 0x02
