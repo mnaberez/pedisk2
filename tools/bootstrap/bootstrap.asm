@@ -1,3 +1,21 @@
+;Bootstrap a PEDISK disk using a CBM disk
+;
+;This program is written as a PRG file to a CBM drive along with any number
+;other PRG files named like "TRACK $00"..."TRACK $4C" that contain PEDISK
+;track data.  When this program is run, the file "TRACK $00" is loaded into
+;$0800 and its data is written to track 0 on the PEDISK.  The disk in the
+;PEDISK must already been formatted.  After the track is written, the next track
+;number is read from offset $04 and its "TRACK $xx" file is loaded and written.
+;The process repeats until the value at offset $04 is $FF, signaling the end.
+;
+;The format of a track PRG file is:
+;  $00-$01  Load address (always $0800)
+;  $02      Track number of the data
+;  $03      Count of sectors in the data (26 for 8", 28 for 5.25")
+;  $04      Next track after this one, or $FF if none
+;  $05...   Sector data (128 bytes * count of sectors)
+;
+
 target_ptr    = $b7       ;Pointer: PEDISK target address for memory ops **
 dos           = $7800     ;Base address for the RAM-resident portion
 track         = dos+$0792 ;Track number to write to WD1793 (0-76 or $00-4c)
