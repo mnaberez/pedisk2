@@ -69,16 +69,12 @@ done:
 print_filename:
 ;Print the filename followed by a carriage return
 ;
-    ldx #0
+    ldy #0
 print_loop:
-    txa
-    pha
-    lda filename,x
+    lda filename,y
     jsr chrout
-    pla
-    tax
-    inx
-    cpx #filename_len
+    iny
+    cpy #filename_len
     bne print_loop
     lda #$0d
     jsr chrout
