@@ -63,12 +63,14 @@ start:
 loop:
     jsr update_filename
     jsr print_filename
-    jsr load_track_file
-    jsr write_track
+    jsr load_track_file ;Load file from CBM drive, prints msg and exits if error
+    jsr write_track     ;Write track to PEDISK, prints msg and returns if error
+    bne done            ;Branch if a PEDISK error occurred
     lda data_next_trk
     cmp #$ff
     bne loop
-    rts
+done:
+    jmp deselect        ;Deselect PEDISK drive (unloads head) and return
 
 print_filename:
 ;Print the filename followed by a carriage return
@@ -81,8 +83,7 @@ print_loop:
     cpy #filename_len
     bne print_loop
     lda #$0d
-    jsr chrout
-    rts
+    jmp chrout
 
 load_track_file:
 ;Load the track data from a CBM program file.  This assumes that the
@@ -108,11 +109,10 @@ load_track_file:
     lda #>data
     sta $fb+1           ;Set high address to load data into
 
-    jsr loadop          ;Load the track data file
-                        ;  If loading fails, control does not return here.
+    jmp loadop          ;Load the track data file
+                        ;  If loading fails, control does not return.
                         ;  An error message like "?file not found in 10" will
                         ;  be printed and the BASIC prompt will return.
-    rts
 
 update_filename:
 ;Update the filename with the track number in data_next_trk
@@ -148,9 +148,7 @@ write_track:
     sta target_ptr          ;Set start address low byte
     lda #>data_sectors
     sta target_ptr+1        ;Set start address high byte
-    jsr write_sectors       ;Write the sectors
-    jsr deselect            ;Deselect the drive
-    rts
+    jmp write_sectors       ;Write the sectors
 
 filename: !text "TRACK $00"
 filename_end = *
