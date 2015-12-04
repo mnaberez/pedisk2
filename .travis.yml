@@ -1,3 +1,5 @@
+sudo: false
+
 install:
   - wget https://www.mirrorservice.org/sites/ftp.cs.vu.nl/pub/minix/distfiles/backup/acme091src.tar.gz
   - tar xzf acme091src.tar.gz
