@@ -197,17 +197,37 @@ class Filesystem(object):
         self.image.read(8) # skip diskname
         return self.image.read(1)[0]
 
+    @property
+    def next_free_entry_index(self):
+        '''Read the directory and return the index (0-63) of the first
+        unused directory entry'''
+        self.image.home()
+        self.image.read(16) # skip directory header
+        data = self.image.peek(63 * 16) # data for all 63 entries
+
+        # find the free entry below the last used one
+        free_entry_index = None
+        for i in range(62, -1, -1): # [62, 61, ..., 0]
+            start = i * 16
+            end = start + 16 + 1
+            entry = DirectoryEntry.from_bytes(data[start:end])
+            if entry.used:
+                break
+            else:
+                free_entry_index = i
+
+        if free_entry_index is None:
+            raise ValueError('Disk full: no entries left in directory')
+        else:
+            return free_entry_index
+
     def _seek_to_free_entry(self):
         '''Seek to the next free directory entry.  Raises an
         error if no more entries are available.'''
+        entry_index = self.next_free_entry_index
         self.image.home()
-        self.image.read(16) # skip past directory header
-        for i in range(63):
-            entry = DirectoryEntry.from_bytes(self.image.peek(16))
-            if not entry.used:
-                return
-            self.image.read(16) # advance to next entry
-        raise ValueError('Disk full: no entries left in directory')
+        self.image.read(16) # skip directory header
+        self.image.read(entry_index * 16) # move to start of entry
 
     @property
     def num_free_entries(self):

@@ -410,6 +410,63 @@ class FilesystemTests(unittest.TestCase):
         img.write(b'\x46') # number of files used = 70 (too high)
         self.assertEqual(fs.num_free_entries, 0)
 
+    # next_free_entry_index
+
+    def test_next_free_entry_index_returns_0_for_fresh_image(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        self.assertEqual(fs.next_free_entry_index, 0)
+
+    def test_next_free_entry_index_raises_if_dir_is_full(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        # fill all 63 directory entries
+        for i in range(63):
+            fs.write_file(
+                filename=bytearray([i]),
+                filetype=imageutil.FileTypes.ASM,
+                data=b'123',
+                load_address=0x0401
+                )
+        # no free entry
+        try:
+            fs.next_free_entry_index
+            self.fail('nothing raised')
+        except ValueError as exc:
+            self.assertEqual(exc.args[0],
+                'Disk full: no entries left in directory')
+
+    def test_next_free_entry_index_ignores_count_in_header(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        img.home()
+        img.write(b'\x10') # number of used files; 0x10 is a lie
+        self.assertEqual(fs.next_free_entry_index, 0)
+
+    def test_next_free_entry_returns_first_entry_after_last_used_one(self):
+        img = imageutil.FiveInchDiskImage()
+        fs = imageutil.Filesystem(img)
+        fs.format(diskname=b'fresh')
+        # write four directory entries
+        for i in range(4):
+            fs.write_file(
+                filename=bytearray([i]),
+                filetype=imageutil.FileTypes.ASM,
+                data=b'123',
+                load_address=0x0401
+                )
+        # make first and second entries appear unused
+        img.home()
+        img.read(16) # skip disk name and info
+        img.write(b'\xff' * 16)
+        img.write(b'\xff' * 16)
+        # third and fourth entries are still used
+        # free entry should still be the fifth
+        self.assertEqual(fs.next_free_entry_index, 4)
+
     # num_free_sectors
 
     def test_num_free_sectors_returns_all_but_dir_for_fresh_image(self):
@@ -802,7 +859,7 @@ class FilesystemTests(unittest.TestCase):
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         img.home()
-        img.read(16) # skip past directory header
+        img.read(16) # skip directory header
         img.write(b'strtrk'.ljust(16, b'\x00'))
         self.assertTrue(fs.file_exists(b'strtrk'))
 
@@ -811,7 +868,7 @@ class FilesystemTests(unittest.TestCase):
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         img.home()
-        img.read(16) # skip past directory header
+        img.read(16) # skip directory header
         img.write(b'hi'.ljust(6, b'\x20').ljust(16, b'\x00'))
         self.assertTrue(fs.file_exists(b'hi'))
 
@@ -837,7 +894,7 @@ class FilesystemTests(unittest.TestCase):
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         img.home()
-        img.read(16) # skip past directory header
+        img.read(16) # skip directory header
         used_entry = b'\x20' * 16
         full_directory = used_entry * 63
         img.write(full_directory)
@@ -855,7 +912,7 @@ class FilesystemTests(unittest.TestCase):
         fs.format(diskname=b'foo')
         # use the first two directory entries
         img.home()
-        img.read(16) # skip past directory header
+        img.read(16) # skip directory header
         used_entry = b'\x20' * 16
         img.write(used_entry * 2)
         # write the new file
@@ -895,7 +952,7 @@ class FilesystemTests(unittest.TestCase):
         fs.format(diskname=b'foo')
         # write a nonsensical used entry count in the header
         img.home()
-        img.read(8) # skip past disk name in header
+        img.read(8) # skip disk name in header
         img.write(b'\x33')
         self.assertEqual(fs.num_used_entries, 0x33)
         # use the first directory entry for a deleted file
