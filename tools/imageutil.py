@@ -221,14 +221,6 @@ class Filesystem(object):
         else:
             return free_entry_index
 
-    def _seek_to_free_entry(self):
-        '''Seek to the next free directory entry.  Raises an
-        error if no more entries are available.'''
-        entry_index = self.next_free_entry_index
-        self.image.home()
-        self.image.read(16) # skip directory header
-        self.image.read(entry_index * 16) # move to start of entry
-
     @property
     def num_free_entries(self):
         '''Read the directory header and return the number of directory
@@ -362,8 +354,13 @@ class Filesystem(object):
         sector_count = len(data) / float(self.image.SECTOR_SIZE)
         sector_count = int(math.ceil(sector_count))
 
+        # seek to free directory entry
+        entry_index = self.next_free_entry_index
+        self.image.home()
+        self.image.read(16) # skip directory header
+        self.image.read(entry_index * 16) # move to start of entry
+
         # write directory entry
-        self._seek_to_free_entry()
         entry = DirectoryEntry(
             filename=filename,
             size=size_or_entry,
