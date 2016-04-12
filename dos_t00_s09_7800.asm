@@ -146,8 +146,12 @@ L786A:
 
     jsr write_sectors
     bne save_done       ;Branch if a disk error occurred
-    lda #$00
-    sta latch           ;Drive Select Latch
+
+    ;Deselect drives and stop motors
+    lda #$00            ;Bit 3 = WD1793 /DDEN=0 (double density mode)
+                        ;All other bits off = deselect drives, stop motors
+    sta latch
+
     lda #$00
 save_done:
     rts
@@ -777,8 +781,12 @@ L7B91:
     lda #$FF
     sta dir_entry
     sta fc_error
-    lda #$00
+
+    ;Deselect drives and stop motors
+    lda #$00            ;Bit 3 = WD1793 /DDEN=0 (double density mode)
+                        ;All other bits off = deselect drives, stop motors
     sta latch
+
     lda #$FF
     jmp seq_cmd_done
 close_disk_err:

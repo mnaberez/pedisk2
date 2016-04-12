@@ -1,11 +1,11 @@
 ;This is a bit correct disassembly of the PEDISK II ROM
 ;Based on work by Lee Davison 2013-07-04
 
-latch        = $e900    ;Drive Select Latch
+latch        = $e900    ;Latch (U7 75LS175)
                         ;  bit function
                         ;  === ======
                         ;  7-4 not used
-                        ;  3   motor ??
+                        ;  3   WD1793 /DDEN (0=double density, 1=single)
                         ;  2   drive 3 select
                         ;  1   drive 2 select
                         ;  0   drive 1 select
@@ -483,7 +483,8 @@ deselect_drive:
 ;
 ;This will disengage the head load solenoid on mechanisms that have one.
 ;
-    lda #%00001000
+    lda #%00001000      ;Bit 3 = WD1793 /DDEN=1 (single density mode)
+                        ;All other bits off = deselect drives, stop motors
     sta latch
     rts
 
@@ -587,7 +588,7 @@ select_drive:
     cmp #%00000111      ;compare it with all drives selected
     bcs no_drive_sel    ;if >= $07 go do disk error $14, no drive selected
 
-    ora #%00001000      ;mask xxxx 1xxx, set ?? bit
+    ora #%00001000      ;mask xxxx 1xxx, set /DDEN=1 (single density mode)
     sta latch           ;save the drive select latch
 
     lda #35             ;set the delay count, 35ms
@@ -882,7 +883,7 @@ disk_error_loop:
     sta fdc_cmdst       ;Write to the WD1793 command register
 
     cli                 ;enable interrupts
-    jsr deselect_drive  ;deselect the drives and stop the motors ??
+    jsr deselect_drive  ;deselect the drives and stop the motors
     sec
 ret_ff_in_a:
     lda #$ff

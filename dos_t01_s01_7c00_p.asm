@@ -309,7 +309,9 @@ L7DEB:
     lda #$0D
     jsr chrout
 
-    lda #$00
+    ;Deselect drives and stop motors
+    lda #$00            ;Bit 3 = WD1793 /DDEN=0 (double density mode)
+                        ;All other bits off = deselect drives, stop motors
     sta latch
 
     jmp pdos_prompt

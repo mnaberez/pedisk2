@@ -137,8 +137,9 @@ insert_dst_disk:
     lda #<put_copy
     jsr puts
 
-    ;TODO deselect drive?
-    lda #$00
+    ;Deselect drives and stop motors
+    lda #$00            ;Bit 3 = WD1793 /DDEN=0 (double density mode)
+                        ;All other bits off = deselect drives, stop motors
     sta latch
 
     ;Wait for user to press the "R" key

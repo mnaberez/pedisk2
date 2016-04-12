@@ -35,8 +35,11 @@ pdos_prompt:
 ;
     ldx #$FF
     txs                 ;Reset stack pointer
-    lda #$00
-    sta latch           ;TODO deselect drives?
+
+    ;Deselect drives and stop motors
+    lda #$00            ;Bit 3 = WD1793 /DDEN=0 (double density mode)
+                        ;All other bits off = deselect drives, stop motors
+    sta latch
 
     ;Print the PDOS prompt
 
