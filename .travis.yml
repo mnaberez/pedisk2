@@ -8,4 +8,6 @@ install:
 
 language: python
 
-script: python tests.py
+script:
+  - python tests.py
+  - python tools/test_imageutil.py
