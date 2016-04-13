@@ -57,3 +57,10 @@ Jumper Settings
 | W3           | Close   | Open      | Grounds MTRON                        |
 | W4           | Depends | Depends   | Close for Micropolis drives with RDY |
 | W5           | Close   | Open      | Connects HD SELECT for 5.25"         |
+
+In addition to the jumpers above, the WD1793's `/DDEN` (Double Density Enable)
+line must be set high for 8" (single density) or low for 5.25" (double
+density).  `/DDEN` is controlled by the pin 15 of the U7 latch.  The
+firmware/software must be changed to set `/DDEN` appropriately.  Another option
+would be to disconnect `/DDEN` from the latch and tie it permanently high
+or low.
