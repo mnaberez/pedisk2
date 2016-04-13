@@ -17,7 +17,7 @@
 | 8                | 24     | In  | (SECTOR) | INDEX   | SEC/INDEX  | *1, 2*|
 | 10               | 26     | Out | SEL1     | SEL1    | SEL1       |       |
 | 12               | 28     | Out | SEL2     | SEL2    | SEL2       |       |
-| 14               | 30     | Out | SEL3     | SEL3    | SEL3       |       |
+| N/C              | 30     | Out | SEL3     | SEL3    | SEL3       |       |
 | 16               | 32     | Out | SEL4     | MTRON   | MTRON      | *4*   |
 | 18               | 34     | Out | STEP IN  | STEP IN | STEP IN    | *5*   |
 | 20               | 36     | Out | STEP     | STEP    | STEP       |       |
@@ -27,7 +27,7 @@
 | 28               | 44     | In  | WPROT    | WPROT   | WPROT      |       |
 | 30               | 46     | In  | RDATA    | RDATA   | RDATA      |       |
 | 32               | 48     | Both| (SEP DAT)| HD SEL  | HD SEL     | *1, 6*|
-| 34               | 50     | In  | (SEP CLK)| RY/DC   | SEL4       | *1*   |
+| N/C              | 50     | In  | (SEP CLK)| RY/DC   | SEL4       | *1*   |
 
 Notes:
 
