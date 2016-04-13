@@ -36,27 +36,33 @@ Notes:
 2. PEDISK II always connects pins 4(20) and 8(24) in parallel.
 
 3. PEDISK II is no-connect unless jumper W4 is installed.  If W4 is installed,
-   the WD1793 gets the READY signal from the drive.
+   the WD1793 gets the `READY` signal from the drive.
 
 4. PEDISK II is no-connect unless jumper W3 is installed.  If W3 is installed,
-   MTRON is grounded (motor always on).
+   `MTRON` is grounded (motor always on).
 
 5. `STEP IN` is also commonly known as `DIRC` (Direction Control).
 
 6. PEDISK II is no-connect unless jumper W5 is installed.  If W5 is installed,
-   the PEDISK II can control HD SEL (head select).
+   the PEDISK II can control `HD SEL` (Head Select).
 
 
 Jumper Settings
 ---------------
 
-| Jumper       | 5.25"   | 8"        | Description                          |
-|--------------|---------|-----------|--------------------------------------|
-| W1 (250/125) | 250     | 250       | Select Bit Rate (kbit/sec)           |  
-| W2 (5/8)     | 5       | 8         | ???                                  |
-| W3           | Close   | Open      | Grounds MTRON                        |
-| W4           | Depends | Depends   | Close for Micropolis drives with RDY |
-| W5           | Close   | Open      | Connects HD SELECT for 5.25"         |
+| Jumper     |5.25"  |8"     | Description                          | Notes |
+|------------|-------|-------|--------------------------------------|:-----:|
+| W1 250/125 |250    |250    | Select Bit Rate (kbits/sec)          |       |
+| W2 5/8     |5      |8      | ???                                  |       |
+| W3         |Close  |Open   | Grounds MTRON                        |       |
+| W4         |Depends|Depends| Close for Micropolis drives with RDY | *1*   |
+| W5         |Close  |Open   | Connects HD SELECT for 5.25"         | &nbsp;|
+
+Notes:
+
+1. An 8" PEDISK II system was found with a Siemens FDD100-8 drive.  This drive
+   has a `READY` signal on pin 6(22) but the PEDISK II was configured with W4
+   open.  The system works in this configuration.
 
 In addition to the jumpers above, the WD1793's `/DDEN` (Double Density Enable)
 line must be set high for 8" (single density) or low for 5.25" (double
