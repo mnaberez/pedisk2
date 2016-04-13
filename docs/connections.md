@@ -20,7 +20,7 @@
 | 14               | 30     | Out | SEL3     | SEL3    | SEL3       |       |
 | 16               | 32     | Out | SEL4     | MTRON   | MTRON      | *4*   |
 | 18               | 34     | Out | STEP IN  | STEP IN | STEP IN    | *5*   |
-| 20               | 36     | Out | STEP     | STEP    |            |       |
+| 20               | 36     | Out | STEP     | STEP    | STEP       |       |
 | 22               | 38     | Out | WDAT     | WDAT    | WDAT       |       |
 | 24               | 40     | Out | WRITE    | WGATE   | WGATE      |       |
 | 26               | 42     | In  | TRK00    | TRK00   | TRK00      |       |
@@ -60,7 +60,7 @@ Jumper Settings
 
 In addition to the jumpers above, the WD1793's `/DDEN` (Double Density Enable)
 line must be set high for 8" (single density) or low for 5.25" (double
-density).  `/DDEN` is controlled by the pin 15 of the U7 latch.  The
+density).  `/DDEN` is controlled by pin 15 of the U7 latch.  The
 firmware/software must be changed to set `/DDEN` appropriately.  Another option
 would be to disconnect `/DDEN` from the latch and tie it permanently high
 or low.
