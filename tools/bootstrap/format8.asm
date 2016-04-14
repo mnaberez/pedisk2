@@ -114,7 +114,7 @@ start_format:
     bne failed          ;Branch if error
 
     ;Disk has been formatted successfully.  All sectors on the
-    ;disk have been filled with $E6.  Now we need to write the
+    ;disk have been filled with $E5.  Now we need to write the
     ;directory sectors.
 
     ;Print "WRITE EMPTY DIR"
@@ -431,7 +431,7 @@ l14b:
     dex
     bne l14a
 
-;Write E5 x 1
+;Write E5 x 128
     ldx #128
 l15a:
     lda #$E6
