@@ -257,8 +257,8 @@ L790D:
 
 L7931:
 ;TODO unknown function
-;     called from dos_t01_s01_7c00_p.asm (print directory)
-;     also from dos_t01_s15_7c00_2.asm (copy utility)
+;     called from dos_t01_s01_7c00_p_directory.asm
+;     also from dos_t01_s15_7c00_2_copy_utility.asm
     jsr L7948
     ldx #$10
 L7936:
