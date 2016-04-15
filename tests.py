@@ -11,6 +11,7 @@ import sys
 import tempfile
 
 FILES = {'tools/bootstrap/bootstrap.asm':            None,
+         'tools/bootstrap/format5.asm':              None,
          'tools/bootstrap/format8.asm':              None,
          'dos_t00_s09_7800.asm':                     'bin/dos_t00_s09_7800.bin',
          'dos_t00_s22_7a00.asm':                     'bin/dos_t00_s22_7a00.bin',
