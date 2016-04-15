@@ -13,20 +13,20 @@
 | N/C              | 16     | Out | IN USE   |         |            |       |
 | N/C              | 18     | Out | HLD      |         |            |       |
 | 4                | 20     | In  | INDEX    | (IN USE)| N/C        | *1, 2*|
-| 6                | 22     | In  | READY    | SEL4    | RDY        | *3*   |
+| 6                | 22     | In  | READY    | SEL4    | READY      | *3*   |
 | 8                | 24     | In  | (SECTOR) | INDEX   | SEC/INDEX  | *1, 2*|
 | 10               | 26     | Out | SEL1     | SEL1    | SEL1       |       |
 | 12               | 28     | Out | SEL2     | SEL2    | SEL2       |       |
 | N/C              | 30     | Out | SEL3     | SEL3    | SEL3       |       |
-| 16               | 32     | Out | SEL4     | MTRON   | MTRON      | *4*   |
-| 18               | 34     | Out | STEP IN  | STEP IN | STEP IN    | *5*   |
+| 16               | 32     | Out | SEL4     | MOTOR   | MOTOR      | *4*   |
+| 18               | 34     | Out | DIRC     | DIRC    | DIRC       |       |
 | 20               | 36     | Out | STEP     | STEP    | STEP       |       |
 | 22               | 38     | Out | WDAT     | WDAT    | WDAT       |       |
 | 24               | 40     | Out | WRITE    | WGATE   | WGATE      |       |
 | 26               | 42     | In  | TRK00    | TRK00   | TRK00      |       |
 | 28               | 44     | In  | WPROT    | WPROT   | WPROT      |       |
 | 30               | 46     | In  | RDATA    | RDATA   | RDATA      |       |
-| 32               | 48     | Both| (SEP DAT)| HD SEL  | HD SEL     | *1, 6*|
+| 32               | 48     | Both| (SEP DAT)| HD SEL  | HD SEL     | *1, 5*|
 | N/C              | 50     | In  | (SEP CLK)| RY/DC   | SEL4       | *1*   |
 
 Notes:
@@ -39,11 +39,9 @@ Notes:
    the WD1793 gets the `READY` signal from the drive.
 
 4. PEDISK II is no-connect unless jumper W3 is installed.  If W3 is installed,
-   `MTRON` is grounded (motor always on).
+   `MOTOR` is grounded (motor always on).
 
-5. `STEP IN` is also commonly known as `DIRC` (Direction Control).
-
-6. PEDISK II is no-connect unless jumper W5 is installed.  If W5 is installed,
+5. PEDISK II is no-connect unless jumper W5 is installed.  If W5 is installed,
    the PEDISK II can control `HD SEL` (Head Select).
 
 
@@ -54,7 +52,7 @@ Jumper Settings
 |------------|-------|-------|--------------------------------------|:-----:|
 | W1 250/125 |250    |250    | Select Bit Rate (kbits/sec)          |       |
 | W2 5/8     |5      |8      | ???                                  |       |
-| W3         |Close  |Open   | Grounds MTRON                        |       |
+| W3         |Close  |Open   | Grounds MOTOR                        |       |
 | W4         |Depends|Depends| Close for Micropolis drives with RDY | *1*   |
 | W5         |Close  |Open   | Connects HD SELECT for 5.25"         | &nbsp;|
 
