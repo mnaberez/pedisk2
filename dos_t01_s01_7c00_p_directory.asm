@@ -1,4 +1,4 @@
-latch = $e900 ;Drive select latch
+latch = $e900 ;Drive Select Latch
 L7931 = $7931
 pdos_prompt = $7A05
 input_device = $7AD1

@@ -4,7 +4,8 @@
 latch        = $e900    ;Latch (U7 75LS175)
                         ;  bit function
                         ;  === ======
-                        ;  7-4 not used
+                        ;  7   WD1793 INTRQ (read only)
+                        ;  6-4 unused
                         ;  3   WD1793 /DDEN (0=double density, 1=single)
                         ;  2   drive 3 select
                         ;  1   drive 2 select

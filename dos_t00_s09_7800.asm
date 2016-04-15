@@ -1,11 +1,4 @@
 latch        = $e900    ;Drive Select Latch
-                        ;  bit function
-                        ;  === ======
-                        ;  7-4 not used
-                        ;  3   motor ??
-                        ;  2   drive 3 select
-                        ;  1   drive 2 select
-                        ;  0   drive 1 select
 
 ;In the zero page locations below, ** indicates the PEDISK destroys
 ;a location that is used for some other purpose by CBM BASIC 4.

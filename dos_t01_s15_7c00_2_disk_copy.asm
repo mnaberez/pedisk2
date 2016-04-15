@@ -21,13 +21,6 @@ get_char = $EF7B
 puts = $EFE7
 
 latch        = $e900    ;Drive Select Latch
-                        ;  bit function
-                        ;  === ======
-                        ;  7-4 not used
-                        ;  3   motor ??
-                        ;  2   drive 3 select
-                        ;  1   drive 2 select
-                        ;  0   drive 1 select
 
 dos         = $7800     ;Base address for the RAM-resident portion
 drive_sel   = dos+$0791 ;Drive select bit pattern to write to the latch
