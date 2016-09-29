@@ -25,37 +25,24 @@ menu:
 ;  L-LOAD DISK PROGRAM Y-
 ;  M-MEMORY ALTER      Z-
 ;
-;The table uses these marker bytes:
+;The table uses 3 marker bytes:
 ;  '!' End of a left column item
 ;  '%' End of a right column item
 ;  $FF End of the menu
 ;
-    !text "A-MACROASM/EDIT"     ,'!'
-    !text "N-RENAME A FILE"     ,'%'
-    !text "B-"                  ,'!'
-    !text "O-"                  ,'%'
-    !text "C-"                  ,'!'
-    !text "P-PRINT DISK DIRECT" ,'%'
-    !text "D-DUMP DISK OR MEM"  ,'!'
-    !text "Q-"                  ,'%'
-    !text "E-"                  ,'!'
-    !text "R-RE-ENTER BASIC"    ,'%'
-    !text "F-"                  ,'!'
-    !text "S-SAVE A PROGRAM"    ,'%'
-    !text "G-GO TO MEMORY"      ,'!'
-    !text "T-"                  ,'%'
-    !text "H-HELP"              ,'!'
-    !text "U-UTILITY DISK MENU" ,'%'
-    !text "I-"                  ,'!'
-    !text "V-"                  ,'%'
-    !text "J-"                  ,'!'
-    !text "W-"                  ,'%'
-    !text "K-KILL A FILE"       ,'!'
-    !text "X-EXECUTE DISK FILE" ,'%'
-    !text "L-LOAD DISK PROGRAM" ,'!'
-    !text "Y-"                  ,'%'
-    !text "M-MEMORY ALTER"      ,'!'
-    !text "Z-"                  ,'%'
+    !text "A-MACROASM/EDIT"     ,'!',   "N-RENAME A FILE"       ,'%'
+    !text "B-"                  ,'!',   "O-"                    ,'%'
+    !text "C-"                  ,'!',   "P-PRINT DISK DIRECT"   ,'%'
+    !text "D-DUMP DISK OR MEM"  ,'!',   "Q-"                    ,'%'
+    !text "E-"                  ,'!',   "R-RE-ENTER BASIC"      ,'%'
+    !text "F-"                  ,'!',   "S-SAVE A PROGRAM"      ,'%'
+    !text "G-GO TO MEMORY"      ,'!',   "T-"                    ,'%'
+    !text "H-HELP"              ,'!',   "U-UTILITY DISK MENU"   ,'%'
+    !text "I-"                  ,'!',   "V-"                    ,'%'
+    !text "J-"                  ,'!',   "W-"                    ,'%'
+    !text "K-KILL A FILE"       ,'!',   "X-EXECUTE DISK FILE"   ,'%'
+    !text "L-LOAD DISK PROGRAM" ,'!',   "Y-"                    ,'%'
+    !text "M-MEMORY ALTER"      ,'!',   "Z-"                    ,'%'
     !byte $ff
 
 start:
