@@ -4,15 +4,20 @@ PEDISK II Notes
 Drive Selection
 ---------------
 
-The drive must be selected before most other commands will work.
+The drive can be exercised from BASIC without using any of the PEDISK II's
+ROM routines.  This is done by `POKE` and `PEEK` commands directly accessing
+the FD1793 and the 75LS175 latch.  The drive must be selected before most
+other commands will work.  
 
-Select the drive:
+Select the first drive (drive 1):
 
-    sys 60320
+    poke 59648,9 : rem write to $e900 latch (u7 75ls175)
+                       bit 4 = 1793 /dden (0=double density, 1=single)
+                       bit 0 = drive 1 select
 
 Deselect the drive:
 
-    sys 60171
+    poke 59648,0
 
 When the drive is selected, there will be an audible click as the head
 load solenoid engages.  The activity LED on the front of the drive will
