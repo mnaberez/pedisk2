@@ -11,5 +11,11 @@ language: python
 script:
   - python tests.py
   - python tools/test_imageutil.py
-  - python tools/makeboot.py 5 "`mktemp`.img"
-  - python tools/makeboot.py 8 "`mktemp`.img"
+
+  - export IMAGE_5_INCH="`mktemp`.img"
+  - python tools/makeboot.py 5 "$IMAGE_5_INCH"
+  - python tools/makestrap.py "$IMAGE_5_INCH" "`mktemp`.d64"
+
+  - export IMAGE_8_INCH="`mktemp`.img"
+  - python tools/makeboot.py 8 "$IMAGE_8_INCH"
+  - python tools/makestrap.py "$IMAGE_8_INCH" "`mktemp`.d64"
