@@ -62,12 +62,16 @@ def main(argv):
         sys.exit(1)
     pedisk_image, cbm_image = map(os.path.abspath, argv[1:])
 
-    here, tempdir = os.getcwd(), tempfile.mkdtemp()
+    here = os.getcwd()
+    root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    tempdir = tempfile.mkdtemp()
     os.chdir(tempdir)
     try:
         extract_tracks_to_prg_files(pedisk_image)
-        acme(os.path.join(here, 'bootstrap', 'format8.asm'), 'format8')
-        acme(os.path.join(here, 'bootstrap', 'bootstrap.asm'), 'bootstrap')
+        acme(srcfile=os.path.join(root, 'tools', 'bootstrap', 'format8.asm'),
+             outfile='format8')
+        acme(srcfile=os.path.join(root, 'tools', 'bootstrap', 'bootstrap.asm'),
+             outfile='bootstrap')
         create_cbm_image_from_dir(cbm_image, '.')
         print("CBM DOS image file written to %s" % cbm_image)
     finally:
