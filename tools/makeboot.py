@@ -8,6 +8,7 @@ need to be fixed to produce a working 8" system.
 
 Usage: makeboot.py <5|8> <imgname>
 '''
+import os
 import sys
 
 import imageutil
@@ -15,8 +16,12 @@ import imageutil
 if len(sys.argv) != 3:
     sys.stderr.write(__doc__)
     sys.exit(1)
-
 size_in_inches, imagename = sys.argv[1:]
+
+# get an absolute path for a binary file that will be included in the image
+def binfile(basename):
+    dirname = os.path.join(os.path.dirname(__file__), '..', 'bin', )
+    return os.path.abspath(os.path.join(dirname, basename))
 
 # make and format the image
 img = imageutil.DiskImage.make_for_physical_size(size_in_inches)
@@ -25,30 +30,30 @@ fs.format(diskname=b'BOOTDISK')
 
 # write the special boot file into the image
 data = bytearray()
-with open('../bin/dos_t00_s09_7800.bin', 'rb') as f:
+with open(binfile('dos_t00_s09_7800.bin'), 'rb') as f:
     data.extend(f.read())
-with open('../bin/dos_t00_s22_7a00.bin', 'rb') as f:
+with open(binfile('dos_t00_s22_7a00.bin'), 'rb') as f:
     data.extend(f.read())
 fs.write_file(filename=b'******', filetype=imageutil.FileTypes.LD,
     load_address=0x7800, entry_address=0x7800, data=data)
 
 # write all the other files into the image
 filenames = [
-    '../bin/dos_t00_s26_7c00_h.bin',
-    '../bin/dos_t01_s01_7c00_p.bin',
-    '../bin/dos_t01_s05_7c00_u.bin',
-    '../bin/dos_t01_s07_7c00_4.bin',
-    '../bin/dos_t01_s09_7c00_3.bin',
-    '../bin/dos_t01_s15_7c00_2.bin',
-    '../bin/dos_t01_s19_7c00_1.bin',
-    '../bin/dos_t01_s25_7c00_d.bin',
-    '../bin/dos_t01_s28_7c00_n.bin',
+    binfile('dos_t00_s26_7c00_h_help.bin'),
+    binfile('dos_t01_s01_7c00_p_directory.bin'),
+    binfile('dos_t01_s05_7c00_u_disk_utility.bin'),
+    binfile('dos_t01_s07_7c00_4_read_or_write.bin'),
+    binfile('dos_t01_s09_7c00_3_disk_format_5inch.bin'),
+    binfile('dos_t01_s15_7c00_2_disk_copy.bin'),
+    binfile('dos_t01_s19_7c00_1_disk_compression.bin'),
+    binfile('dos_t01_s25_7c00_d_dump_disk_or_mem.bin'),
+    binfile('dos_t01_s28_7c00_n_file_rename.bin'),
 ]
 for filename in filenames:
     parts = filename.split('_')
-    load_address = int(parts[-2], 16) # 0x7800
+    load_address = int(parts[3], 16) # 0x7800
     entry_address = load_address
-    menu_key = parts[-1][0].upper() # "H" from "h.bin"
+    menu_key = parts[4][0].upper() # "H" from "h.bin"
 
     with open(filename, 'rb') as f:
         data = f.read()
