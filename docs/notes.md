@@ -1,26 +1,6 @@
 PEDISK II Notes
 ===============
 
-
-Initialization
---------------
-
-Before running any other commands, the PEDISK II needs to be initialized:
-
-    sys 59904
-
-It should print the welcome banner:
-
-    pedisk ii system
-    cgrs microtech
-    langhorne,pa.19047 c1981
-
-After a short time, it will return to the ``ready.`` prompt.  If the DOS
-can't be loaded from disk, a ``disk error`` message will be printed before
-the prompt the prompt returns.  The BASIC wedge is not installed if the DOS
-is not loaded.
-
-
 Drive Selection
 ---------------
 
@@ -160,8 +140,20 @@ Jumpers W3, W4, and W5 are unknown.  They are all open.
 BASIC Wedge
 -----------
 
-Initializing the PEDISK II with ``sys 59904`` will attempt to load the DOS
-from disk.  The wedge will only be installed if the DOS loads successfully.
+Initialize the PEDISK II and it will attempt to load the DOS from disk:
+
+    sys 59904
+
+It should print the welcome banner:
+
+    pedisk ii system
+    cgrs microtech
+    langhorne,pa.19047 c1981
+
+After a short time, it will return to the ``ready.`` prompt.  If the DOS
+can't be loaded from disk, a ``disk error`` message will be printed before
+the prompt the prompt returns.  The BASIC wedge is not installed if the DOS
+is not loaded.
 
 Detect if the wedge is installed:
 
