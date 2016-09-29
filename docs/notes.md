@@ -44,11 +44,11 @@ Head Step
 
 Step out (decrease track, towards track 0):
 
-    poke 59776,99
+    poke 59776,99 : rem write to $e980 fd1793 command register
 
 Step in (increase track, towards track 76):
 
-    poke 59776,67
+    poke 59776,67 : rem write to $e980 fd1793 command register
 
 Do not step beyond track 76.  It will bump against the stop.
 
@@ -58,16 +58,16 @@ Random Seek
 
 Restore (go to track 0):
 
-    poke 59776,11
+    poke 59776,11 : rem write to $e980 fd1793 command register
 
 Seek to a random track:
 
-    poke 59779,t  : rem put track number in data register
-    poke 59776,27 : rem seek to track
+    poke 59779,t  : rem write to $e983 fd1793 data register
+    poke 59776,27 : rem write to $e980 fd1793 command register
 
 Show current track:
 
-    print peek(59777)
+    print peek(59777) : rem read from $e981 fd1793 track register
 
 
 Track Zero Sensor
@@ -79,7 +79,7 @@ is high.
 
 Bit 2 of the FD1793 status register is track zero status:
 
-    print peek(59776) and 4
+    print peek(59776) and 4 : rem read from $e980 fd1793 status register
 
 Prints ``4`` when positioned on track zero, should print ``0``
 when on any other track.
@@ -93,7 +93,7 @@ covered, pin 36 is high.  When it is not, pin 36 is low.
 
 Bit 6 of the FD1793 status register is write protect status:
 
-    print peek(59776) and 64
+    print peek(59776) and 64 : rem read from $e980 fd1793 status register
 
 Prints ``64`` when notch is not covered, ``0`` when not is covered.
 
