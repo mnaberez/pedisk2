@@ -1,6 +1,7 @@
-sudo: false
+sudo: true
 
 install:
+  - sudo apt-get install -y vice
   - wget https://www.mirrorservice.org/sites/ftp.cs.vu.nl/pub/minix/distfiles/backup/acme091src.tar.gz
   - tar xzf acme091src.tar.gz
   - make -C acme091/src install BINDIR=$PWD/acme-bin
