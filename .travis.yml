@@ -11,3 +11,5 @@ language: python
 script:
   - python tests.py
   - python tools/test_imageutil.py
+  - python tools/makeboot.py 5 "`mktemp`.img"
+  - python tools/makeboot.py 8 "`mktemp`.img"
