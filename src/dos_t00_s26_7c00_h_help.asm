@@ -26,36 +26,36 @@ menu:
 ;  M-MEMORY ALTER      Z-
 ;
 ;The table uses these marker bytes:
-;  $21 End of a left column item
-;  $25 End of a right column item
+;  '!' End of a left column item
+;  '%' End of a right column item
 ;  $FF End of the menu
 ;
-    !text "A-MACROASM/EDIT",$21
-    !text "N-RENAME A FILE",$25
-    !text "B-",$21
-    !text "O-",$25
-    !text "C-",$21
-    !text "P-PRINT DISK DIRECT",$25
-    !text "D-DUMP DISK OR MEM",$21
-    !text "Q-",$25
-    !text "E-",$21
-    !text "R-RE-ENTER BASIC",$25
-    !text "F-",$21
-    !text "S-SAVE A PROGRAM",$25
-    !text "G-GO TO MEMORY",$21
-    !text "T-",$25
-    !text "H-HELP",$21
-    !text "U-UTILITY DISK MENU",$25
-    !text "I-",$21
-    !text "V-",$25
-    !text "J-",$21
-    !text "W-",$25
-    !text "K-KILL A FILE",$21
-    !text "X-EXECUTE DISK FILE",$25
-    !text "L-LOAD DISK PROGRAM",$21
-    !text "Y-",$25
-    !text "M-MEMORY ALTER",$21
-    !text "Z-",$25
+    !text "A-MACROASM/EDIT"     ,'!'
+    !text "N-RENAME A FILE"     ,'%'
+    !text "B-"                  ,'!'
+    !text "O-"                  ,'%'
+    !text "C-"                  ,'!'
+    !text "P-PRINT DISK DIRECT" ,'%'
+    !text "D-DUMP DISK OR MEM"  ,'!'
+    !text "Q-"                  ,'%'
+    !text "E-"                  ,'!'
+    !text "R-RE-ENTER BASIC"    ,'%'
+    !text "F-"                  ,'!'
+    !text "S-SAVE A PROGRAM"    ,'%'
+    !text "G-GO TO MEMORY"      ,'!'
+    !text "T-"                  ,'%'
+    !text "H-HELP"              ,'!'
+    !text "U-UTILITY DISK MENU" ,'%'
+    !text "I-"                  ,'!'
+    !text "V-"                  ,'%'
+    !text "J-"                  ,'!'
+    !text "W-"                  ,'%'
+    !text "K-KILL A FILE"       ,'!'
+    !text "X-EXECUTE DISK FILE" ,'%'
+    !text "L-LOAD DISK PROGRAM" ,'!'
+    !text "Y-"                  ,'%'
+    !text "M-MEMORY ALTER"      ,'!'
+    !text "Z-"                  ,'%'
     !byte $ff
 
 start:
@@ -87,10 +87,10 @@ next_char:
 eval_char:
 ;Evaluate the character
 ;
-    cmp #$21            ;Is this the end of a left column menu item?
+    cmp #'!'            ;Is this the end of a left column menu item?
     beq finish_left     ;  Yes: branch to space over into the right side
 
-    cmp #$25            ;Is this the end of a right column menu item?
+    cmp #'%'            ;Is this the end of a right column menu item?
     beq finish_right    ;  Yes: branch to go to the next line
 
     cmp #$FF            ;Is this the end of the menu?
@@ -103,7 +103,7 @@ eval_char:
     bne next_char       ;Branch to do the next character
 
 finish_left:
-;Handle menu character = #$21
+;Handle menu character '!'
 ;
 ;End of a left column menu item has been reached.  Space over
 ;until we are at the start of the right column.
@@ -116,7 +116,7 @@ left_loop:
     beq next_item       ;Branch always to next line
 
 finish_right:
-;Handle menu character = #$25
+;Handle menu character '%'
 ;
 ;End of a right column menu item has been reached.  Print a newline
 ;so the next menu item is displayed at the beginning of the next line.
@@ -126,7 +126,7 @@ finish_right:
     jmp next_item       ;Jump to next line
 
 finish_menu:
-;Handle menu character = #$FF
+;Handle menu character $FF
 ;
 ;End of the menu has been reached.  Print a newline to finish
 ;the current line, and then another newline to finish the menu.
