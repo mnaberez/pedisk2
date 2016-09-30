@@ -13,9 +13,9 @@ Process for bootstrapping the PEDISK with no existing PEDISK media:
 
 Usage: makestrap.py <input.img> <output.d64|output.d80|output.d82>
 '''
+import os
 import shutil
 import sys
-import os
 import tempfile
 
 import imageutil
@@ -52,7 +52,7 @@ def create_cbm_image_from_dir(imagename, dirname):
     res = os.system("c1541 -format bootstrap,pe '%s' '%s'" % (
         cbm_type, imagename))
     assert res == 0
-    for filename in os.listdir(dirname):
+    for filename in sorted(os.listdir(dirname)):
         os.system("c1541 -attach '%s' -write '%s'" % (imagename, filename))
         assert res == 0
 
