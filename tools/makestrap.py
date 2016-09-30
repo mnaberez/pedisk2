@@ -36,7 +36,7 @@ def extract_tracks_to_prg_files(imagename):
         else:
             next_track = track + 1
 
-        with open("track $%02x" % track, "wb") as f:
+        with open("track 0x%02x" % track, "wb") as f:
             f.write(bytearray([0x00, 0x08])) # load address = 0x0800
             f.write(bytearray([track])) # track number
             f.write(bytearray([img.SECTORS])) # number of sectors

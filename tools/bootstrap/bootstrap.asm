@@ -150,6 +150,6 @@ write_track:
     sta target_ptr+1        ;Set start address high byte
     jmp write_sectors       ;Write the sectors
 
-filename: !text "TRACK $00"
+filename: !text "TRACK 0X00"
 filename_end = *
 filename_len = filename_end - filename
