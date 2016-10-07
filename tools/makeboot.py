@@ -1,7 +1,7 @@
 '''
-Make a boot disk image using the files from the 5.25" version.
+Make a bootable PEDISK disk image using the files from the 5.25" version.
 
-This can be used to make a 5.25" or a 8" disk.  The files from
+This can be used to make a 5.25" or an 8" PEDISK disk.  The files from
 the 5.25" system will boot up on 8" hardware but will not be
 fully functional due to hardcoded sector constants.  These will
 need to be fixed to produce a working 8" system.

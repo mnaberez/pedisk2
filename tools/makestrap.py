@@ -4,7 +4,7 @@ be written to a CBM drive.  The bootstrap contains all the track data for one
 PEDISK disk and a program to write the tracks to the PEDISK.
 
 Process for bootstrapping the PEDISK with no existing PEDISK media:
- - Run makeboot.py to make a boot disk image
+ - Run makeboot.py to make a bootable PEDISK disk image
  - Run makestrap.py (this file) to make a bootstrap CBM DOS image from it
  - Write the CBM DOS image to a CBM drive
  - Run the "FORMAT8" program from the CBM drive to format a PEDISK 8" disk
