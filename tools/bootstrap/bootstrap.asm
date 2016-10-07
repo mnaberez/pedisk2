@@ -1,11 +1,11 @@
 ;Bootstrap a PEDISK disk using a CBM disk
 ;
 ;This program is written as a PRG file to a CBM drive along with any number
-;other PRG files named like "TRACK $00"..."TRACK $4C" that contain PEDISK
-;track data.  When this program is run, the file "TRACK $00" is loaded into
+;other PRG files named like "TRACK 0X00"..."TRACK 0X4C" that contain PEDISK
+;track data.  When this program is run, the file "TRACK 0X00" is loaded into
 ;$0800 and its data is written to track 0 on the PEDISK.  The disk in the
 ;PEDISK must already been formatted.  After the track is written, the next track
-;number is read from offset $04 and its "TRACK $xx" file is loaded and written.
+;number is read from offset $04 and its "TRACK 0Xxx" file is loaded and written.
 ;The process repeats until the value at offset $04 is $FF, signaling the end.
 ;
 ;The format of a track PRG file is:
@@ -22,6 +22,7 @@ fnlen         = $d1       ;Filename length
 sa            = $d3       ;Secondary address
 dn            = $d4       ;Device number
 fnadr         = $da       ;Pointer: Filename address
+linprt        = $cf83     ;BASIC 4 Print 256*A + X in decimal
 loadop        = $f356     ;BASIC 4 load PRG file without relocating
 chrout        = $ffd2     ;KERNAL write byte to default output (screen)
 
@@ -33,6 +34,7 @@ num_sectors   = dos+$0796 ;Number of sectors to read or write
 rom           = $e800     ;Base address for the PEDISK ROM portion
 deselect      = rom+$030b ;Deselect drive
 write_sectors = rom+$053f ;Write sectors
+puts          = rom+$07e7 ;Print a null-terminated string
 
 data          = $0800   ;Base address where track data will be loaded
 data_track    = data+0  ;Track number for the data
@@ -57,31 +59,57 @@ start:
     lda #0
     sta data_next_trk   ;Start at PEDISK track 0
     lda dn              ;Get current CBM device number
-    bne loop            ;Branch to use current device if there is one
+    bne got_dn          ;Branch to use current device if there is one
     lda #8
     sta dn              ;Default to CBM device number 8
+got_dn:
+    jsr print_cbm_unit
 loop:
     jsr update_filename
-    jsr print_filename
+    jsr print_load_file ;Print 'LOADING CBM DOS FILE "TRACK 0Xxx"'
     jsr load_track_file ;Load file from CBM drive, prints msg and exits if error
+    jsr print_write_trk ;Print "WRITING PEDISK TRACK x"
     jsr write_track     ;Write track to PEDISK, prints msg and returns if error
     bne done            ;Branch if a PEDISK error occurred
+
     lda data_next_trk
     cmp #$ff
     bne loop
 done:
     jmp deselect        ;Deselect PEDISK drive (unloads head) and return
 
-print_filename:
-;Print the filename followed by a carriage return
-;
-    ldy #0
-print_loop:
-    lda filename,y
+print_cbm_unit:
+    ;Print "USING CBM DOS UNIT x"
+    lda #<using_cbm_unit
+    ldy #>using_cbm_unit
+    jsr puts
+    lda #$00            ;High byte of number to print = 0
+    ldx dn              ;Low byte of number to print = dn
+    jsr linprt          ;Print 256*A + X in decimal
+    lda #$0d
+    jmp chrout
+
+print_load_file:
+;Print 'LOADING CBM DOS FILE "0Xxx"'
+    lda #<loading_cbm_file
+    ldy #>loading_cbm_file
+    jsr puts
+    lda #<filename
+    ldy #>filename
+    jsr puts
+    lda #'"'
     jsr chrout
-    iny
-    cpy #filename_len
-    bne print_loop
+    lda #$0d
+    jmp chrout
+
+print_write_trk:
+;Print "WRITING PEDISK TRACK x"
+    lda #<writing_pedisk_track
+    ldy #>writing_pedisk_track
+    jsr puts
+    lda #$00            ;High byte of number to print = 0
+    ldx data_track      ;Low byte of number to print = track number
+    jsr linprt          ;Print 256*A + X in decimal
     lda #$0d
     jmp chrout
 
@@ -150,6 +178,10 @@ write_track:
     sta target_ptr+1        ;Set start address high byte
     jmp write_sectors       ;Write the sectors
 
-filename: !text "TRACK 0X00"
-filename_end = *
+using_cbm_unit: !text "USING CBM DOS UNIT", 0
+loading_cbm_file: !text "LOADING CBM DOS FILE ", '"', 0
+writing_pedisk_track: !text "WRITING PEDISK TRACK",0
+
+filename: !text "TRACK 0X00", 0
+filename_end = * - 1
 filename_len = filename_end - filename
