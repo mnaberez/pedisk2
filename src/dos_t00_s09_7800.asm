@@ -14,6 +14,9 @@ vartab      = $2a       ;Pointer: Start of BASIC variables
 varpnt      = $44       ;Pointer: Current BASIC variable
 open_track  = $56       ;Next track open for a new file **
 open_sector = $57       ;Next sector open for a new file **
+tmp_track   = $58       ;TODO seems to hold a track
+tmp_sector  = $59       ;TODO seems to hold a sector
+filesize    = $58       ;2 byte file size, shared with tmp_track/tmp_sector
 edit_ptr    = $66       ;Pointer: PEDISK current address of memory editor **
 chrget      = $70       ;Subroutine: Get Next Byte of BASIC Text (patched)
 txtptr      = $77       ;Pointer: Current Byte of BASIC Text
@@ -73,29 +76,29 @@ save_from_basic:
     lda vartab
     sec
     sbc txttab
-    sta dir_entry+$06   ;File size low byte
-    sta $58
+    sta dir_entry+$06   ;Save file size low byte in dir entry
+    sta filesize        ;Save file size low byte to calculate sector count
 
     lda vartab+1
     sbc txttab+1
-    sta $59
-    sta dir_entry+$07   ;File size high byte
+    sta filesize+1      ;Save file size high byte to calculate sector count
+    sta dir_entry+$07   ;Save file size high byte in dir entry
 
     lda txttab
-    sta dir_entry+$08   ;Load address low byte
+    sta dir_entry+$08   ;Save load address low byte in dir entry
 
     lda txttab+1
-    sta dir_entry+$09   ;Load address high byte
+    sta dir_entry+$09   ;Save load address high byte in dir entry
 
-    jsr calc_n_sectors  ;Calculate num_sectors from file size in $58/59
+    jsr calc_n_sectors  ;Calculate num_sectors from filesize
     lda num_sectors
-    sta dir_entry+$0e   ;File sector count low byte
+    sta dir_entry+$0e   ;Save file sector count low byte in dir entry
 
     lda #$00
-    sta dir_entry+$0f   ;File sector count high byte
+    sta dir_entry+$0f   ;Save file sector count high byte in dir entry
 
     lda #$03            ;Type 3 = BASIC program
-    sta dir_entry+$0a   ;File type
+    sta dir_entry+$0a   ;Save file type in dir entry
 
     jsr find_file
     tax
@@ -150,15 +153,15 @@ save_done:
     rts
 
 calc_n_sectors:
-;TODO seems to calculate num_sectors from file size in $58/59
-    lda $58
+;TODO seems to calculate num_sectors from filesize
+    lda filesize        ;Get file size low byte
     clc
     adc #$7F            ;$7F = 128 byte sector - 1
     bcc l_789a
-    inc $59
+    inc filesize+1      ;Get file size high byte
 l_789a:
     asl ;a
-    lda $59
+    lda filesize+1      ;Get file size high byte
     rol ;a
     sta num_sectors
     rts
@@ -176,7 +179,7 @@ l_78a2:
     sta dir_entry+$0d   ;File sector number
 
     jsr l_78f1
-    lda $58
+    lda tmp_track
     cmp #$51
     bmi l_78c0
     lda #$2B            ;TODO FC% error code for ??
@@ -202,10 +205,10 @@ l_78c2:
 l_78e0:
     inc dir_sector+$08  ;Increment number of used file entries
 
-    lda $58
+    lda tmp_track
     sta dir_sector+$09  ;Set next open track
 
-    lda $59
+    lda tmp_sector
     sta dir_sector+$0a  ;Set next open sector
 
     jsr write_a_sector
@@ -215,17 +218,17 @@ l_78f1:
     jsr l_790d
     lda dir_entry+$0d   ;File sector number
     clc
-    adc $59
+    adc tmp_sector
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
     bmi l_7902
     sbc #$1C            ;TODO 28 sectors per track?
-    inc $58
+    inc tmp_track
 l_7902:
-    sta $59
+    sta tmp_sector
     lda dir_entry+$0c   ;File track number
     clc
-    adc $58
-    sta $58
+    adc tmp_track
+    sta tmp_track
     rts
 
 l_790d:
@@ -243,9 +246,9 @@ l_790d:
     jsr l_797b
     ldx $5E
     inx
-    stx $59
+    stx tmp_sector
     lda $62
-    sta $58
+    sta tmp_track
     rts
 
 l_7931:

@@ -14,6 +14,7 @@ chrout = $FFD2
 
 dir_ptr     = $22       ;Pointer: PEDISK directory **
 edit_pos    = $27       ;PEDISK memory editor position on current line **
+tmp_sector  = $59       ;TODO seems to hold a sector
 target_ptr  = $b7       ;Pointer: PEDISK target address for memory ops **
 dos         = $7800     ;Base address for the RAM-resident portion
 dir_sector  = dos+$0700 ;128 bytes for directory sector
@@ -93,7 +94,7 @@ l_7ce2:
     jsr puts
 
     ldx #$00
-    stx $59
+    stx tmp_sector
     lda dir_sector+$09  ;Next open track
     sta $5E
     lda #$1C            ;TODO 28 sectors per track?

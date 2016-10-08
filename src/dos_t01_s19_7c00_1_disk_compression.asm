@@ -1,6 +1,8 @@
 vartab = $2a
 old_dir_ptr = $4b
 new_dir_ptr = $4d
+tmp_track = $58
+tmp_sector = $59
 target_ptr = $b7
 dir_buffer = $0400  ;1024 byte buffer for all directory sectors
 file_buffer = $0800 ;TODO ??? byte buffer for file data
@@ -199,7 +201,7 @@ copy_entry_loop:
 
     lda new_sector
     clc
-    adc $59
+    adc tmp_sector
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
     bmi l_7d7b
     sec
@@ -210,7 +212,7 @@ l_7d7b:
     sta new_sector
     lda new_track
     clc
-    adc $58
+    adc tmp_track
     sta new_track
 jmp_next_new:
     jmp next_new
