@@ -28,10 +28,12 @@ chrout        = $ffd2     ;KERNAL write byte to default output (screen)
 
 target_ptr    = $b7       ;Pointer: PEDISK target address for memory ops
 dos           = $7800     ;Base address for the PEDISK RAM-resident portion
+drive_sel     = dos+$0791 ;Drive select bit pattern to write to the latch
 track         = dos+$0792 ;Track number to write to WD1793 (0-76 or $00-4c)
 sector        = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
 num_sectors   = dos+$0796 ;Number of sectors to read or write
 rom           = $e800     ;Base address for the PEDISK ROM portion
+drive_selects = rom+$022f ;Drive select bit patterns table
 deselect      = rom+$030b ;Deselect drive
 write_sectors = rom+$053f ;Write sectors
 puts          = rom+$07e7 ;Print a null-terminated string
@@ -56,8 +58,13 @@ bas_eol:
     !byte $00,$00       ;End of BASIC program
 
 start:
-    lda #0
+    ldx #0
+    lda drive_selects,x ;Get pattern to select PEDISK drive 0
+    sta drive_sel       ;Store pattern to write to the drive select latch
+
+    txa
     sta data_next_trk   ;Start at PEDISK track 0
+
     lda dn              ;Get current CBM device number
     bne got_dn          ;Branch to use current device if there is one
     lda #8
