@@ -4,7 +4,7 @@ fdc_track    = fdc+1    ;  Track register
 fdc_sector   = fdc+2    ;  Sector register
 fdc_data     = fdc+3    ;  Data register
 
-L000D = $0D
+l_000d= $0D
 hex_save_a = $26
 target_ptr = $b7
 pdos_prompt = $7A05
@@ -18,7 +18,7 @@ status = $7f94
 linprt = $CF83          ;BASIC Print 256*A + X in decimal
 select_drive = $EBA0
 send_fdc_cmd = $EC0D
-LECCC = $ECCC
+l_eccc= $ECCC
 write_a_sector = $ED3A
 get_char = $EF7B
 puts = $EFE7
@@ -152,10 +152,10 @@ track_loop:
     ;Fill all 128 bytes of the buffer with $FF
     ldy #$7F
     lda #$FF
-L7CF9:
+l_7cf9:
     sta (target_ptr),y
     dey
-    bpl L7CF9
+    bpl l_7cf9
 
     ;Set track 0, sector 2 (this is the second sector of the directory)
     ldx #$00
@@ -167,17 +167,17 @@ L7CF9:
 erase_dir_loop:
     ;Write the sector to disk (all $FF bytes)
     jsr write_a_sector
-L7D0B:
+l_7d0b:
     bne exit            ;Branch if a disk error occurred
 
     ;TODO check ??
     lda status
-    beq L7D17           ;Branch if no error
+    beq l_7d17          ;Branch if no error
 
     lda #$F1
     jmp puts_error_exit
 
-L7D17:
+l_7d17:
     ;Increment to next directory sector, keep filling until end of dir
     ldx sector
     inx
@@ -200,14 +200,14 @@ L7D17:
 
     ;Get 8 characters for disk name, store it in the directory
     ldx #$00
-L7D30:
+l_7d30:
     stx hex_save_a
     jsr get_char        ;Wait for a char, echo it, return it in A
     ldx hex_save_a
     sta dir_sector,x
     inx
     cpx #$08
-    bcc L7D30
+    bcc l_7d30
 
     ;Set number of used file entries to 0 (empty disk)
     lda #$00
@@ -229,7 +229,7 @@ L7D30:
 
     ;Write the first directory sector
     jsr write_a_sector
-    bne L7D0B           ;Branch if a disk error occurred
+    bne l_7d0b          ;Branch if a disk error occurred
 
     ;Print "FINISHED!"
     lda #<finished_disk
@@ -241,7 +241,7 @@ L7D30:
 puts_error_exit:
 ;Print ?? followed by " ERROR!" and exit
     pha
-    lda L000D           ;TODO XXX is this a bug? should it be #$0d?
+    lda l_000d          ;TODO XXX is this a bug? should it be #$0d?
     jsr chrout
     pla
 
@@ -271,125 +271,125 @@ format_track:
 
 ;Busy wait for WD1793
     ldx #$06
-L7D97:
+l_7d97:
     dex
-    bne L7D97
+    bne l_7d97
 
 ;Write $4E x 16
     ldx #$10
-L7D9C:
+l_7d9c:
     lda #$E6
-L7D9E:
+l_7d9e:
     bit fdc_cmdst
-    beq L7D9E
+    beq l_7d9e
     lda #$4E
     sta fdc_data        ;data = 4e
     dex
-    bne L7D9C
+    bne l_7d9c
 
 ;Write $00 x 8
     ldx #$08
-L7DAD:
+l_7dad:
     lda #$E6
-L7DAF:
+l_7daf:
     bit fdc_cmdst
-    beq L7DAF
+    beq l_7daf
     lda #$00
     sta fdc_data        ;data = 0
     dex
-    bne L7DAD
+    bne l_7dad
 
 ;Write $F6 x 3
     ldx #$03
-L7DBE:
+l_7dbe:
     lda #$E6
-L7DC0:
+l_7dc0:
     bit fdc_cmdst
-    beq L7DC0
+    beq l_7dc0
     lda #$F6
     sta fdc_data        ;data = f6 (writes c2)
     dex
-    bne L7DBE
+    bne l_7dbe
 
 ;Write $FC x 1
     lda #$E6
-L7DCF:
+l_7dcf:
     bit fdc_cmdst
-    beq L7DCF
+    beq l_7dcf
     lda #$FC
     sta fdc_data        ;data = fc (index mark)
 
 ;Write $4E x 32
     ldx #$20
-L7DDB:
+l_7ddb:
     lda #$E6
-L7DDD:
+l_7ddd:
     bit fdc_cmdst
-    beq L7DDD
+    beq l_7ddd
     lda #$4E
     sta fdc_data        ;data = 4e
     dex
-    bne L7DDB
+    bne l_7ddb
 
 ;
 ;Start of a sector
 ;
 
-L7DEA:
+l_7dea:
 
 ;Write $00 x 8
     ldx #$08
-L7DEC:
+l_7dec:
     lda #$E6
-L7DEE:
+l_7dee:
     bit fdc_cmdst
-    beq L7DEE
+    beq l_7dee
     lda #$00
     sta fdc_data        ;data = 0
     dex
-    bne L7DEC
+    bne l_7dec
 
 ;Write $F5 x 3
     ldx #$03
-L7DFD:
+l_7dfd:
     lda #$E6
-L7DFF:
+l_7dff:
     bit fdc_cmdst
-    beq L7DFF
+    beq l_7dff
     lda #$F5
     sta fdc_data        ;data = f5 (write ?)
     dex
-    bne L7DFD
+    bne l_7dfd
 
 ;Write $FE x 1 (id address mark)
     lda #$E6
-L7E0E:
+l_7e0e:
     bit fdc_cmdst
-    beq L7E0E
+    beq l_7e0e
     lda #$FE
     sta fdc_data        ;data = fe (id address mark)
 
 ;Write track byte
     lda #$E6
-L7E1A:
+l_7e1a:
     bit fdc_cmdst
-    beq L7E1A
+    beq l_7e1a
     lda track
     sta fdc_data        ;data = track number
 
 ;Write side number byte
     lda #$E6
-L7E27:
+l_7e27:
     bit fdc_cmdst
-    beq L7E27
+    beq l_7e27
     lda #$00
     sta fdc_data        ;data = side number 0
 
 ;Write sector number byte
     lda #$E6
-L7E33:
+l_7e33:
     bit fdc_cmdst
-    beq L7E33
+    beq l_7e33
     sty fdc_data        ;data = sector number
 
 ;Increment sector number for next iteration
@@ -397,101 +397,101 @@ L7E33:
 
 ;Write sector length byte
     lda #$E6
-L7E3E:
+l_7e3e:
     bit fdc_cmdst
-    beq L7E3E
+    beq l_7e3e
     lda #$00
     sta fdc_data        ;data = sector length (0 = 128 bytes)
 
 ;Write $F7 x 1
     lda #$E6
-L7E4A:
+l_7e4a:
     bit fdc_cmdst
-    beq L7E4A
+    beq l_7e4a
     lda #$F7
     sta fdc_data        ;data = f7 (2 CRCs written)
 
 ;Write $4E x 22
     ldx #$16
-L7E56:
+l_7e56:
     lda #$E6
-L7E58:
+l_7e58:
     bit fdc_cmdst
-    beq L7E58
+    beq l_7e58
     lda #$4E
     sta fdc_data        ;data = 4e
     dex
-    bne L7E56
+    bne l_7e56
 
 ;Write $00 x 12
     ldx #$0C
-L7E67:
+l_7e67:
     lda #$E6
-L7E69:
+l_7e69:
     bit fdc_cmdst
-    beq L7E69
+    beq l_7e69
     lda #$00
     sta fdc_data        ;data = 0
     dex
-    bne L7E67
+    bne l_7e67
 
 ;Write $F5 x 3
     ldx #$03
-L7E78:
+l_7e78:
     lda #$E6
-L7E7A:
+l_7e7a:
     bit fdc_cmdst
-    beq L7E7A
+    beq l_7e7a
     lda #$F5
     sta fdc_data        ;data = f5 (writes a1)
     dex
-    bne L7E78
+    bne l_7e78
 
 ;Write $FB x 1
     lda #$E6
-L7E89:
+l_7e89:
     bit fdc_cmdst
-    beq L7E89
+    beq l_7e89
     lda #$FB            ;data = fb
     sta fdc_data
 
 ;Write $E5 x 128
     ldx #$80
-L7E95:
+l_7e95:
     lda #$E6
-L7E97:
+l_7e97:
     bit fdc_cmdst
-    beq L7E97
+    beq l_7e97
     lda #$E5            ;data = e5
     sta fdc_data
     dex
-    bne L7E95
+    bne l_7e95
 
 ;Write $F7 x 1
     lda #$E6
-L7EA6:
+l_7ea6:
     bit fdc_cmdst
-    beq L7EA6
+    beq l_7ea6
     lda #$F7
     sta fdc_data        ;data = f7
 
 ;Write $4E x 28
     ldx #$1C            ;TODO 28 sectors per track?
-L7EB2:
+l_7eb2:
     lda #$E6
-L7EB4:
+l_7eb4:
     bit fdc_cmdst
-    beq L7EB4
+    beq l_7eb4
     lda #$4E
     sta fdc_data        ;data = 4e
     dex
-    bne L7EB2
+    bne l_7eb2
 
 ;Write $4E x 1
     lda #$E6
-L7EC3:
+l_7ec3:
     bit fdc_cmdst
-    bne L7EC3
+    bne l_7ec3
     lda #$4E
     sta fdc_data        ;data = 4e
 
@@ -500,17 +500,17 @@ L7EC3:
 ;
 
     cpy #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
-    bpl L7ED4
+    bpl l_7ed4
 
-    jmp L7DEA
+    jmp l_7dea
 
-L7ED4:
+l_7ed4:
     lda #$01
-L7ED6:
+l_7ed6:
     bit fdc_cmdst
-    bne L7ED6
+    bne l_7ed6
     cli
-    jsr LECCC          ;TODO XXX middle of an instruction in the ROM
+    jsr l_eccc         ;TODO XXX middle of an instruction in the ROM
     rts
 
 filler:

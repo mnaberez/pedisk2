@@ -37,17 +37,17 @@ hex_byte_out:
     lsr ;a
     lsr ;a
     lsr ;a
-    jsr L048A
+    jsr l_048a
     pla
-L0488:
+l_0488:
     and #$0F
-L048A:
+l_048a:
     clc
     adc #'0'
     cmp #$3A
-    bcc L0493
+    bcc l_0493
     adc #$06
-L0493:
+l_0493:
     jsr jmp_chrout
     rts
 
@@ -55,14 +55,14 @@ msg_out:
 ;Print the message at ($22).
 ;Message is terminated with $04 byte.
     ldy #$00
-L0499:
+l_0499:
     lda ($22),y
     cmp #$04
-    beq L04A5
+    beq l_04a5
     jsr jmp_chrout
     iny
-    bne L0499
-L04A5:
+    bne l_0499
+l_04a5:
     rts
 
 input_byte:
@@ -84,23 +84,23 @@ input_nibble:
 ;Stores the nibble in $22.
     jsr jmp_chrin
     cmp #'0'
-    bcc L04C8
+    bcc l_04c8
     cmp #'9'+1
-    bcc L04D9
+    bcc l_04d9
     cmp #'A'
-    bcc L04C8
+    bcc l_04c8
     cmp #'F'+1
-    bcc L04D7
-L04C8:
+    bcc l_04d7
+l_04c8:
     lda #'?'
     jsr jmp_chrout
     lda #$08
     jsr jmp_chrout
     jsr jmp_chrout
     bne input_nibble
-L04D7:
+l_04d7:
     adc #$09
-L04D9:
+l_04d9:
     and #$0F
     rts
 
@@ -149,37 +149,37 @@ start:
     sta $26
     jsr cr_out
 
-L0521:
+l_0521:
     ldx #$00
     stx $22
-    jsr L0545
+    jsr l_0545
     jsr cr_out
     lda #'1'
     jsr jmp_chrout
     jsr jsr_spc_out
     inc $22
-    jsr L0545
+    jsr l_0545
     lda #'2'
     jsr jmp_chrout
     clc
-    bcc L0521
-L0540:
+    bcc l_0521
+l_0540:
     inc $23
-    bne L054B
+    bne l_054b
     rts
 
-L0545:
+l_0545:
     ldy #$00
     ldx #$00
     stx $23
-L054B:
+l_054b:
     nop
     nop
     nop
     inc $8000
     ldy $23
-    jsr L05DB
-L0556:
+    jsr l_05db
+l_0556:
     tya
     sta ($28,x)
     nop
@@ -188,59 +188,59 @@ L0556:
     lda ($28,x)
     sta $2A
     cpy $2A
-    beq L0567
-    jsr L05A9
-L0567:
-    jsr L0598
-    beq L0572
-    jsr L058C
+    beq l_0567
+    jsr l_05a9
+l_0567:
+    jsr l_0598
+    beq l_0572
+    jsr l_058c
     clc
-    bcc L0556
-L0572:
+    bcc l_0556
+l_0572:
     ldy $23
-    jsr L05DB
-L0577:
+    jsr l_05db
+l_0577:
     lda ($28,x)
     sta $2A
     cpy $2A
-    beq L0582
-    jsr L05AE
-L0582:
-    jsr L058C
-    jsr L0598
-    bne L0577
-    beq L0540
-L058C:
+    beq l_0582
+    jsr l_05ae
+l_0582:
+    jsr l_058c
+    jsr l_0598
+    bne l_0577
+    beq l_0540
+l_058c:
     iny
     lda $22
-    beq L0597
+    beq l_0597
     cpy #$F3
-    bcc L0597
+    bcc l_0597
     ldy #$00
-L0597:
+l_0597:
     rts
 
-L0598:
+l_0598:
     inc $28
-    bne L059E
+    bne l_059e
     inc $29
-L059E:
+l_059e:
     lda $26
     cmp $28
-    bne L05A8
+    bne l_05a8
     lda $27
     cmp $29
-L05A8:
+l_05a8:
     rts
 
-L05A9:
+l_05a9:
     pha
     lda #$49
-    bne L05B1
-L05AE:
+    bne l_05b1
+l_05ae:
     pha
     lda #'D'
-L05B1:
+l_05b1:
     jsr jmp_chrout
     jsr jsr_spc_out
     lda $29
@@ -259,7 +259,7 @@ L05B1:
     jsr cr_out
     rts
 
-L05DB:
+l_05db:
     lda $24
     sta $28
     lda $25

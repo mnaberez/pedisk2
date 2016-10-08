@@ -1,5 +1,5 @@
 latch = $e900 ;Drive Select Latch
-L7931 = $7931
+l_7931= $7931
 pdos_prompt = $7A05
 input_device = $7AD1
 put_spc_hex = $EB7F
@@ -26,7 +26,7 @@ dir_track   = 0         ;Track where directory is stored (always one track)
 
     *=$7c00
 
-    jmp L7CB4
+    jmp l_7cb4
 
 more:
     !text $0d,$0a,"MORE....",0
@@ -48,7 +48,7 @@ filetypes:
     !text " TEXT  ",0
     !text " OBJCT ",0
 
-L7CB4:
+l_7cb4:
     ;Get drive select pattern
     jsr input_device    ;Print "DEVICE? ", get num, returns drv sel pat in A
     sta drive_sel       ;Save the drive select pattern in drive_sel
@@ -68,10 +68,10 @@ L7CB4:
     sta dir_ptr+1
 
     jsr read_a_sector   ;Read the first directory sector
-    beq L7CD7           ;If no error occured, branch to start printing
+    beq l_7cd7          ;If no error occured, branch to start printing
     jmp pdos_prompt     ;If an error occurred, jump to the PDOS prompt
 
-L7CD7:
+l_7cd7:
     ;Clear screen and print "PEDISK II DISK DIRECTORY"
     lda #<pedisk_dir
     ldy #>pedisk_dir
@@ -80,12 +80,12 @@ L7CD7:
     ;Print disk name
     ldy #$00            ;Y = 0, index added to pointer
     ldx #$08            ;X = 8 chars in disk name
-L7CE2:
+l_7ce2:
     lda (dir_ptr),y     ;Get char of disk name
     jsr chrout          ;Print it
     iny                 ;Increment pointer to next char
     dex                 ;Decrement chars remaining
-    bne L7CE2           ;Loop until 8 chars printed
+    bne l_7ce2          ;Loop until 8 chars printed
 
     ;Print "  SECTORS LEFT= "
     lda #<sectors_left
@@ -101,14 +101,14 @@ L7CE2:
     lda #$00
     sta $5F
     sta $61
-    jsr L7931
+    jsr l_7931
     lda dir_sector+$0a  ;Next open sector
     clc
     adc $62
     sta $62
-    bcc L7D14
+    bcc l_7d14
     inc $63
-L7D14:
+l_7d14:
     lda #$5F
     sec
     sbc $62
@@ -141,20 +141,20 @@ next_entry:
     lda #$0A
     jsr chrout
 
-L7D3C:
+l_7d3c:
     lda dir_ptr
     clc
     adc #$10
-    bpl L7D50
+    bpl l_7d50
     inc sector
 
     jsr read_a_sector   ;Read next sector in the directory
-    beq L7D4E           ;If no error occurred, branch to continue
+    beq l_7d4e          ;If no error occurred, branch to continue
     jmp pdos_prompt     ;If error occured, jump to PDOS prompt
 
-L7D4E:
+l_7d4e:
     lda #$00
-L7D50:
+l_7d50:
     sta dir_ptr
 
     ;Check for end of directory
@@ -162,16 +162,16 @@ L7D50:
     ldy #$00
     lda (dir_ptr),y     ;Get first byte of filename
     cmp #$FF            ;Equal to $FF?
-    bne L7D5D           ;  No: continue
-    jmp L7DEB           ;  Yes: jump, end of directory
+    bne l_7d5d          ;  No: continue
+    jmp l_7deb          ;  Yes: jump, end of directory
 
-L7D5D:
+l_7d5d:
     ;Check if file has been deleted
 
     ldy #$05
     lda (dir_ptr),y     ;Get last byte of filename
     cmp #$FF            ;Equal to $FF?
-    beq L7D3C           ;  Yes: file is deleted, skip it
+    beq l_7d3c          ;  Yes: file is deleted, skip it
 
     ;Print newline
     lda #$0D
@@ -181,12 +181,12 @@ L7D5D:
     ;Print filename
 
     ldy #$00
-L7D6C:
+l_7d6c:
     lda (dir_ptr),y
     jsr chrout
     iny
     cpy #$06
-    bmi L7D6C
+    bmi l_7d6c
 
     ;Under "TYPE" column
     ;Print file type
@@ -248,7 +248,7 @@ L7D6C:
     ldy #$0A
     lda (dir_ptr),y
     cmp #$05
-    bne L7DD7
+    bne l_7dd7
 
     ;Print two spaces
 
@@ -284,15 +284,15 @@ L7D6C:
     lda (dir_ptr),y
     jsr put_hex_byte
 
-L7DD7:
+l_7dd7:
     ;Decrement lines count.  If not time for a pause,
     ;jump back to do the next line.
 
     dec edit_pos
-    bmi L7DDE
+    bmi l_7dde
     jmp next_entry
 
-L7DDE:
+l_7dde:
     ;Time for a pause.  Wait for a keypress, then
     ;jump back to do the next line.
 
@@ -304,7 +304,7 @@ L7DDE:
     jsr get_char_w_stop ;Get a character and test for {STOP}
     jmp next_screen
 
-L7DEB:
+l_7deb:
     ;Print newline
     lda #$0D
     jsr chrout

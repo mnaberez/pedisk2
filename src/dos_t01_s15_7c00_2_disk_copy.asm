@@ -1,7 +1,7 @@
 vartab = $2a
 target_ptr = $b7
 copy_buffer = $0400 ;Stores data during copy (overwrites BASIC program text)
-L7931 = $7931
+l_7931= $7931
 pdos_prompt = $7A05
 input_device = $7AD1
 copy_sector = $7e00 ;128 byte buffer used only by this copy program
@@ -61,7 +61,7 @@ start:
     sta $61
     lda #$1C            ;TODO 28 sectors per track?
     sta $60
-    jsr L7931
+    jsr l_7931
     lda $62
     sta $7F9D
     sta $7F9B
@@ -111,18 +111,18 @@ start_copy:
     sta target_ptr+1
     jsr read_a_sector
     beq copy_loop       ;Branch if read succeeded
-L7CEB:
+l_7ceb:
     jmp pdos_prompt
 
 copy_loop:
     lda src_drive_sel
     jsr set_rw_params
     jsr read_sectors
-    bne L7CEB           ;Branch if a disk error occurred
+    bne l_7ceb          ;Branch if a disk error occurred
 
     ;Skip disk swap if copying in two drive mode
     bit copy_mode
-    bpl L7D4D           ;Branch if two drive mode
+    bpl l_7d4d          ;Branch if two drive mode
 
 insert_dst_disk:
     ;Print "PUT COPY"
@@ -148,21 +148,21 @@ insert_dst_disk:
     lda #>copy_sector
     sta target_ptr+1
     jsr read_a_sector
-    bne L7CEB           ;Branch if a disk error occurred
+    bne l_7ceb          ;Branch if a disk error occurred
     lda copy_track
-    bne L7D3C
+    bne l_7d3c
     ldx #$07
-L7D2E:
+l_7d2e:
     lda copy_sector,x
     sta copy_buffer,x
     dex
-    bpl L7D2E
+    bpl l_7d2e
     stx copy_buffer+$0f
-    bne L7D4D
-L7D3C:
+    bne l_7d4d
+l_7d3c:
     lda copy_sector+$0f
     cmp #$FF
-    beq L7D4D
+    beq l_7d4d
 
     ;Print "* WRONG DISK *"
     lda #<wrong_disk
@@ -170,22 +170,22 @@ L7D3C:
     jsr puts
 
     jmp insert_dst_disk
-L7D4D:
+l_7d4d:
     lda dst_drive_sel
     jsr set_rw_params
     jsr write_sectors
-L7D56:
-    bne L7CEB           ;Branch if a disk error occurred
+l_7d56:
+    bne l_7ceb          ;Branch if a disk error occurred
     lda copy_track
     clc
     adc $7F9C
     sta copy_track
     cmp dir_sector+$09  ;Get next open track
-    beq L7D69
+    beq l_7d69
     bpl finish_and_exit
-L7D69:
+l_7d69:
     cmp $7F9E
-    bmi L7D8A
+    bmi l_7d8a
     lda #$28            ;TODO 40/41 tracks?
     sec
     sbc copy_track
@@ -196,16 +196,16 @@ L7D69:
     lda #$00
     sta $5F
     sta $61
-    jsr L7931
+    jsr l_7931
     lda $62
     sta $7F9B
-L7D8A:
+l_7d8a:
     ;Skip disk swap if copying in two drive mode
     bit copy_mode
-    bpl L7D92           ;Branch if two drive mode
+    bpl l_7d92          ;Branch if two drive mode
 
     jsr insert_src_disk
-L7D92:
+l_7d92:
     jmp copy_loop
 
 finish_and_exit:
@@ -219,11 +219,11 @@ finish_and_exit:
     lda #>copy_sector
     sta target_ptr+1
     jsr read_a_sector
-    bne L7D56           ;Branch if a disk error occurred
+    bne l_7d56          ;Branch if a disk error occurred
     lda #$20
     sta copy_sector+$0f
     jsr write_a_sector
-    bne L7D56           ;Branch if a disk error occurred
+    bne l_7d56          ;Branch if a disk error occurred
 
     ;Set start of BASIC variables to $0404
     lda #>copy_buffer   ;TODO this code must be changed to set low byte and

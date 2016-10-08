@@ -2,9 +2,9 @@ dir_ptr = $22
 hex_save_a = $26
 edit_ptr = $66
 chrget = $70
-L7857 = $7857
-L7C00 = $7C00
-L7C11 = $7C11
+l_7857= $7857
+l_7c00= $7C00
+l_7c11= $7C11
 dir_entry = $7fa0
 drive_sel_f = $7fb1
 latch = $e900
@@ -95,7 +95,7 @@ try_extrnl_cmd:
     jsr external_cmd    ;Try to load the overlay
     txa                 ;X=0 means overlay loaded successfully
     bne pdos_prompt     ;If load failed, jump to prompt.
-    jmp L7C00           ;If load succeeded, jump to the overlay.
+    jmp l_7c00          ;If load succeeded, jump to the overlay.
 
 jmp_kill_file:
     jmp kill_file
@@ -165,23 +165,23 @@ input_filename:
     jsr puts
 
     ldy #$00
-L7AAC:
+l_7aac:
     jsr chrin
     cmp #':'
-    beq L7ABB
+    beq l_7abb
     sta dir_entry,y
     iny
     cpy #$07
-    bmi L7AAC
-L7ABB:
+    bmi l_7aac
+l_7abb:
     lda #' '
-L7ABD:
+l_7abd:
     cpy #$06
-    bpl L7AC7
+    bpl l_7ac7
     sta dir_entry,y
     iny
-    bne L7ABD
-L7AC7:
+    bne l_7abd
+l_7ac7:
     jsr chrin
     jsr parse_drive
     sta drive_sel_f
@@ -361,13 +361,13 @@ save_prog:
 
     ;Check that the filename does not already exist
     jsr find_file
-    bmi L7B90           ;Branch if a disk error occurred
+    bmi l_7b90          ;Branch if a disk error occurred
     tax
     beq file_exists     ;Branch if the file was found
 
     ;TODO this must save the file
-    jsr L7857
-L7B90:
+    jsr l_7857
+l_7b90:
     jmp pdos_prompt
 
 kill_file:

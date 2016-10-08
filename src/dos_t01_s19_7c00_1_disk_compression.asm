@@ -4,7 +4,7 @@ new_dir_ptr = $4d
 target_ptr = $b7
 dir_buffer = $0400  ;1024 byte buffer for all directory sectors
 file_buffer = $0800 ;TODO ??? byte buffer for file data
-L790D = $790D
+l_790d= $790D
 pdos_prompt = $7A05
 try_extrnl_cmd = $7A47
 input_device = $7AD1
@@ -88,12 +88,12 @@ start:
 
     ;Read all of the directory sectors into dir_buffer
     jsr read_sectors
-    beq L7CE8           ;Branch if read succeeded
+    beq l_7ce8          ;Branch if read succeeded
 
     ;Read failed, just return to the prompt
     jmp pdos_prompt
 
-L7CE8:
+l_7ce8:
     ;Set number of used directory entries to 0
     lda #$00
     sta dir_buffer+$08  ;$08 = index to used directory entries count
@@ -195,18 +195,18 @@ copy_entry_loop:
     lda old_count+1
     sta dir_entry+$0f   ;File sector count high byte
 
-    jsr L790D
+    jsr l_790d
 
     lda new_sector
     clc
     adc $59
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
-    bmi L7D7B
+    bmi l_7d7b
     sec
     sbc #$1C            ;TODO 28 sectors per track?
     inc new_track
 
-L7D7B:
+l_7d7b:
     sta new_sector
     lda new_track
     clc
@@ -226,19 +226,19 @@ move_file_loop:
     sec
     sbc tmp_7f9a
     sta old_count
-    bcs L7DB0
+    bcs l_7db0
     dec old_count+1
-    bpl L7DB0
+    bpl l_7db0
 
     lda #$00
     sta old_count
     sta old_count+1
-    beq L7DB6
+    beq l_7db6
 
-L7DB0:
+l_7db0:
     lda tmp_7f9a
     sta num_sectors
-L7DB6:
+l_7db6:
     lda num_sectors
     sta tmp_7f97
 
@@ -255,7 +255,7 @@ L7DB6:
     sta target_ptr+1    ;High byte
 
     jsr read_sectors
-    beq L7DE2           ;Branch if read succeeded
+    beq l_7de2          ;Branch if read succeeded
 
     ;Read file failed, print error and jump to write new dir
 
@@ -269,12 +269,12 @@ L7DB6:
 
     jmp write_new_dir
 
-L7DE2:
+l_7de2:
     jsr next_sector     ;Increment to next sector, don't change target_ptr
-    bcc L7DEA           ;Branch if success
+    bcc l_7dea          ;Branch if success
     jmp write_new_dir   ;Jump out if failed to increment (end of disk)
 
-L7DEA:
+l_7dea:
     lda track
     sta old_track
     lda sector
@@ -305,10 +305,10 @@ L7DEA:
     bne write_file_err  ;Branch if a disk error occurred
 
     jsr next_sector     ;Increment to next sector, don't change target_ptr
-    bcc L7E27           ;Branch if success
+    bcc l_7e27          ;Branch if success
     jmp write_new_dir   ;Jump out if failed to increment (end of disk)
 
-L7E27:
+l_7e27:
     lda track
     sta new_track
     lda sector

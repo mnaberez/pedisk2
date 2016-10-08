@@ -1305,7 +1305,7 @@ find_file:
 ;  $09       byte  next open track
 ;  $0A       byte  next open sector
 ;  $0B-0F    byte  unused bytes, format program sets each to $20
-;                  TODO: L7857 and L7A75 set offset $0B to 0
+;                  TODO: l_7857 and l_7a75 set offset $0B to 0
 ;
 ;Each successive 16 bytes is a directory entry for a file.  There are a total
 ;of 63 entries possible.  A directory entry consists of:

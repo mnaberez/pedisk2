@@ -156,7 +156,7 @@ loop:
     lda #$04
     sta dir_ptr+1
     sty hex_save_a
-L7CFB:
+l_7cfb:
     ldx #$04
 
     ;Print a space
@@ -171,7 +171,7 @@ hex_loop:
     bne hex_loop
 
     dec dir_ptr+1
-    bne L7CFB
+    bne l_7cfb
 
     ;Print four spaces
     lda #' '
@@ -182,16 +182,16 @@ hex_loop:
 
     ldy hex_save_a
     ldx #$10
-L7D21:
+l_7d21:
     txa
     and #$03
-    bne L7D2B
+    bne l_7d2b
 
     ;Print a space
     lda #' '
     jsr chrout
 
-L7D2B:
+l_7d2b:
     ;Print a space
     lda #' '
     jsr chrout
@@ -209,7 +209,7 @@ printable:
 
     iny
     dex
-    bne L7D21
+    bne l_7d21
 
     ;Check if STOP key was pressed, return to prompt if so
     jsr chrin           ;Get key, or 0 if none

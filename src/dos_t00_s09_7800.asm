@@ -100,28 +100,28 @@ save_from_basic:
     jsr find_file
     tax
     bmi save_done       ;Branch if a disk error occurred
-    bne L7857           ;Branch if the file was not found
+    bne l_7857          ;Branch if the file was not found
 
     lda #e_exists       ;Set error code $05, file exists error
 save_error:
     jsr disk_error      ;Print error msg, FDC restore cmd, deselect drive
     bne save_done       ;Branch always
 
-L7857:
+l_7857:
 ;TODO Monitor command "S" (save file) jumps here to perform the save
 ;
     lda #$00
     sta dir_entry+$0b   ;TODO ??
 
-    jsr L78A2
+    jsr l_78a2
     bne save_done       ;Branch if an error occurred
     lda fc_error
-    beq L786A           ;Branch if no error
+    beq l_786a          ;Branch if no error
 
     lda #$06            ;A = 6, TODO error number for ??
     bne save_error      ;Branch always
 
-L786A:
+l_786a:
     lda dir_entry+$08   ;File load address low byte
     sta target_ptr
 
@@ -154,17 +154,17 @@ calc_n_sectors:
     lda $58
     clc
     adc #$7F            ;$7F = 128 byte sector - 1
-    bcc L789A
+    bcc l_789a
     inc $59
-L789A:
+l_789a:
     asl ;a
     lda $59
     rol ;a
     sta num_sectors
     rts
 
-L78A2:
-;TODO called from L7857 (monitor save command) and open_create
+l_78a2:
+;TODO called from l_7857 (monitor save command) and open_create
 ;is this create a file?
     lda #$00            ;FC% error code for OK
     sta fc_error
@@ -175,31 +175,31 @@ L78A2:
     lda open_sector
     sta dir_entry+$0d   ;File sector number
 
-    jsr L78F1
+    jsr l_78f1
     lda $58
     cmp #$51
-    bmi L78C0
+    bmi l_78c0
     lda #$2B            ;TODO FC% error code for ??
     sta fc_error
     rts
 
-L78C0:
+l_78c0:
     ldy #$0F
-L78C2:
+l_78c2:
     lda dir_entry,y
     sta (dir_ptr),y
     dey
-    bpl L78C2
+    bpl l_78c2
     lda sector
     cmp #$01
-    beq L78E0
+    beq l_78e0
     jsr write_a_sector
     bne save_done       ;Branch if a disk error occurred
     lda #$01
     sta sector
     jsr read_a_sector
     bne save_done       ;Branch if a disk error occurred
-L78E0:
+l_78e0:
     inc dir_sector+$08  ;Increment number of used file entries
 
     lda $58
@@ -211,16 +211,16 @@ L78E0:
     jsr write_a_sector
     rts
 
-L78F1:
-    jsr L790D
+l_78f1:
+    jsr l_790d
     lda dir_entry+$0d   ;File sector number
     clc
     adc $59
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
-    bmi L7902
+    bmi l_7902
     sbc #$1C            ;TODO 28 sectors per track?
     inc $58
-L7902:
+l_7902:
     sta $59
     lda dir_entry+$0c   ;File track number
     clc
@@ -228,7 +228,7 @@ L7902:
     sta $58
     rts
 
-L790D:
+l_790d:
     lda dir_entry+$0e   ;File sector count low byte
     sec
     sbc #$01
@@ -240,7 +240,7 @@ L790D:
     sta $60
     lda #$00
     sta $61
-    jsr L797B
+    jsr l_797b
     ldx $5E
     inx
     stx $59
@@ -248,25 +248,25 @@ L790D:
     sta $58
     rts
 
-L7931:
+l_7931:
 ;TODO unknown function
 ;     called from dos_t01_s01_7c00_p_directory.asm
 ;     also from dos_t01_s15_7c00_2_copy_utility.asm
-    jsr L7948
+    jsr l_7948
     ldx #$10
-L7936:
-    jsr L7953
-    bcc L793E
-    jsr L7958
-L793E:
+l_7936:
+    jsr l_7953
+    bcc l_793e
+    jsr l_7958
+l_793e:
     dex
-    beq L7947
-    jsr L7972
-    jmp L7936
-L7947:
+    beq l_7947
+    jsr l_7972
+    jmp l_7936
+l_7947:
     rts
 
-L7948:
+l_7948:
     lda #$00
     sta $62
     sta $63
@@ -274,12 +274,12 @@ L7948:
     sta $65
     rts
 
-L7953:
+l_7953:
     asl $5E
     rol $5F
     rts
 
-L7958:
+l_7958:
     lda $60
     clc
     adc $62
@@ -295,48 +295,48 @@ L7958:
     sta $65
     rts
 
-L7972:
+l_7972:
     asl $62
     rol $63
     rol $64
     rol $65
     rts
 
-L797B:
+l_797b:
     ldx #$00
     stx $62
     stx $63
     cpx $60
-    bne L798E
+    bne l_798e
     cpx $61
-    bne L798E
+    bne l_798e
     stx $5E
     stx $5F
-L798D:
+l_798d:
     rts
 
-L798E:
+l_798e:
     lda $61
     cmp $5F
-    bcc L799E
-    bne L79AB
+    bcc l_799e
+    bne l_79ab
     lda $60
     cmp $5E
-    beq L799E
-    bcs L79AB
-L799E:
+    beq l_799e
+    bcs l_79ab
+l_799e:
     inx
     asl $60
     rol $61
-    bcc L798E
+    bcc l_798e
     dex
     ror $61
-    jmp L79B0
-L79AB:
+    jmp l_79b0
+l_79ab:
     dex
-    bmi L798D
+    bmi l_798d
     lsr $61
-L79B0:
+l_79b0:
     ror $60
     sec
     lda $5E
@@ -348,14 +348,14 @@ L79B0:
     rol $62
     rol $63
     plp
-    bcs L79C8
+    bcs l_79c8
     pla
-    jmp L79AB
-L79C8:
+    jmp l_79ab
+l_79c8:
     sta $5F
     pla
     sta $5E
-    jmp L79AB
+    jmp l_79ab
 
 _dos_sys:
 ;Perform !SYS
@@ -573,7 +573,7 @@ open_new:
 
 open_create:
     ;Create a new file on disk
-    jsr L78A2
+    jsr l_78a2
     bne open_create_err ;Branch if an error occurred
     beq open_done       ;Branch always
 
@@ -623,11 +623,11 @@ open_existing:
     ;Open an existing file on disk
 
     ldy #$0F
-L7AE0:
+l_7ae0:
     lda (dir_ptr),y
     sta dir_entry,y
     dey
-    bpl L7AE0
+    bpl l_7ae0
 
 open_done:
     lda #$00
@@ -662,12 +662,12 @@ seq_cmd_done:
 
     jsr file_num_to_xy
 
-L7B22:
+l_7b22:
     lda dir_entry,y
     sta file_infos,x
     dex
     dey
-    bpl L7B22
+    bpl l_7b22
 
 open_create_err:
     jmp restore         ;Restore top 32 bytes of the stack page and return
@@ -762,7 +762,7 @@ _dos_close:
     ldy #$00
     lda (txtptr),y      ;Peek at next byte of BASIC text
     cmp #$80            ;Is it the CBM BASIC token for END?
-    bne L7B91           ;  No: branch to ??? TODO
+    bne l_7b91          ;  No: branch to ??? TODO
 
     jsr chrget          ;Consume the END token
     jsr no_pos_keyword
@@ -770,7 +770,7 @@ _dos_close:
     sta dir_sector
     jsr write_a_sector
     bne close_disk_err  ;Branch if a disk error occurred
-L7B91:
+l_7b91:
     lda #$FF
     sta dir_entry
     sta fc_error
@@ -789,19 +789,19 @@ handle_filename:
 ;TODO called from _dos_print, _dos_open, _dos_close
     jsr get_file_num    ;X=file number from filename or $FF if not open
     inx                 ;Increment X to test for $FF
-    bne L7BB1           ;Not equal to $FF?  File open, branch to continue
+    bne l_7bb1          ;Not equal to $FF?  File open, branch to continue
 
     lda #$07            ;FC% error code for file not open error
     jmp seq_cmd_error   ;Jump out to finish this command on error
 
-L7BB1:
+l_7bb1:
     jsr file_num_to_xy
-L7BB4:
+l_7bb4:
     lda file_infos,x
     sta dir_entry,y
     dex
     dey
-    bpl L7BB4
+    bpl l_7bb4
     lda #$00
     sta fc_error
     rts
@@ -838,8 +838,8 @@ pos_nonzero:
     sta $60
     lda #$00
     sta $61
-L7C00:
-    jsr L797B
+l_7c00:
+    jsr l_797b
     lda $5E
     clc
     adc dir_entry+$0d   ;File sector number
@@ -849,39 +849,39 @@ L7C00:
     sta $7FBA
     pla
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
-    bcc L7C1C
+    bcc l_7c1c
     inc $7FBA
     sbc #$1C            ;TODO 28 sectors per track?
-L7C1C:
+l_7c1c:
     sta $7FBB
-    jmp L7C3C
+    jmp l_7c3c
 
 no_pos_keyword:
     inc fi_pos
-    bne L7C2A
+    bne l_7c2a
     inc fi_pos+1
-L7C2A:
+l_7c2a:
     inc $7FBB
     lda $7FBB
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
-    bcc L7C3C
+    bcc l_7c3c
     inc $7FBA
     lda #$01
     sta $7FBB
-L7C3C:
+l_7c3c:
     lda $7FBA
     sta track
     cmp $7FBC
-    bcc L7C56
-    bne L7C51
+    bcc l_7c56
+    bne l_7c51
     lda $7FBB
     cmp $7FBD
-    bcc L7C56
-L7C51:
+    bcc l_7c56
+l_7c51:
     lda #$08            ;FC% error code for position out of range
     jmp seq_cmd_error   ;Jump out to finish this command on error
 
-L7C56:
+l_7c56:
     lda $7FBB
     sta sector
     lda #<dir_sector
@@ -1074,7 +1074,7 @@ _dos_list:
     cmp #'4'
     bpl _dos_list
 
-    jmp L7D83           ;Jump over the strings
+    jmp l_7d83          ;Jump over the strings
 
 device:
     !text $0d,$0d,"DEVICE?",0
@@ -1096,14 +1096,14 @@ filetypes:
 
     ;Convert char to a drive select bit pattern, store the pattern
 
-L7D83:
+l_7d83:
     and #$03
     tax
     sec
-L7D87:
+l_7d87:
     rol ;a
     dex
-    bpl L7D87
+    bpl l_7d87
     sta drive_sel       ;Drive select bit pattern to write to the latch
 
     ;Set track 0
@@ -1116,7 +1116,7 @@ L7D87:
     inx
     stx sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
 
-L7D97:
+l_7d97:
     lda #<dir_sector
     sta target_ptr
     sta dir_ptr
@@ -1126,12 +1126,12 @@ L7D97:
     sta dir_ptr+1
 
     jsr read_a_sector
-    beq L7DAB           ;Branch if read succeeded
+    beq l_7dab          ;Branch if read succeeded
     jmp restore         ;Restore top 32 bytes of the stack page and return
 
     ;Print "DISKNAME= "
 
-L7DAB:
+l_7dab:
     lda #<diskname
     ldy #>diskname
     jsr puts
@@ -1140,12 +1140,12 @@ L7DAB:
 
     ldy #$00
     ldx #$08
-L7DB6:
+l_7db6:
     lda (dir_ptr),y
     jsr chrout
     iny
     dex
-    bne L7DB6
+    bne l_7db6
 
     ;Print "NAME  TYPE TRK SCTR #SCTRS"
 
@@ -1155,7 +1155,7 @@ L7DB6:
 
     ;Set line number countdown until "MORE.." prompt
 
-L7DC6:
+l_7dc6:
     lda #18
     sta edit_pos
 
@@ -1164,18 +1164,18 @@ L7DC6:
     lda #$0D
     jsr chrout
 
-L7DCF:
+l_7dcf:
     lda dir_ptr
     clc
     adc #$10
-    bpl L7DE3
+    bpl l_7de3
     inc sector          ;Sector number to write to WD1793 (1-26 or $01-1a)
     jsr read_a_sector
-    beq L7DE1           ;Branch if read succeeded
+    beq l_7de1          ;Branch if read succeeded
     jmp restore         ;Restore top 32 bytes of the stack page and return
-L7DE1:
+l_7de1:
     lda #$00
-L7DE3:
+l_7de3:
     sta dir_ptr
 
     ;Check for end of directory
@@ -1183,16 +1183,16 @@ L7DE3:
     ldy #$00
     lda (dir_ptr),y     ;Get first byte of filename
     cmp #$FF            ;Equal to $FF?
-    bne L7DF0           ;  No: continue
-    jmp L7E56           ;  Yes: jump, end of directory
+    bne l_7df0          ;  No: continue
+    jmp l_7e56          ;  Yes: jump, end of directory
 
     ;Check if file has been deleted
 
-L7DF0:
+l_7df0:
     ldy #$05
     lda (dir_ptr),y     ;Get last byte of filename
     cmp #$FF            ;Equal to $FF?
-    beq L7DCF           ;  Yes: file is deleted, skip it
+    beq l_7dcf          ;  Yes: file is deleted, skip it
                         ;  No: continue
 
     ;Print a newline
@@ -1203,12 +1203,12 @@ L7DF0:
     ;Print filename followed by a space
 
     ldy #$00
-L7DFF:
+l_7dff:
     lda (dir_ptr),y
     jsr chrout
     iny
     cpy #$06
-    bmi L7DFF
+    bmi l_7dff
     jsr put_spc
 
     ;Set pointer to file type
@@ -1260,22 +1260,22 @@ L7DFF:
     jsr put_hex_byte
 
     dec edit_pos
-    bmi L7E49
-    jmp L7DCF
+    bmi l_7e49
+    jmp l_7dcf
 
     ;Print "MORE.."
 
-L7E49:
+l_7e49:
     lda #<more
     ldy #>more
     jsr puts
 
     jsr get_char_w_stop ;Get a character and test for {STOP}
-    jmp L7DC6
+    jmp l_7dc6
 
     ;Print a newline
 
-L7E56:
+l_7e56:
     lda #$0D
     jsr chrout
 
