@@ -38,6 +38,10 @@ wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
 drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename
 fi_pos      = dos+$07b2 ;2 bytes for record position used with FI% variable
 fc_error    = dos+$07b5 ;Error code that will be set in FC% variable
+m_7fba_track  = dos+$07ba ;TODO seems to hold a track
+m_7fbb_sector = dos+$07bb ;TODO seems to hold a sector
+m_7fbc_track  = dos+$07bc ;TODO seems to hold a track
+m_7fbd_sector = dos+$07bd ;TODO seems to hold a sector
 linget      = $b8f6     ;BASIC Fetch integer (usually a line number)
 ptrget      = $c12b     ;BASIC Find a variable
 
@@ -179,29 +183,37 @@ l_78a2:
     sta dir_entry+$0d   ;File sector number
 
     jsr l_78f1
+
     lda tmp_track
     cmp #$51
     bmi l_78c0
+
     lda #$2B            ;TODO FC% error code for ??
     sta fc_error
     rts
 
+    ;Copy the directory entry at dir_entry into the entry at (dir_ptr)
 l_78c0:
-    ldy #$0F
+    ldy #$0F            ;Y = offset of last byte (a dir entry is 16 bytes)
 l_78c2:
     lda dir_entry,y
     sta (dir_ptr),y
     dey
-    bpl l_78c2
+    bpl l_78c2          ;Loop until entire entry has been copied
+
     lda sector
     cmp #$01
     beq l_78e0
+
     jsr write_a_sector
     bne save_done       ;Branch if a disk error occurred
+
     lda #$01
     sta sector
     jsr read_a_sector
     bne save_done       ;Branch if a disk error occurred
+                        ;Fall through to write sector 1
+
 l_78e0:
     inc dir_sector+$08  ;Increment number of used file entries
 
@@ -215,7 +227,9 @@ l_78e0:
     rts
 
 l_78f1:
+;TODO called from l_78a2 only
     jsr l_790d
+
     lda dir_entry+$0d   ;File sector number
     clc
     adc tmp_sector
@@ -232,6 +246,9 @@ l_7902:
     rts
 
 l_790d:
+;TODO called from l_78f1 only in this file
+;     also called from dos_t01_s19_7c00_1_disk_compression.asm
+;
     lda dir_entry+$0e   ;File sector count low byte
     sec
     sbc #$01
@@ -243,7 +260,9 @@ l_790d:
     sta $60
     lda #$00
     sta $61
+
     jsr l_797b
+
     ldx $5E
     inx
     stx tmp_sector
@@ -255,21 +274,21 @@ l_7931:
 ;TODO unknown function
 ;     called from dos_t01_s01_7c00_p_directory.asm
 ;     also from dos_t01_s15_7c00_2_copy_utility.asm
-    jsr l_7948
+    jsr clear_62_63_64_65
     ldx #$10
-l_7936:
-    jsr l_7953
-    bcc l_793e
-    jsr l_7958
-l_793e:
+l_7931_loop:
+    jsr asl_5e_rol_5f
+    bcc l_7931_bcc
+    jsr add_add_add_add
+l_7931_bcc:
     dex
-    beq l_7947
-    jsr l_7972
-    jmp l_7936
-l_7947:
+    beq l_7931_done
+    jsr asl_62_rol_63_64_65
+    jmp l_7931_loop
+l_7931_done:
     rts
 
-l_7948:
+clear_62_63_64_65:
     lda #$00
     sta $62
     sta $63
@@ -277,28 +296,31 @@ l_7948:
     sta $65
     rts
 
-l_7953:
+asl_5e_rol_5f:
     asl $5E
     rol $5F
     rts
 
-l_7958:
+add_add_add_add:
     lda $60
     clc
     adc $62
     sta $62
+
     lda $61
     adc $63
     sta $63
+
     lda #$00
     adc $64
     sta $64
+
     lda #$00
     adc $65
     sta $65
     rts
 
-l_7972:
+asl_62_rol_63_64_65:
     asl $62
     rol $63
     rol $64
@@ -319,6 +341,7 @@ l_798d:
     rts
 
 l_798e:
+;Called from l_797b only
     lda $61
     cmp $5F
     bcc l_799e
@@ -581,7 +604,7 @@ open_create:
     beq open_done       ;Branch always
 
 open_handle_len:
-    jsr ptrget          ;Find variable
+    jsr ptrget          ;Find variable, sets valtyp and varpnt
 
     ;Check if LEN argument is numeric
     lda valtyp          ;A = type of variable (0=numeric, $ff=string)
@@ -638,14 +661,14 @@ open_done:
     sta fi_pos+1
     sta fc_error
     lda dir_entry+$0c   ;File track number
-    sta $7FBA
+    sta m_7fba_track
     ldx dir_entry+$0d   ;File sector number
     dex
-    stx $7FBB
+    stx m_7fbb_sector
                         ;Fall through into seq_cmd_done
 
 seq_cmd_done:
-    ;Set variable FI% to value in fi_pos/fi_pos+1
+    ;Set variable FI% to value in fi_pos, fi_pos+1
     jsr ptrget_fi       ;Find variable FI%
     ldy #$00
     lda fi_pos+1
@@ -663,7 +686,7 @@ seq_cmd_done:
     iny
     sta (varpnt),y
 
-    jsr file_num_to_xy
+    jsr file_num_to_xy  ;Set up X for file_infos and Y for dir_entry
 
 l_7b22:
     lda dir_entry,y
@@ -676,6 +699,10 @@ open_create_err:
     jmp restore         ;Restore top 32 bytes of the stack page and return
 
 file_num_to_xy:
+;Call with file number (0..3) in A
+;Returns with indexes set:
+;  X for file_infos
+;  Y for dir_entry
     lda file_num
     asl ;a
     asl ;a
@@ -684,7 +711,7 @@ file_num_to_xy:
     asl ;a
     adc #$1F
     tax
-    ldy #$1F
+    ldy #$1F            ;Y = offset for dir_entry
     rts
 
 seq_cmd_error:
@@ -792,13 +819,13 @@ handle_filename:
 ;TODO called from _dos_print, _dos_open, _dos_close
     jsr get_file_num    ;X=file number from filename or $FF if not open
     inx                 ;Increment X to test for $FF
-    bne l_7bb1          ;Not equal to $FF?  File open, branch to continue
+    bne l_7bb1          ;Not equal to $FF?  File is open, branch to continue
 
     lda #$07            ;FC% error code for file not open error
     jmp seq_cmd_error   ;Jump out to finish this command on error
 
 l_7bb1:
-    jsr file_num_to_xy
+    jsr file_num_to_xy  ;Set up X for file_infos and Y for dir_entry
 l_7bb4:
     lda file_infos,x
     sta dir_entry,y
@@ -817,15 +844,22 @@ handle_pos:
     bne no_pos_keyword  ;Branch if POS was not specified
 
     jsr chrget          ;Consume the POS token
+
     jsr ptrget_fi       ;Find variable FI%
+
+    ;Copy value in FI% into fi_pos, fi_pos+1
     ldy #$00
     lda (varpnt),y
     sta fi_pos+1
     iny
     lda (varpnt),y
     sta fi_pos
+
+    ;Branch if position (fi_pos, fi_pos+1) is valid
     ora fi_pos+1
     bne pos_nonzero
+
+    ;Position of 0 is invalid, set error and exit
     lda #$08            ;FC% error code for position out of range
     jmp seq_cmd_error   ;Jump out to finish this command on error
 
@@ -849,14 +883,14 @@ l_7c00:
     pha
     lda $62
     adc dir_entry+$0c   ;File track number
-    sta $7FBA
+    sta m_7fba_track
     pla
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
     bcc l_7c1c
-    inc $7FBA
+    inc m_7fba_track
     sbc #$1C            ;TODO 28 sectors per track?
 l_7c1c:
-    sta $7FBB
+    sta m_7fbb_sector
     jmp l_7c3c
 
 no_pos_keyword:
@@ -864,28 +898,28 @@ no_pos_keyword:
     bne l_7c2a
     inc fi_pos+1
 l_7c2a:
-    inc $7FBB
-    lda $7FBB
+    inc m_7fbb_sector
+    lda m_7fbb_sector
     cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
     bcc l_7c3c
-    inc $7FBA
+    inc m_7fba_track
     lda #$01
-    sta $7FBB
+    sta m_7fbb_sector
 l_7c3c:
-    lda $7FBA
+    lda m_7fba_track
     sta track
-    cmp $7FBC
+    cmp m_7fbc_track    ;TODO where is this ($7FBC) set?
     bcc l_7c56
     bne l_7c51
-    lda $7FBB
-    cmp $7FBD
+    lda m_7fbb_sector
+    cmp m_7fbd_sector   ;TODO where is this ($7FBD) set?
     bcc l_7c56
 l_7c51:
     lda #$08            ;FC% error code for position out of range
     jmp seq_cmd_error   ;Jump out to finish this command on error
 
 l_7c56:
-    lda $7FBB
+    lda m_7fbb_sector
     sta sector
     lda #<dir_sector
     sta target_ptr
@@ -916,7 +950,7 @@ _dos_input:
     bne input_disk_err  ;Branch if a disk error occurred
 
     ;Get the variable that will receive the record data
-    jsr ptrget          ;Find variable
+    jsr ptrget          ;Find variable, sets valtyp and varpnt
     bit valtyp          ;Test type of variable (0=numeric, $ff=string)
     bmi input_got_str   ;Branch if variable is a string
 
