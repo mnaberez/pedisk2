@@ -33,7 +33,7 @@ drive_sel   = dos+$0791 ;Drive select bit pattern to write to the latch
 track       = dos+$0792 ;Track number to write to WD1793 (0-76 or $00-4c)
 sector      = dos+$0793 ;Sector number to write to WD1793 (1-26 or $01-1a)
 num_sectors = dos+$0796 ;Number of sectors to read or write
-dir_entry   = dos+$07a0 ;16 byte buffer for a directory entry
+dir_entry   = dos+$07a0 ;32 bytes: a dir entry (first 16) or file info (32)
 wedge_stack = dos+$07e0 ;32 bytes for preserving the stack used by the wedge
 drive_sel_f = dos+$07b1 ;Drive select bit pattern parsed from a filename
 fi_pos      = dos+$07b2 ;2 bytes for record position used with FI% variable
@@ -433,11 +433,11 @@ get_file_num:
 ;Get the file number of an already opened file
 ;from its filename and drive.
 ;
-;Open files are stored in the file_infos table.  There are 4
-;possible open files, numbered 0 to 3.  Each open file is
-;represented by 32 bytes in file_infos.  The first 16 bytes are
-;the file's directory entry, followed by 1 byte for the drive
-;select pattern.
+;Open files are stored in the file_infos table.  There are 4 possible open
+;files, numbered 0 to 3.  Each open file has an associated 32 byte buffer
+;in file_infos.  If the first byte of a 32 byte buffer is $FF, that buffer
+;is unused.  Otherwise, the first 16 bytes are the file's directory entry,
+;followed by 1 byte for the drive select pattern.
 ;
 ;Calling parameters:
 ;  dir_entry: first 6 bytes only with the filename
@@ -686,7 +686,7 @@ seq_cmd_done:
     iny
     sta (varpnt),y
 
-    jsr file_num_to_xy  ;Set up X for file_infos and Y for dir_entry
+    jsr file_num_to_xy  ;Set up X for file_infos and Y for 32 byte countdown
 
 l_7b22:
     lda dir_entry,y
@@ -701,8 +701,8 @@ open_create_err:
 file_num_to_xy:
 ;Call with file number (0..3) in A
 ;Returns with indexes set:
-;  X for file_infos
-;  Y for dir_entry
+;  X = offset into file_infos
+;  Y = 31 for counting down 32 bytes from 31 to -1
     lda file_num
     asl ;a
     asl ;a
@@ -711,7 +711,7 @@ file_num_to_xy:
     asl ;a
     adc #$1F
     tax
-    ldy #$1F            ;Y = offset for dir_entry
+    ldy #$1F            ;Y = 31 (start of 32 byte countdown from 31 to -1)
     rts
 
 seq_cmd_error:
