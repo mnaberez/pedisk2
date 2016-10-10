@@ -484,7 +484,8 @@ deselect_drive:
 ;
 ;This will disengage the head load solenoid on mechanisms that have one.
 ;
-    lda #%00001000      ;Bit 3 = WD1793 /DDEN=1 (single density mode)
+    lda #%00001000      ;TODO disk conversion: this code always sets /DDEN=1
+                        ;Bit 3 = WD1793 /DDEN=1 (single density mode)
                         ;All other bits off = deselect drives, stop motors
     sta latch
     rts
@@ -589,6 +590,7 @@ select_drive:
     cmp #%00000111      ;compare it with all drives selected
     bcs no_drive_sel    ;if >= $07 go do disk error $14, no drive selected
 
+                        ;TODO disk conversion: this code always sets /DDEN=1
     ora #%00001000      ;mask xxxx 1xxx, set /DDEN=1 (single density mode)
     sta latch           ;save the drive select latch
 

@@ -131,10 +131,10 @@ sector_loop:
     ;Increment to the next sector for the next time around
     clc
     adc #$01
-    cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
+    cmp #$1D            ;TODO disk conversion: Past last sector?  28 sectors per track on 5.25"
     bmi skip_trk_inc
     sec
-    sbc #$1C            ;TODO 28 sectors per track?
+    sbc #$1C            ;TODO disk conversion: 28 sectors per track?
     inc track
 skip_trk_inc:
     sta sector

@@ -59,13 +59,13 @@ start:
     lda #$00
     sta $5F
     sta $61
-    lda #$1C            ;TODO 28 sectors per track?
+    lda #$1C            ;TODO disk conversion: 28 sectors per track?
     sta $60
     jsr l_7931
     lda $62
     sta $7F9D
     sta $7F9B
-    lda #$28            ;TODO 40/41 tracks?
+    lda #$28            ;TODO disk conversion: 40/41 tracks?
     sec
     sbc $7F9C
     sta $7F9E
@@ -133,6 +133,7 @@ insert_dst_disk:
     ;Deselect drives and stop motors
     lda #$00            ;Bit 3 = WD1793 /DDEN=0 (double density mode)
                         ;All other bits off = deselect drives, stop motors
+                        ;TODO disk conversion: this code always sets /DDEN=0
     sta latch
 
     ;Wait for user to press the "R" key
@@ -186,12 +187,12 @@ l_7d56:
 l_7d69:
     cmp $7F9E
     bmi l_7d8a
-    lda #$28            ;TODO 40/41 tracks?
+    lda #$28            ;TODO disk conversion: 40/41 tracks?
     sec
     sbc copy_track
     bcc finish_and_exit
     sta $5E
-    lda #$1C            ;TODO 28 sectors per track?
+    lda #$1C            ;TODO disk conversion: 28 sectors per track?
     sta $60
     lda #$00
     sta $5F

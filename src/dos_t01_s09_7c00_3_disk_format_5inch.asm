@@ -136,7 +136,7 @@ track_loop:
 
     ;Increment track, loop until all tracks have been formatted.
     inc track
-    lda #$28            ;TODO 40/41 tracks?
+    lda #$28            ;TODO disk conversion: 40/41 tracks?
     cmp track
     bpl track_loop
 
@@ -476,7 +476,7 @@ l_7ea6:
     sta fdc_data        ;data = f7
 
 ;Write $4E x 28
-    ldx #$1C            ;TODO 28 sectors per track?
+    ldx #$1C            ;TODO disk conversion: 28 sectors per track?
 l_7eb2:
     lda #$E6
 l_7eb4:
@@ -499,7 +499,7 @@ l_7ec3:
 ;End of Sector
 ;
 
-    cpy #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
+    cpy #$1D            ;TODO disk conversion: Past last sector?  28 sectors per track on 5.25"
     bpl l_7ed4
 
     jmp l_7dea
@@ -510,7 +510,7 @@ l_7ed6:
     bit fdc_cmdst
     bne l_7ed6
     cli
-    jsr l_eccc         ;TODO XXX middle of an instruction in the ROM
+    jsr l_eccc         ;TODO disk conversion: XXX middle of an instruction in the 8" ROM
     rts
 
 filler:

@@ -202,10 +202,10 @@ copy_entry_loop:
     lda new_sector
     clc
     adc tmp_sector
-    cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
+    cmp #$1D            ;TODO disk conversion: Past last sector?  28 sectors per track on 5.25"
     bmi l_7d7b
     sec
-    sbc #$1C            ;TODO 28 sectors per track?
+    sbc #$1C            ;TODO disk conversion: 28 sectors per track?
     inc new_track
 
 l_7d7b:

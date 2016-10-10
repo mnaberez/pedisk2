@@ -148,7 +148,8 @@ l_786a:
     bne save_done       ;Branch if a disk error occurred
 
     ;Deselect drives and stop motors
-    lda #$00            ;Bit 3 = WD1793 /DDEN=0 (double density mode)
+    lda #$00            ;TODO disk conversion: this code always sets /DDEN=0
+                        ;Bit 3 = WD1793 /DDEN=0 (double density mode)
                         ;All other bits off = deselect drives, stop motors
     sta latch
 
@@ -233,9 +234,9 @@ l_78f1:
     lda dir_entry+$0d   ;File sector number
     clc
     adc tmp_sector
-    cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
+    cmp #$1D            ;TODO disk conversion: Past last sector?  28 sectors per track on 5.25"
     bmi l_7902
-    sbc #$1C            ;TODO 28 sectors per track?
+    sbc #$1C            ;TODO disk conversion: 28 sectors per track?
     inc tmp_track
 l_7902:
     sta tmp_sector
@@ -256,7 +257,7 @@ l_790d:
     lda dir_entry+$0f   ;File sector count high byte
     sbc #$00
     sta $5F
-    lda #$1C            ;TODO 28 sectors per track?
+    lda #$1C            ;TODO disk conversion: 28 sectors per track?
     sta $60
     lda #$00
     sta $61
@@ -874,7 +875,7 @@ pos_nonzero:
     lda fi_pos+1
     sbc #$00
     sta $5F
-    lda #$1C            ;TODO 28 sectors per track?
+    lda #$1C            ;TODO disk conversion: 28 sectors per track?
     sta $60
     lda #$00
     sta $61
@@ -888,10 +889,10 @@ l_7c00:
     adc dir_entry+$0c   ;File track number
     sta m_7fba_track
     pla
-    cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
+    cmp #$1D            ;TODO disk conversion: Past last sector?  28 sectors per track on 5.25"
     bcc l_7c1c
     inc m_7fba_track
-    sbc #$1C            ;TODO 28 sectors per track?
+    sbc #$1C            ;TODO disk conversion: 28 sectors per track?
 l_7c1c:
     sta m_7fbb_sector
     jmp l_7c3c
@@ -903,7 +904,7 @@ no_pos_keyword:
 l_7c2a:
     inc m_7fbb_sector
     lda m_7fbb_sector
-    cmp #$1D            ;TODO Past last sector?  28 sectors per track on 5.25"
+    cmp #$1D            ;TODO disk conversion: Past last sector?  28 sectors per track on 5.25"
     bcc l_7c3c
     inc m_7fba_track
     lda #$01
@@ -1145,6 +1146,7 @@ l_7d87:
     dex
     bpl l_7d87
     sta drive_sel       ;Drive select bit pattern to write to the latch
+                        ;TODO disk conversion: what does this do to bit for /DDEN?
 
     ;Set track 0
 

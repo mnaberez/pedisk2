@@ -97,7 +97,7 @@ l_7ce2:
     stx tmp_sector
     lda dir_sector+$09  ;Next open track
     sta $5E
-    lda #$1C            ;TODO 28 sectors per track?
+    lda #$1C            ;TODO disk conversion: 28 sectors per track?
     sta $60
     lda #$00
     sta $5F
@@ -313,6 +313,7 @@ l_7deb:
     ;Deselect drives and stop motors
     lda #$00            ;Bit 3 = WD1793 /DDEN=0 (double density mode)
                         ;All other bits off = deselect drives, stop motors
+                        ;TODO disk conversion: this code always sets /DDEN=0
     sta latch
 
     jmp pdos_prompt
