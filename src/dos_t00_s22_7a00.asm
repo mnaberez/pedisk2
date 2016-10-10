@@ -73,7 +73,7 @@ bad_cmd_or_file:
 dispatch_cmd:
 ;A valid command character (A-Z) has been entered.  Try to dispatch
 ;it to one of the internal routines in this file.  If it is not
-;recognized, try to load an external $7C000 overlay for it.
+;recognized, try to load an external $7C00 overlay for it.
 ;
     cmp #'L'            ;L-LOAD DISK PROGRAM
     beq jmp_load_prog
