@@ -816,7 +816,7 @@ close_disk_err:
     jmp restore         ;Restore top 32 bytes of the stack page and return
 
 handle_filename:
-;TODO called from _dos_print, _dos_open, _dos_close
+;TODO called from _dos_print, _dos_input, _dos_close
     jsr get_file_num    ;X=file number from filename or $FF if not open
     inx                 ;Increment X to test for $FF
     bne l_7bb1          ;Not equal to $FF?  File is open, branch to continue
