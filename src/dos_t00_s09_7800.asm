@@ -389,9 +389,9 @@ _dos_sys:
 ;
 ;Usage: !SYS (accepts no arguments)
 ;
-    lda #<dos_stop      ;Load address low byte
+    lda #<dos_monitor   ;Load address low byte
     sta target_ptr
-    lda #>dos_stop      ;Load address high byte
+    lda #>dos_monitor   ;Load address high byte
     sta target_ptr+1
 
     ldx #$00            ;Set track 0 (first track)
@@ -408,7 +408,7 @@ _dos_sys:
 
     jsr read_sectors
     bne sys_disk_err    ;Branch if a disk error occurred
-    jmp dos_stop
+    jmp dos_monitor
 
 sys_disk_err:
     jmp restore         ;Restore top 32 bytes of the stack page and return
@@ -416,7 +416,10 @@ sys_disk_err:
 l_79f6: ;dos+$01f6
     !byte $b3,$fa,$40,$00,$00,$40,$20,$00,$34,$01
 
-dos_stop:
+dos_monitor:
+;PDOS monitor mode (!SYS prompt) overlay code loads here
+;and overwrites the code below.
+
 fi_or_fc:
     !text "FI%",0
 

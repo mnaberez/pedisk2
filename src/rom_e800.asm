@@ -92,9 +92,9 @@ dos_close   = dos+$0006 ;Entry point for !CLOSE
 dos_input   = dos+$0009 ;Entry point for !INPUT
 dos_print   = dos+$000c ;Entry point for !PRINT
 dos_run     = dos+$000f ;Entry point for !RUN (load and run)
-dos_sys     = dos+$0012 ;Entry point for !SYS (disk monitor)
+dos_sys     = dos+$0012 ;Entry point for !SYS (PDOS disk monitor)
 dos_list    = dos+$0015 ;Entry point for !LIST (directory)
-dos_stop    = dos+$0200 ;Unknown, PEDISK monitor jumps here if STOP pressed
+dos_monitor = dos+$0200 ;Base address of PDOS monitor overlay (!SYS prompt)
 copy_sector = dos+$0600 ;128 bytes for sector, used only by copy disk overlay
 file_infos  = dos+$0680 ;4 buffers of 32 bytes each for tracking open files
 dir_sector  = dos+$0700 ;128 bytes for directory sector used by find_file
@@ -1663,8 +1663,8 @@ l_ef58:
 
 get_char_w_stop:
 ;Show the checker cursor, wait for a character, and display it.
-;If the character is {STOP}, jump out to dos_stop.  Otherwise,
-;return the character in A.
+;If the character is {STOP}, jump out to dos_monitor (PDOS prompt).
+;Otherwise, return the character in A.
 ;
     txa                 ;copy X
     pha                 ;save X
@@ -1688,7 +1688,8 @@ get_char_w_stop:
     cmp #stop           ;compare it with {STOP}
     bne l_ef58          ;if not {STOP} just exit
 
-    jmp dos_stop        ;else go do {STOP}
+    jmp dos_monitor     ;else start jump to base address of PDOS monitor
+                        ;(clears screen and shows prompt)
 
 
 get_char:
