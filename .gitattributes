@@ -1,5 +1,10 @@
 *.bas binary
 *.bin binary
 *.img binary
+*.kicad_pcb binary
 *.ld binary
+*.lib binary
+*.net binary
 *.prg binary
+*.pro binary
+*.sch binary
