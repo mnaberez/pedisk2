@@ -504,8 +504,10 @@ _dos_open:
 ;Usage: !OPEN "NAME:0"            (open an existing SEQ file)
 ;       !OPEN "NAME:0" NEW        (create SEQ file with default 100 records)
 ;       !OPEN "NAME:0" NEW LEN 35 (create SEQ file with 35 records)
+;       !OPEN "NAME:0" NEW LEN N% (create SEQ file with N% records)
 ;
-;Filename may be specified as a variable (F$) or immediate ("NAME:0").
+;Filename may be specified as a string variable (F$) or literal ("NAME:0").
+;Record count may be specified as an integer variable (N%) or literal (35).
 ;
     ;Check if file is already open
     jsr get_file_num    ;X=file number from filename or $FF if not open
@@ -789,7 +791,7 @@ _dos_close:
 ;Usage: !CLOSE F$
 ;       !CLOSE F$ END  (TODO what does END mean? truncate file?)
 ;
-;Filename may be specified as a variable (F$) or immediate ("NAME:0").
+;Filename may be specified as a string variable (F$) or literal ("NAME:0").
 ;
     jsr handle_filename ;TODO this must handle the filename
 
@@ -942,9 +944,9 @@ _dos_input:
 ;Usage: !INPUT "NAME:0" A$        (read record at current position into A$)
 ;       !INPUT "NAME:0" POS A$    (read record at position in FI% into A$)
 ;
-;Filename may be specified as a variable (F$) or immediate ("NAME:0").
+;Filename may be specified as a string variable (F$) or literal ("NAME:0").
 ;Optional POS keyword sets position to value in FI% (starts at 1, not 0)
-;Last argument is a variable that will receive the record data.
+;Last argument is a string variable that will receive the record data.
 ;
     jsr handle_filename ;TODO this must handle the filename
     jsr handle_pos      ;TODO handle possible POS keyword
@@ -1003,9 +1005,9 @@ _dos_print:
 ;Usage: !PRINT "NAME:0" A$        (write record in A$ at current position)
 ;       !PRINT "NAME:0" POS A$    (write record in A$ at position in FI%)
 ;
-;Filename may be specified as a variable (F$) or immediate ("NAME:0").
+;Filename may be specified as a string variable (F$) or literal ("NAME:0").
 ;Optional POS keyword sets position to value in FI% (starts at 1, not 0)
-;Last argument is variable to read record data from (TODO can this be immediate?)
+;Last argument is variable to read record data from (TODO can this be a literal?)
 ;and must be 127 bytes or less.
 ;
     jsr handle_filename ;TODO this must handle the filename
