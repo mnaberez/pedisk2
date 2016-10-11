@@ -62,7 +62,21 @@ get_char_w_stop= $EF59
 puts           = $EFE7
 chrout         = $FFD2
 
-e_exists = $05 ;File Exists
+;Error codes for "disk error" message (all others in the ROM)
+e_exists       = $05 ;File Exists
+e_unknown_06   = $06 ;TODO Unknown
+
+;Error codes for FC%
+f_ok           = $00 ;OK
+f_not_open     = $07 ;File not open
+f_not_string   = $09 ;Variable is not a string
+f_unknown_2b   = $2B ;TODO Unknown
+f_already_open = $30 ;File already open
+f_too_many     = $31 ;Too many open files
+f_bad_filename = $32 ;Bad filename (file exists or file not found)
+f_len_float    = $34 ;LEN argument is a float
+f_len_not_num  = $35 ;LEN argument not numeric
+f_unknown_ff   = $ff ;TODO Unknown
 
     *=dos
 
@@ -125,7 +139,7 @@ l_7857:
     lda fc_error
     beq l_786a          ;Branch if no error
 
-    lda #$06            ;A = 6, TODO error number for ??
+    lda #e_unknown_06   ;A = 6, TODO error number for ??
     bne save_error      ;Branch always
 
 l_786a:
@@ -174,7 +188,7 @@ l_789a:
 l_78a2:
 ;TODO called from l_7857 (monitor save command) and open_create
 ;is this create a file?
-    lda #$00            ;FC% error code for OK
+    lda #f_ok           ;FC% error code for OK
     sta fc_error
 
     lda open_track
@@ -189,7 +203,7 @@ l_78a2:
     cmp #$51
     bmi l_78c0
 
-    lda #$2B            ;TODO FC% error code for ??
+    lda #f_unknown_2b   ;TODO FC% error code for ??
     sta fc_error
     rts
 
@@ -516,7 +530,7 @@ _dos_open:
     beq open_find_num   ;Equal to $FF?  File not open, branch to continue
 
     ;File is already open
-    lda #$30            ;FC% error code for file already open error
+    lda #f_already_open ;FC% error code for file already open error
     bne open_err_1      ;Branch always; go to seq_cmd_error
 
 open_find_num:
@@ -533,7 +547,7 @@ open_find_loop:
     bpl open_find_next  ;File number >= 0? Branch to try next file info
 
     ;No free space in file_infos, all 4 buffers are in use
-    lda #$31            ;FC% error code for too many open files error
+    lda #f_too_many     ;FC% error code for too many open files error
     bne open_err_1      ;Branch always; go to seq_cmd_error
 
 open_find_next:
@@ -568,7 +582,7 @@ open_check_new:
     bne open_new        ;Branch if file was not found on disk
 
     ;Trying to create a new file but filename already exists.
-    lda #$32            ;FC% error code for file exists
+    lda #f_bad_filename ;FC% error code for file exists
 open_err_1:
     bne open_err_2      ;Branch always; go to seq_cmd_error
 
@@ -623,12 +637,12 @@ open_handle_len:
     bmi open_set_len    ;Branch if integer
 
     ;LEN argument is a float
-    lda #$34            ;FC% error code for LEN argument not an integer
+    lda #f_len_float     ;FC% error code for LEN argument not an integer
     bne open_err_2      ;Branch always; go to seq_cmd_error
 
 open_len_str:
     ;LEN argument is not numeric
-    lda #$35            ;FC% error code for LEN argument not numeric
+    lda #f_len_not_num  ;FC% error code for LEN argument not numeric
     bne open_err_2      ;Branch always; go to seq_cmd_error
 
 open_set_len:
@@ -648,7 +662,7 @@ open_not_new:
     beq open_existing   ;Branch find_file found the file on disk
 
     ;Trying to open an existing file but it doesn't exist.
-    lda #$32            ;FC% error code for file found
+    lda #f_bad_filename ;FC% error code for file not found
 open_err_2:
     jmp seq_cmd_error   ;Jump out to finish this command on error
 
@@ -663,7 +677,7 @@ l_7ae0:
     bpl l_7ae0
 
 open_done:
-    lda #$00
+    lda #f_ok
     sta fi_pos
     sta fi_pos+1
     sta fc_error
@@ -808,7 +822,7 @@ _dos_close:
     jsr write_a_sector
     bne close_disk_err  ;Branch if a disk error occurred
 l_7b91:
-    lda #$FF
+    lda #f_unknown_ff
     sta dir_entry
     sta fc_error
 
@@ -828,7 +842,7 @@ handle_filename:
     inx                 ;Increment X to test for $FF
     bne l_7bb1          ;Not equal to $FF?  File is open, branch to continue
 
-    lda #$07            ;FC% error code for file not open error
+    lda #f_not_open     ;FC% error code for file not open error
     jmp seq_cmd_error   ;Jump out to finish this command on error
 
 l_7bb1:
@@ -839,7 +853,7 @@ l_7bb4:
     dex
     dey
     bpl l_7bb4
-    lda #$00
+    lda #f_ok
     sta fc_error
     rts
 
@@ -961,7 +975,7 @@ _dos_input:
     bit valtyp          ;Test type of variable (0=numeric, $ff=string)
     bmi input_got_str   ;Branch if variable is a string
 
-    lda #$09            ;FC% error code for "Not a string"
+    lda #f_not_string   ;FC% error code for "Not a string"
 input_err:
     jmp seq_cmd_error   ;Jump out to finish this command on error
 
@@ -1020,7 +1034,7 @@ _dos_print:
     bmi print_got_str   ;Branch if variable is a string
 
     ;Variable is not a string
-    lda #$09            ;FC% error code for "Not a string"
+    lda #f_not_string   ;FC% error code for "Not a string"
 print_err:
     jmp seq_cmd_error   ;Jump out to finish this command on error
 
