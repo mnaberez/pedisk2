@@ -1008,8 +1008,8 @@ _dos_print:
 ;
 ;Filename may be specified as a string variable (F$) or literal ("NAME:0").
 ;Optional POS keyword sets position to value in FI% (starts at 1, not 0)
-;Last argument is variable to read record data from (TODO can this be a literal?)
-;and must be 127 bytes or less.
+;Last argument is a string variable (can't be a literal) with 127 bytes
+;of data or less.
 ;
     jsr handle_filename ;TODO this must handle the filename
     jsr handle_pos      ;TODO handle possible POS keyword
