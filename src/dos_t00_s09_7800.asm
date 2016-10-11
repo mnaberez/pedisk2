@@ -758,7 +758,7 @@ ptrget_fc:
                         ;Fall through into ptrget_fc_or_fi
 
 ptrget_fc_or_fi:
-    ;Store A making fi_or_fi into "FC%" or "FI%"
+    ;Store A making fi_or_fc into "FC%" or "FI%"
     sta fi_or_fc+1
 
     ;Save the current txtptr on the stack
