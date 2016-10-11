@@ -789,8 +789,8 @@ _dos_close:
 ;Close an open sequential (SEQ) file.
 ;See _dos_open for a description of sequential files.
 ;
-;Usage: !CLOSE F$
-;       !CLOSE F$ END  (TODO what does END mean? truncate file?)
+;Usage: !CLOSE "NAME:0"
+;       !CLOSE "NAME:0" END  (TODO what does END mean? truncate file?)
 ;
 ;Filename may be specified as a string variable (F$) or literal ("NAME:0").
 ;
