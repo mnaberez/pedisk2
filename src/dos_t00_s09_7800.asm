@@ -503,6 +503,7 @@ _dos_open:
 ;
 ;Usage: !OPEN "NAME:0"            (open an existing SEQ file)
 ;       !OPEN "NAME:0" NEW        (create SEQ file with default 100 records)
+;       !OPEN "NAME:0" NEW LEN    (TODO is this valid? seen in PEDISK newsletter issue 2)
 ;       !OPEN "NAME:0" NEW LEN 35 (create SEQ file with 35 records)
 ;       !OPEN "NAME:0" NEW LEN N% (create SEQ file with N% records)
 ;
