@@ -104,7 +104,7 @@ print_load_file:
     lda #<filename
     ldy #>filename
     jsr puts
-    lda #'"'
+    lda #$22            ;Quotation mark
     jsr chrout
     lda #$0d
     jmp chrout
@@ -186,7 +186,7 @@ write_track:
     jmp write_sectors       ;Write the sectors
 
 using_cbm_unit: !text "USING CBM DOS UNIT", 0
-loading_cbm_file: !text "LOADING CBM DOS FILE ", '"', 0
+loading_cbm_file: !text "LOADING CBM DOS FILE ", $22, 0
 writing_pedisk_track: !text "WRITING PEDISK TRACK",0
 
 filename: !text "TRACK 0X00", 0
