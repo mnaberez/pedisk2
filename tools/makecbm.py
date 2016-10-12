@@ -1,17 +1,17 @@
 '''
-Make a bootstrap image.  The bootstrap is a CBM DOS image (e.g. D64) that can
-be written to a CBM drive.  The bootstrap contains all the track data for one
-PEDISK disk and a program to write the tracks to the PEDISK.
+Make a CBM DOS image (e.g. D64 file) that can write a PEDISK disk.  The
+CBM DOS image will contain track data for one PEDISK disk and a program
+to write those tracks to the PEDISK.
 
 Process for bootstrapping the PEDISK with no existing PEDISK media:
  - Run makeboot.py to make a bootable PEDISK disk image
- - Run makestrap.py (this file) to make a bootstrap CBM DOS image from it
+ - Run makecbm.py (this file) to make a CBM DOS image from it
  - Write the CBM DOS image to a CBM drive
  - Run the "FORMAT8" program from the CBM drive to format a PEDISK 8" disk
  - Run the "BOOTSTRAP" program from the CBM drive to write the PEDISK tracks
  - Boot from the new PEDISK disk with "SYS 59904"
 
-Usage: makestrap.py <input.img> <output.d64|output.d80|output.d82>
+Usage: makecbm.py <input.img> <output.d64|output.d80|output.d82>
 '''
 import os
 import shutil
