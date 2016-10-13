@@ -20,7 +20,7 @@ size_in_inches, imagename = sys.argv[1:]
 
 # get an absolute path for a binary file that will be included in the image
 def binfile(basename):
-    dirname = os.path.join(os.path.dirname(__file__), '..', 'bin', )
+    dirname = os.path.join(os.path.dirname(__file__), '..', 'bin')
     return os.path.abspath(os.path.join(dirname, basename))
 
 # make and format the image
@@ -38,29 +38,21 @@ fs.write_file(filename=b'******', filetype=imageutil.FileTypes.LD,
     load_address=0x7800, entry_address=0x7800, data=data)
 
 # write all the other files into the image
-filenames = [
-    binfile('dos_t00_s26_7c00_h_help.bin'),
-    binfile('dos_t01_s01_7c00_p_directory.bin'),
-    binfile('dos_t01_s05_7c00_u_disk_utility.bin'),
-    binfile('dos_t01_s07_7c00_4_read_or_write.bin'),
-    binfile('dos_t01_s09_7c00_3_disk_format_5inch.bin'),
-    binfile('dos_t01_s15_7c00_2_disk_copy.bin'),
-    binfile('dos_t01_s19_7c00_1_disk_compression.bin'),
-    binfile('dos_t01_s25_7c00_d_dump_disk_or_mem.bin'),
-    binfile('dos_t01_s28_7c00_n_file_rename.bin'),
-]
-for filename in filenames:
-    parts = filename.split('_')
-    load_address = int(parts[3], 16) # 0x7800
-    entry_address = load_address
-    menu_key = parts[4][0].upper() # "H" from "h.bin"
-
+files = (
+    (b'*****H', 0x7c00, binfile('dos_t00_s26_7c00_h_help.bin')),
+    (b'*****P', 0x7c00, binfile('dos_t01_s01_7c00_p_directory.bin')),
+    (b'*****U', 0x7c00, binfile('dos_t01_s05_7c00_u_disk_utility.bin')),
+    (b'*****4', 0x7c00, binfile('dos_t01_s07_7c00_4_read_or_write.bin')),
+    (b'*****3', 0x7c00, binfile('dos_t01_s09_7c00_3_disk_format_5inch.bin')),
+    (b'*****2', 0x7c00, binfile('dos_t01_s15_7c00_2_disk_copy.bin')),
+    (b'*****1', 0x7c00, binfile('dos_t01_s19_7c00_1_disk_compression.bin')),
+    (b'*****D', 0x7c00, binfile('dos_t01_s25_7c00_d_dump_disk_or_mem.bin')),
+    (b'*****N', 0x7c00, binfile('dos_t01_s28_7c00_n_file_rename.bin')),
+    )
+for name, address, filename in files:
     with open(filename, 'rb') as f:
-        data = f.read()
-        name = bytearray([42,42,42,42,42,ord(menu_key)]) # "*****H"
         fs.write_file(filename=name, filetype=imageutil.FileTypes.LD,
-            load_address=load_address, entry_address=entry_address,
-            data=data)
+            load_address=address, entry_address=address, data=f.read())
 
 # save image file
 with open(imagename, 'wb') as f:
