@@ -15,8 +15,8 @@ script:
 
   - export IMAGE_5_INCH="`mktemp`.img"
   - python tools/makeboot.py 5 "$IMAGE_5_INCH"
-  - python tools/makestrap.py "$IMAGE_5_INCH" "`mktemp`.d64"
+  - python tools/makecbm.py "$IMAGE_5_INCH" "`mktemp`.d64"
 
   - export IMAGE_8_INCH="`mktemp`.img"
   - python tools/makeboot.py 8 "$IMAGE_8_INCH"
-  - python tools/makestrap.py "$IMAGE_8_INCH" "`mktemp`.d64"
+  - python tools/makecbm.py "$IMAGE_8_INCH" "`mktemp`.d64"
