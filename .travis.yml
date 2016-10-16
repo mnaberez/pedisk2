@@ -10,7 +10,7 @@ install:
 language: python
 
 script:
-  - python tests.py
+  - python tools/test_historic.py
   - python tools/test_imageutil.py
 
   - export IMAGE_5_INCH="`mktemp`.img"

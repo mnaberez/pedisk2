@@ -29,7 +29,7 @@ FILES = {'tools/bootstrap/bootstrap.asm':                None,
         }
 
 def main():
-    repo_root = os.path.abspath(os.path.join(__file__, ".."))
+    repo_root = os.path.abspath(os.path.join(__file__, "..", ".."))
 
     failures = []
     for src in sorted(FILES.keys()):
