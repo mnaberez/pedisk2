@@ -269,4 +269,4 @@ l_05db:
 filler:
     !byte $0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d
     !byte $0d,$0d,$0d,$0d
-    !text "CCRS/ASM "  ;not a typo: "CCGRS" not "CGRS"
+    !text "CCRS/ASM "  ;not a typo: "CCRS" not "CGRS"
