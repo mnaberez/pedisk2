@@ -1,13 +1,16 @@
 sudo: true
 
+language: python
+python:
+  - "2.7"
+  - "3.5"
+
 install:
   - sudo apt-get install -y vice
   - wget https://www.mirrorservice.org/sites/ftp.cs.vu.nl/pub/minix/distfiles/backup/acme091src.tar.gz
   - tar xzf acme091src.tar.gz
   - make -C acme091/src install BINDIR=$PWD/acme-bin
   - export PATH=$PATH:$PWD/acme-bin
-
-language: python
 
 script:
   - python tools/test_historic.py
