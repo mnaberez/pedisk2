@@ -34,7 +34,8 @@ def main(argv):
     # make and format the image
     img = imageutil.DiskImage.make_for_physical_size(size_in_inches)
     fs = imageutil.Filesystem(img)
-    diskname = bytes(datetime.datetime.now().strftime('%Y%m%d')) # b'20161016'
+    now = datetime.datetime.now()
+    diskname = bytes(now.strftime('%Y%m%d'), encoding='ascii') # b'20161016'
     fs.format(diskname=diskname)
 
     here = os.getcwd()
