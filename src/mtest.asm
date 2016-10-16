@@ -270,3 +270,5 @@ filler:
     !byte $0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d
     !byte $0d,$0d,$0d,$0d
     !text "CCRS/ASM "  ;not a typo: "CCRS" not "CGRS"
+                       ;there only one bit difference between ASCII "C" and "G"
+                       ;so perhaps this is a bit flip from a read error
