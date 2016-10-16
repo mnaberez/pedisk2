@@ -22,4 +22,9 @@ It should assemble a binary that is identical to the original.
 
 ## Credits
 
-The initial ROM disassembly was done by Lee Davison.
+- Lee Davison did the initial disassembly of the ROM.
+- Jim Oldfield provided the PEDISK disks from which the DOS code was recovered.
+- Mike Naberezny disassembled the DOS code and wrote the image tools.
+- Josh Bensadon reverse engineered the original PCB and made the schematic.
+- Steve Gray made the replica PCB layout and had boards manufactured.
+- Mike Stein built the replica and provided help and input throughout.
