@@ -73,7 +73,7 @@ def main(argv):
         for name, address, filename in files:
             # assemble the file
             srcfile = asmpath(filename)
-            outfile = filename.replace('.asm', '.bin')
+            outfile = '%s.bin' % os.path.splitext(filename)[0]
             acme(srcfile=srcfile, outfile=outfile)
             # write it into the image
             with open(outfile, 'rb') as f:
