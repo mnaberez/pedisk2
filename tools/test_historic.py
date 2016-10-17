@@ -50,7 +50,7 @@ def main():
         subs = {'srcfile': srcfile, 'outfile': outfile}
 
         # assembler command
-        cmd = "acme -v1 --cpu 6502 -o '%(outfile)s' '%(srcfile)s'"
+        cmd = "acme -v -f plain -o '%(outfile)s' '%(srcfile)s'"
 
         # try to assemble the file
         try:

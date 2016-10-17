@@ -22,7 +22,7 @@ def asmpath(basename):
     return os.path.join(dirname, basename)
 
 def acme(srcfile, outfile):
-    res = os.system("acme -v -f cbm -o '%s' '%s'" % (outfile, srcfile))
+    res = os.system("acme -v -f plain -o '%s' '%s'" % (outfile, srcfile))
     assert res == 0
 
 def main(argv):
