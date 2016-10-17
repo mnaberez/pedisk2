@@ -83,6 +83,7 @@ loop:
     cmp #$ff
     bne loop
 done:
+    jsr print_finished  ;Print "FINISHED OK"
     jmp deselect        ;Deselect PEDISK drive (unloads head) and return
 
 print_cbm_unit:
@@ -119,6 +120,12 @@ print_write_trk:
     jsr linprt          ;Print 256*A + X in decimal
     lda #$0d
     jmp chrout
+
+print_finished:
+;Print "FINISHED OK"
+    lda #<finished_ok
+    ldy #>finished_ok
+    jmp puts
 
 load_track_file:
 ;Load the track data from a CBM program file.  This assumes that the
@@ -188,6 +195,7 @@ write_track:
 using_cbm_unit: !text "USING CBM DOS UNIT", 0
 loading_cbm_file: !text "LOADING CBM DOS FILE ", $22, 0
 writing_pedisk_track: !text "WRITING PEDISK TRACK",0
+finished_ok: !text "FINISHED OK", $0d, 0
 
 filename: !text "TRACK 0X00", 0
 filename_end = * - 1
