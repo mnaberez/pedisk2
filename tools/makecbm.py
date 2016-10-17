@@ -13,6 +13,7 @@ Process for bootstrapping the PEDISK with no existing PEDISK media:
 
 Usage: makecbm.py <input.img> <output.d64|output.d80|output.d82>
 '''
+import datetime
 import os
 import shutil
 import sys
@@ -49,8 +50,11 @@ def acme(srcfile, outfile):
 
 def create_cbm_image_from_dir(imagename, dirname):
     cbm_type = os.path.splitext(imagename)[1].lstrip('.').lower() # "d64"
-    res = os.system("c1541 -format bootstrap,pe '%s' '%s'" % (
-        cbm_type, imagename))
+    now = datetime.datetime.now()
+    disk_name = now.strftime('%Y-%m-%d %H:%M')
+    disk_id = now.strftime('%S')
+    res = os.system("c1541 -format '%s','%s' '%s' '%s'" % (
+        disk_name, disk_id, cbm_type, imagename))
     assert res == 0
     for filename in sorted(os.listdir(dirname)):
         os.system("c1541 -attach '%s' -write '%s'" % (imagename, filename))
