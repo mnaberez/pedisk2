@@ -57,7 +57,7 @@ start:
     cmp #'M'
     bne start
 
-    ;Print "ADDR"? and get a valid address into edit_ptr
+    ;Print "ADDR?" and get a valid address into edit_ptr
     jsr input_hex_addr
 
     ;Print a newline
@@ -97,14 +97,14 @@ dump_disk:
     ldy #>enter_track
     jsr puts            ;Print "TRACK? "
     jsr input_hex_byte  ;Get a hex byte from the user
-    sta track           ;Save it track
+    sta track           ;Save it in track
 
     ;Get sector
     lda #<enter_sector
     ldy #>enter_sector
     jsr puts            ;Print "SECTOR? "
     jsr input_hex_byte  ;Get a hex byte from the user
-    sta sector          ;Save it sector
+    sta sector          ;Save it in sector
 
     lda #<dir_sector
     sta target_ptr
