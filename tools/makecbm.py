@@ -48,6 +48,10 @@ def acme(srcfile, outfile):
     res = os.system("acme -v -f cbm -o '%s' '%s'" % (outfile, srcfile))
     assert res == 0
 
+def petcat(srcfile, outfile):
+    res = os.system("petcat -w4 -l 0401 -o '%s' -- '%s'" % (outfile, srcfile))
+    assert res == 0
+
 def create_cbm_image_from_dir(imagename, dirname):
     cbm_type = os.path.splitext(imagename)[1].lstrip('.').lower() # "d64"
     now = datetime.datetime.now()
@@ -76,6 +80,8 @@ def main(argv):
              outfile='format8')
         acme(srcfile=os.path.join(root, 'tools', 'bootstrap', 'bootstrap.asm'),
              outfile='bootstrap')
+        petcat(srcfile=os.path.join(root, 'tools', 'bootstrap', 'tester.bas'),
+               outfile='tester')
         create_cbm_image_from_dir(cbm_image, '.')
         print("CBM DOS image file written to %s" % cbm_image)
     finally:
