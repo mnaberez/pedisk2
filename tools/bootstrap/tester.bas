@@ -26,6 +26,6 @@
   180 if a$="7" then print peek(59776)and4
   181 if a$="8" then printpeek(59777)
   182 if a$="9" then printpeek(59776)and64
-  185 if a$>"0" anda$<"9" then print
+  185 if a$>"0" and a$<":" then print
   190 goto 100
 
