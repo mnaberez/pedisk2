@@ -609,14 +609,16 @@ open_new:
     ;LEN keyword was specified
 
     jsr chrget          ;Get next byte of BASIC text
-    bcs open_handle_len ;TODO what does carry set mean?
+    bcs open_len_var    ;Branch if byte is not an ASCII numeral
 
-    ;Set record count from text (e.g. 123 from "!OPEN F$ NEW LEN 123")
+    ;Set record count from literal number after LEN
+    ;  (e.g. "123" from "!OPEN F$ NEW LEN 123")
     jsr linget          ;Fetch integer into linnum
     lda linnum          ;A = low byte of integer
     sta dir_entry+$0e   ;Set file sector count low byte
     lda linnum+1        ;A = high byte of integer
     sta dir_entry+$0f   ;Set file sector count high byte
+                        ;Fall through into open_create
 
 open_create:
     ;Create a new file on disk
@@ -624,29 +626,32 @@ open_create:
     bne open_create_err ;Branch if an error occurred
     beq open_done       ;Branch always
 
-open_handle_len:
+open_len_var:
+    ;Try to set record count from integer variable after LEN
+    ;  (e.g. "N%" from "!OPEN F$ NEW LEN N%")
     jsr ptrget          ;Find variable, sets valtyp and varpnt
 
-    ;Check if LEN argument is numeric
+    ;Check if variable after LEN is numeric
     lda valtyp          ;A = type of variable (0=numeric, $ff=string)
     bne open_len_str    ;Branch if variable is not numeric
 
-    ;LEN argument is numeric
+    ;Variable after LEN is numeric
     ;Check if it is an integer
     bit intflg          ;Test type of numeric (0=floating point, $80=integer)
-    bmi open_set_len    ;Branch if integer
+    bmi open_len_int    ;Branch if integer
 
-    ;LEN argument is a float
-    lda #f_len_float     ;FC% error code for LEN argument not an integer
+    ;Variable after LEN is floating point but an integer is required
+    lda #f_len_float    ;FC% error code for LEN argument not an integer
     bne open_err_2      ;Branch always; go to seq_cmd_error
 
 open_len_str:
-    ;LEN argument is not numeric
+    ;Variable after LEN is a string but an integer is required
     lda #f_len_not_num  ;FC% error code for LEN argument not numeric
     bne open_err_2      ;Branch always; go to seq_cmd_error
 
-open_set_len:
-    ;LEN argument is a valid integer, set sector count from it
+open_len_int:
+    ;Variable after LEN is an integer
+    ;Set sector count from it
     ldy #$00
     lda (varpnt),y
     sta dir_entry+$0f   ;File sector count high byte
@@ -659,7 +664,7 @@ open_not_new:
     ;NEW keyword was not specified so we are trying to open a file
     ;that already exists on disk.  Ensure the file does not already exist.
     pla                 ;Pull find_file status off stack
-    beq open_existing   ;Branch find_file found the file on disk
+    beq open_existing   ;Branch if find_file found the file on disk
 
     ;Trying to open an existing file but it doesn't exist.
     lda #f_bad_filename ;FC% error code for file not found
@@ -667,8 +672,7 @@ open_err_2:
     jmp seq_cmd_error   ;Jump out to finish this command on error
 
 open_existing:
-    ;Open an existing file on disk
-
+    ;Opening an existing file on disk; find_file has already found the file
     ldy #$0F
 l_7ae0:
     lda (dir_ptr),y
