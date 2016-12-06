@@ -8,14 +8,14 @@ class DiskImageTests(unittest.TestCase):
     # __init__
 
     def test_ctor_sets_pos_at_start_of_disk(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         self.assertEqual(img.track, 0)
         self.assertEqual(img.sector, 1)
         self.assertEqual(img.data_offset, 0)
         self.assertEqual(img.sector_offset, 0)
 
     def test_ctor_initalizes_disk_to_0xe5(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         self.assertEqual(len(img.data), img.TOTAL_SIZE)
         data = bytearray(b'\xe5' * img.TOTAL_SIZE)
         self.assertEqual(img.read(img.TOTAL_SIZE), data)
@@ -23,7 +23,7 @@ class DiskImageTests(unittest.TestCase):
     # home
 
     def test_home_seeks_to_first_sector_of_first_track(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         img.read(5000)
         self.assertNotEqual(img.track, 0)
         self.assertNotEqual(img.sector, 1)
@@ -35,7 +35,7 @@ class DiskImageTests(unittest.TestCase):
     # seek
 
     def test_seek_raises_for_track_out_of_range(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         for t in (-1, img.TRACKS):
             try:
                 img.seek(track=t, sector=1)
@@ -45,7 +45,7 @@ class DiskImageTests(unittest.TestCase):
                     'Invalid track or sector: (%d,%d)' % (t, 1))
 
     def test_seek_raises_for_sector_out_of_range(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         for s in (0, img.SECTORS+1):
             try:
                 img.seek(track=0, sector=s)
@@ -57,7 +57,7 @@ class DiskImageTests(unittest.TestCase):
     # write
 
     def test_write_writes_bytes_and_advances_pointers(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         img.home()
         img.write(bytearray(b'\x00\x01\x02'))
         self.assertEqual(img.sector_offset, 3)
@@ -65,7 +65,7 @@ class DiskImageTests(unittest.TestCase):
         self.assertEqual(bytearray(b'\x00\x01\x02'), img.read(3))
 
     def test_write_spans_sectors_and_tracks(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         # seek to the last sector of a track
         track = 20
         img.seek(track=track, sector=img.SECTORS)
@@ -80,7 +80,7 @@ class DiskImageTests(unittest.TestCase):
         self.assertEqual(img.read(1)[0], data[-1])
 
     def test_write_allows_writing_to_very_end_of_disk(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         # fill the last sector on disk but don't overflow
         img.seek(track=img.TRACKS - 1, sector=img.SECTORS)
         data = bytearray(b'\x42' * img.SECTOR_SIZE)
@@ -94,7 +94,7 @@ class DiskImageTests(unittest.TestCase):
         self.assertEqual(img.read(img.SECTOR_SIZE), data)
 
     def test_write_raises_if_past_end_of_disk(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         # seek to the last sector of a track
         img.seek(track=img.TRACKS - 1, sector=img.SECTORS)
         data = bytearray(b'\x42' * (img.SECTOR_SIZE + 1))
@@ -107,7 +107,7 @@ class DiskImageTests(unittest.TestCase):
     # read
 
     def test_read_reads_bytes_and_advances_pointers(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         img.home()
         img.write(bytearray(b'\x00\x01\x02'))
         img.home()
@@ -117,7 +117,7 @@ class DiskImageTests(unittest.TestCase):
         self.assertEqual(img.sector_offset, 3)
 
     def test_read_spans_sectors_and_tracks(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         # seek to the last sector of a track
         data = img.read(img.SECTOR_SIZE + 1)
         # read should have overflowed to first sector of next track
@@ -125,7 +125,7 @@ class DiskImageTests(unittest.TestCase):
         self.assertEqual(data, expected)
 
     def test_read_allows_reading_to_very_end_of_disk(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         # seek to the last track/sector
         img.seek(track=img.TRACKS - 1, sector=img.SECTORS)
         img.read(img.SECTOR_SIZE)
@@ -138,7 +138,7 @@ class DiskImageTests(unittest.TestCase):
         self.assertEqual(img.read(img.SECTOR_SIZE), expected)
 
     def test_read_raises_if_past_end_of_disk(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         # seek to the last sector of a track
         img.seek(track=img.TRACKS - 1, sector=img.SECTORS)
         try:
@@ -150,7 +150,7 @@ class DiskImageTests(unittest.TestCase):
     # peek
 
     def test_peek_reads_bytes_without_changing_pointers(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         img.home()
         t, s = img.track, img.sector
         so, do = img.sector_offset, img.data_offset
@@ -161,7 +161,7 @@ class DiskImageTests(unittest.TestCase):
         self.assertEqual(img.data_offset, do)
 
     def test_peek_reads_to_very_end_of_disk(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         t, s = img.TRACKS - 1, img.SECTORS
         img.seek(t, s)
         so, do = img.sector_offset, img.data_offset
@@ -172,7 +172,7 @@ class DiskImageTests(unittest.TestCase):
         self.assertEqual(img.data_offset, do)
 
     def test_peek_raises_if_past_end_of_disk(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         t, s = img.TRACKS - 1, img.SECTORS
         img.seek(t, s)
         try:
@@ -184,18 +184,18 @@ class DiskImageTests(unittest.TestCase):
     # count_sectors_from
 
     def test_count_sectors_from_returns_full_size_of_image(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         total_sectors = img.TRACKS * img.SECTORS
         self.assertEqual(img.count_sectors_from(0, 1), total_sectors)
 
     def test_count_sectors_from_returns_1_sector_at_very_end(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         last_track = img.TRACKS - 1
         last_sector = img.SECTORS
         self.assertEqual(img.count_sectors_from(last_track, last_sector), 1)
 
     def test_count_sectors_raises_for_invalid_track_or_sector(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         try:
             track = img.TRACKS + 1
             img.count_sectors_from(track, 1)
@@ -206,7 +206,7 @@ class DiskImageTests(unittest.TestCase):
     # is_valid_ts
 
     def test_is_valid_ts_validates_track_in_range(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         self.assertTrue(img.is_valid_ts(track=0, sector=1))
         self.assertTrue(img.is_valid_ts(track=img.TRACKS - 1, sector=1))
         too_low = -1
@@ -215,7 +215,7 @@ class DiskImageTests(unittest.TestCase):
         self.assertFalse(img.is_valid_ts(track=too_high, sector=1))
 
     def test_is_valid_ts_validates_sector_in_range(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         self.assertTrue(img.is_valid_ts(track=0, sector=1))
         self.assertTrue(img.is_valid_ts(track=0, sector=img.SECTORS))
         too_low = 0
@@ -226,11 +226,11 @@ class DiskImageTests(unittest.TestCase):
     # validate_ts
 
     def test_validate_ts_does_nothing_for_valid_ts(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         img.validate_ts(track=0, sector=1)
 
     def test_validate_ts_raises_for_invalid_ts(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         try:
             img.validate_ts(track=0, sector=0)
         except ValueError as exc:
@@ -241,7 +241,7 @@ class FilesystemTests(unittest.TestCase):
     # format
 
     def test_format_fills_entire_disk_with_e5(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         # fill disk with some byte that should be overwritten
         img.write(b'\xab' * img.TOTAL_SIZE)
@@ -263,7 +263,7 @@ class FilesystemTests(unittest.TestCase):
                 self.assertEqual(data, expected)
 
     def test_format_writes_directory(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         # fill track 0 with some byte that will be overwritten
         img.write(b'\xab' * (img.SECTOR_SIZE * img.SECTORS))
@@ -289,7 +289,7 @@ class FilesystemTests(unittest.TestCase):
             self.assertEqual(img.read(16), b'\xff' * 16)
 
     def test_format_raises_for_diskname_too_long(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         diskname = b'123456789'
         try:
@@ -300,7 +300,7 @@ class FilesystemTests(unittest.TestCase):
                 "Disk name %r is too long, limit is 8 bytes" % diskname)
 
     def test_format_pads_diskname_with_spaces(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'12345')
 
@@ -311,7 +311,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(num_files, 0)
 
     def test_format_allows_empty_diskname(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'')
         img.home()
@@ -323,7 +323,7 @@ class FilesystemTests(unittest.TestCase):
     # next_free_ts
 
     def test_next_free_ts_returns_track_0_sector_9_for_fresh_image(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         track, sector = fs.next_free_ts
@@ -331,7 +331,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(sector, 9)
 
     def test_next_free_ts_returns_valid_track_and_sector(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
@@ -344,7 +344,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(sector, 0x10)
 
     def test_next_free_ts_returns_invalid_track_and_sector(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
@@ -360,13 +360,13 @@ class FilesystemTests(unittest.TestCase):
     # num_used_entries
 
     def test_num_used_entries_returns_0_for_fresh_image(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         self.assertEqual(fs.num_used_entries, 0)
 
     def test_num_used_entries_returns_valid_count(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
@@ -375,7 +375,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.num_used_entries, 42)
 
     def test_num_used_entries_returns_invalid_count(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
@@ -387,13 +387,13 @@ class FilesystemTests(unittest.TestCase):
     # num_free_entries
 
     def test_num_free_entries_returns_63_for_fresh_image(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         self.assertEqual(fs.num_free_entries, 63)
 
     def test_num_free_entries_returns_valid_count(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
@@ -402,7 +402,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.num_free_entries, 21)
 
     def test_num_free_entries_returns_0_for_invalid_count(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
@@ -413,13 +413,13 @@ class FilesystemTests(unittest.TestCase):
     # next_free_entry_index
 
     def test_next_free_entry_index_returns_0_for_fresh_image(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         self.assertEqual(fs.next_free_entry_index, 0)
 
     def test_next_free_entry_index_raises_if_dir_is_full(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         # fill all 63 directory entries
@@ -439,7 +439,7 @@ class FilesystemTests(unittest.TestCase):
                 'Disk full: no entries left in directory')
 
     def test_next_free_entry_index_ignores_count_in_header(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
@@ -447,7 +447,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.next_free_entry_index, 0)
 
     def test_next_free_entry_returns_first_entry_after_last_used_one(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         # write four directory entries
@@ -470,7 +470,7 @@ class FilesystemTests(unittest.TestCase):
     # num_free_sectors
 
     def test_num_free_sectors_returns_all_but_dir_for_fresh_image(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
 
@@ -481,7 +481,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.num_free_sectors, free_sectors)
 
     def test_num_free_sectors_returns_0_if_free_track_too_high(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
@@ -491,7 +491,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.num_free_sectors, 0)
 
     def test_num_free_sectors_returns_0_if_free_sector_too_low(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
@@ -502,7 +502,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.num_free_sectors, 0)
 
     def test_num_free_sectors_returns_0_if_free_sector_too_high(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
@@ -515,7 +515,7 @@ class FilesystemTests(unittest.TestCase):
     # num_free_bytes
 
     def test_num_free_bytes_returns_free_sectors_times_sector_size(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
 
@@ -529,7 +529,7 @@ class FilesystemTests(unittest.TestCase):
     # diskname
 
     def test_diskname_returns_disk_name(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'abcdefgh')
         self.assertEqual(fs.diskname, b'abcdefgh')
@@ -537,7 +537,7 @@ class FilesystemTests(unittest.TestCase):
     # rename_disk
 
     def test_rename_disk_renames_disk(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'12345678')
         fs.rename_disk(b'abcdefgh')
@@ -545,7 +545,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(img.read(8), b'abcdefgh')
 
     def test_rename_disk_pads_diskname_with_spaces(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'12345678')
         fs.rename_disk(b'abcd')
@@ -553,7 +553,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(img.read(8), b'abcd\x20\x20\x20\x20')
 
     def test_rename_disks_raises_for_diskname_too_long(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'abc')
         diskname = b'123456789'
@@ -567,13 +567,13 @@ class FilesystemTests(unittest.TestCase):
     # list_dir
 
     def test_list_dir_returns_empty_for_fresh_disk(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         self.assertEqual(fs.list_dir(), [])
 
     def test_list_dir_returns_only_active_filenames(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
@@ -587,7 +587,7 @@ class FilesystemTests(unittest.TestCase):
     # read_dir
 
     def test_read_dir_returns_all_dir_entries(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
@@ -602,7 +602,7 @@ class FilesystemTests(unittest.TestCase):
     # read_entry
 
     def test_read_entry_raises_for_file_not_found(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         try:
@@ -613,7 +613,7 @@ class FilesystemTests(unittest.TestCase):
                 "File %r not found" % b'notfound')
 
     def test_read_entry_returns_entry_for_filename(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
@@ -625,7 +625,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(entry.filename, b'cccccc')
 
     def test_read_entry_pads_filename_with_spaces_if_needed(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         img.home()
@@ -637,7 +637,7 @@ class FilesystemTests(unittest.TestCase):
     # expected_data_size
 
     def test_expected_data_size_returns_full_sectors_for_LD_and_SEQ(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         for ftype in (imageutil.FileTypes.LD, imageutil.FileTypes.SEQ):
             entry = imageutil.DirectoryEntry(
@@ -653,7 +653,7 @@ class FilesystemTests(unittest.TestCase):
             self.assertEqual(fs.expected_data_size(entry), size)
 
     def test_expected_data_size_returns_size_field_for_BAS(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         entry = imageutil.DirectoryEntry(
                     filename=b'strtrk',
@@ -667,7 +667,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.expected_data_size(entry), 42)
 
     def test_expected_data_size_does_not_return_more_than_sector_count(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         entry = imageutil.DirectoryEntry(
                     filename=b'strtrk',
@@ -681,7 +681,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.expected_data_size(entry), img.SECTOR_SIZE)
 
     def test_expected_data_size_returns_full_sectors_for_size_0xFFFF(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         entry = imageutil.DirectoryEntry(
                     filename=b'strtrk',
@@ -699,7 +699,7 @@ class FilesystemTests(unittest.TestCase):
     # read_data
 
     def test_read_data_reads_exact_size_for_not_LD_not_SEQ(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         # write directory entry
@@ -722,7 +722,7 @@ class FilesystemTests(unittest.TestCase):
 
     def test_read_data_reads_sector_count_for_types_LD_and_SEQ(self):
         for ftype in (imageutil.FileTypes.LD, imageutil.FileTypes.SEQ):
-            img = imageutil.FiveInchDiskImage()
+            img = imageutil.FiveInchDoubleDensityDiskImage()
             fs = imageutil.Filesystem(img)
             fs.format(diskname=b'fresh')
             # write directory entry
@@ -745,7 +745,7 @@ class FilesystemTests(unittest.TestCase):
             self.assertEqual(fs.read_data(entry), expected)
 
     def test_read_data_allows_reading_the_largest_possible_file(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         # write the largest possible file
@@ -758,7 +758,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.read_data(entry), data)
 
     def test_read_data_returns_empty_for_zero_length_file(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         # write directory entry
@@ -775,7 +775,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.read_data(entry), b'')
 
     def test_read_data_returns_empty_for_invalid_track_sector(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         # write directory entry
@@ -792,7 +792,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.read_data(entry), b'')
 
     def test_read_data_does_not_read_more_than_sector_count(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         img.home()
         img.read(16) # skip directory header
@@ -815,7 +815,7 @@ class FilesystemTests(unittest.TestCase):
     # read_file
 
     def test_read_file_raises_for_file_not_found(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         try:
@@ -826,7 +826,7 @@ class FilesystemTests(unittest.TestCase):
                 "File %r not found" % b'notfnd')
 
     def test_read_file_returns_data_from_read_data(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'fresh')
         # write directory entry
@@ -849,13 +849,13 @@ class FilesystemTests(unittest.TestCase):
     # file_exists
 
     def test_file_exists_returns_False_if_name_not_in_dir(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         self.assertFalse(fs.file_exists(b'strtrk'))
 
     def test_file_exists_returns_True_if_name_in_dir(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         img.home()
@@ -864,7 +864,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertTrue(fs.file_exists(b'strtrk'))
 
     def test_file_exists_pads_filename_with_spaces(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         img.home()
@@ -875,7 +875,7 @@ class FilesystemTests(unittest.TestCase):
     # write_file
 
     def test_write_file_raises_if_file_already_exists(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         filename = b'strtrk'
@@ -890,7 +890,7 @@ class FilesystemTests(unittest.TestCase):
                 'File %r already exists' % filename)
 
     def test_write_file_raises_if_no_entry_free(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         img.home()
@@ -907,7 +907,7 @@ class FilesystemTests(unittest.TestCase):
                 'Disk full: no entries left in directory')
 
     def test_write_file_uses_first_unused_dir_entry(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         # use the first two directory entries
@@ -924,7 +924,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(b'newnew', img.read(6))
 
     def test_write_file_does_not_use_entry_of_deleted_file(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         # use the first directory entry for a deleted file
@@ -947,7 +947,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(b'newnew', img.read(6))
 
     def test_write_file_rewrites_count_of_used_entries(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         # write a nonsensical used entry count in the header
@@ -975,7 +975,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.num_used_entries, 3)
 
     def test_write_file_sets_size_from_length_of_data_for_not_type_LD(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         # write SEQ file with data 40,000 bytes long
@@ -991,7 +991,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(entry[14:16], bytearray([0x39, 0x01]))
 
     def test_write_file_sets_size_to_entry_address_for_type_LD_only(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         # write SEQ file with data 40,000 bytes long
@@ -1007,7 +1007,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(entry[14:16], bytearray([0x39, 0x01]))
 
     def test_write_file_writes_to_very_end_of_disk(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         img.home()
@@ -1025,7 +1025,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.next_free_ts, (last_track_plus_one, 1,))
 
     def test_write_file_allows_writing_the_largest_possible_file(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         # write the largest possible file
@@ -1045,7 +1045,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.next_free_ts, (last_track_plus_one, 1,))
 
     def test_write_file_allows_writing_an_empty_non_LD_file(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         for name in (b'a', b'c'):
@@ -1059,7 +1059,7 @@ class FilesystemTests(unittest.TestCase):
             self.assertEqual(fs.next_free_ts, (0, 9))
 
     def test_write_file_allows_writing_an_empty_LD_file(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'foo')
         for name in (b'a', b'c'):
@@ -1075,14 +1075,14 @@ class FilesystemTests(unittest.TestCase):
     # compact
 
     def test_compact_preserves_diskname(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'abcdefgh')
         fs.compact()
         self.assertEqual(fs.diskname, b'abcdefgh')
 
     def test_compact_preserves_unknown_bytes_in_dir_header(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'diskname')
         img.home()
@@ -1094,7 +1094,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(img.read(5), b'vwxyz')
 
     def tset_compact_preserves_unknown_byte_in_entry(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'diskname')
         # write directory
@@ -1125,7 +1125,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.read_data(entry), b'Hello')
 
     def test_compact_clears_unused_sectors_to_0xE5(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'diskname')
         # fill unused sectors with junk
@@ -1139,7 +1139,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(img.read(size), b'\xe5' * size)
 
     def test_compact_removes_deleted_files(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'diskname')
         # write directory
@@ -1181,7 +1181,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(fs.read_data(entry), b'Not Deleted')
 
     def test_compact_removes_duplicate_filenames(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'diskname')
         # write directory
@@ -1222,7 +1222,7 @@ class FilesystemTests(unittest.TestCase):
         self.assertEqual(b'Second', fs.read_data(entry))
 
     def test_compact_removes_inconsistent_files(self):
-        img = imageutil.FiveInchDiskImage()
+        img = imageutil.FiveInchDoubleDensityDiskImage()
         fs = imageutil.Filesystem(img)
         fs.format(diskname=b'diskname')
         # write directory
