@@ -23,9 +23,13 @@ It should assemble a binary that is identical to the original.
 ## Credits
 
 - Lee Davison did the initial disassembly of the ROM.
-- Jim Oldfield provided the PEDISK disks from which the DOS code was recovered.
-- Mike Naberezny disassembled the DOS code and wrote the image tools.
+- Jim Oldfield provided the 5.25" PEDISK disks from which the DOS code was
+  recovered.
+- Mike Naberezny disassembled the 5.25" DOS code, adapted it for 8", and wrote
+  the image tools.
 - Steve Hirsch provided help and formatted 8" disks used for early testing.
 - Josh Bensadon reverse engineered the original PCB and made the schematic.
 - Steve Gray made the replica PCB layout and had boards manufactured.
 - Mike Stein built the replica and provided help and input throughout.
+- Bill Goble, the original designer of the PEDISK, found and donated the
+  original manuals, schematics, source code, and master disks.
