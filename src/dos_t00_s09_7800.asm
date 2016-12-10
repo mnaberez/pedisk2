@@ -276,7 +276,7 @@ l_790d:
     lda #$00
     sta $61
 
-    jsr l_797b
+    jsr divide
 
     ldx $5E
     inx
@@ -285,25 +285,24 @@ l_790d:
     sta tmp_track
     rts
 
-l_7931:
-;TODO unknown function
-;     called from dos_t01_s01_7c00_p_directory.asm
-;     also from dos_t01_s15_7c00_2_copy_utility.asm
-    jsr clear_62_63_64_65
+mult:
+;Multiple calc1 * calc2 giving calc3 (4 bytes)
+;
+    jsr blnk3
     ldx #$10
-l_7931_loop:
-    jsr asl_5e_rol_5f
-    bcc l_7931_bcc
-    jsr add_add_add_add
-l_7931_bcc:
+mllp1:
+    jsr sl1
+    bcc mlelp1
+    jsr add23
+mlelp1:
     dex
-    beq l_7931_done
-    jsr asl_62_rol_63_64_65
-    jmp l_7931_loop
-l_7931_done:
+    beq mltfin
+    jsr sl3
+    jmp mllp1
+mltfin:
     rts
 
-clear_62_63_64_65:
+blnk3:
     lda #$00
     sta $62
     sta $63
@@ -311,12 +310,12 @@ clear_62_63_64_65:
     sta $65
     rts
 
-asl_5e_rol_5f:
+sl1:
     asl $5E
     rol $5F
     rts
 
-add_add_add_add:
+add23:
     lda $60
     clc
     adc $62
@@ -335,49 +334,51 @@ add_add_add_add:
     sta $65
     rts
 
-asl_62_rol_63_64_65:
+sl3:
     asl $62
     rol $63
     rol $64
     rol $65
     rts
 
-l_797b:
+divide:
+;Divide calc1 by calc2 giving calc3
+;Remainder in calc1
+;
     ldx #$00
     stx $62
     stx $63
     cpx $60
-    bne l_798e
+    bne divok1
     cpx $61
-    bne l_798e
+    bne divok1
     stx $5E
     stx $5F
-l_798d:
+divrts:
     rts
 
-l_798e:
-;Called from l_797b only
+divok1:
     lda $61
     cmp $5F
-    bcc l_799e
-    bne l_79ab
+    bcc dvelp1
+    bne dvflp1
     lda $60
     cmp $5E
-    beq l_799e
-    bcs l_79ab
-l_799e:
+    beq dvelp1
+    bcs dvflp1
+dvelp1:
     inx
     asl $60
     rol $61
-    bcc l_798e
+    bcc divok1
     dex
     ror $61
-    jmp l_79b0
-l_79ab:
+    jmp dvhigh
+dvflp1:
     dex
-    bmi l_798d
+    bmi divrts
     lsr $61
-l_79b0:
+dvhigh:
     ror $60
     sec
     lda $5E
@@ -389,14 +390,14 @@ l_79b0:
     rol $62
     rol $63
     plp
-    bcs l_79c8
+    bcs dvsub
     pla
-    jmp l_79ab
-l_79c8:
+    jmp dvflp1
+dvsub:
     sta $5F
     pla
     sta $5E
-    jmp l_79ab
+    jmp dvflp1
 
 _dos_sys:
 ;Perform !SYS
@@ -901,7 +902,7 @@ pos_nonzero:
     lda #$00
     sta $61
 l_7c00:
-    jsr l_797b
+    jsr divide
     lda $5E
     clc
     adc dir_entry+$0d   ;File sector number
