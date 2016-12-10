@@ -70,7 +70,7 @@ e_unknown_06   = $06 ;TODO Unknown
 f_ok           = $00 ;OK
 f_not_open     = $07 ;File not open
 f_not_string   = $09 ;Variable is not a string
-f_unknown_2b   = $2B ;TODO Unknown
+f_out_of_space = $2B ;Not enough space left on disk to create file
 f_already_open = $30 ;File already open
 f_too_many     = $31 ;Too many open files
 f_bad_filename = $32 ;Bad filename (file exists or file not found)
@@ -203,7 +203,7 @@ l_78a2:
     cmp #$51
     bmi l_78c0
 
-    lda #f_unknown_2b   ;TODO FC% error code for ??
+    lda #f_out_of_space   ;FC% error code for not enough space left
     sta fc_error
     rts
 
