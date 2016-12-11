@@ -143,9 +143,14 @@ class DiskImage(object):
                     self.sector = 1
         return wrapped
 
-class FiveInchSingleDensityDiskImage(DiskImage):
+class FiveInchSingleDensity35TrackDiskImage(DiskImage):
     SIZE_IN_INCHES = 5.25
     TRACKS = 35 # tracks numbered 0-34
+    SECTORS = 18 # sectors per track numbered 1-18
+
+class FiveInchSingleDensity40TrackDiskImage(DiskImage):
+    SIZE_IN_INCHES = 5.25
+    TRACKS = 40 # tracks numbered 0-39
     SECTORS = 18 # sectors per track numbered 1-18
 
 class FiveInchDoubleDensityDiskImage(DiskImage):
