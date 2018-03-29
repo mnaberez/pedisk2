@@ -1,4 +1,5 @@
-sudo: true
+dist: trusty
+sudo: required
 
 language: python
 python:
@@ -23,3 +24,4 @@ script:
   - export IMAGE_8_INCH="`mktemp`.img"
   - python tools/makeboot.py 8 "$IMAGE_8_INCH"
   - python tools/makecbm.py "$IMAGE_8_INCH" "`mktemp`.d64"
+
