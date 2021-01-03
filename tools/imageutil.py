@@ -8,6 +8,7 @@ class DiskImage(object):
     sector positions with boundary checks and read/write raw data in the
     image.  This class is abstract.'''
     SIZE_IN_INCHES = None  # override in subclass
+    ENCODING = None  # override in subclass
     TRACKS = None  # override in subclass
     SECTORS = None  # override in subclass
     SECTOR_SIZE = 128
@@ -143,30 +144,47 @@ class DiskImage(object):
                     self.sector = 1
         return wrapped
 
+class EightInchDiskImage(DiskImage):
+    SIZE_IN_INCHES = 8.0
+    ENCODING = "FM"
+    TRACKS = 77 # tracks numbered 0-76
+    SECTORS = 26 # sectors per track numbered 1-26
+
 class FiveInchSingleDensity35TrackDiskImage(DiskImage):
     SIZE_IN_INCHES = 5.25
+    ENCODING = "FM"
     TRACKS = 35 # tracks numbered 0-34
     SECTORS = 18 # sectors per track numbered 1-18
 
-class FiveInchSingleDensity40TrackDiskImage(DiskImage):
+class FiveInchSingleDensity40Track18SectorDiskImage(DiskImage):
     SIZE_IN_INCHES = 5.25
+    ENCODING = "FM"
     TRACKS = 40 # tracks numbered 0-39
     SECTORS = 18 # sectors per track numbered 1-18
 
+class FiveInchSingleDensity40Track19SectorDiskImage(DiskImage):
+    SIZE_IN_INCHES = 5.25
+    ENCODING = "FM"
+    TRACKS = 40 # tracks numbered 0-39
+    SECTORS = 19 # sectors per track numbered 1-19
+
 class FiveInchDoubleDensityDiskImage(DiskImage):
     SIZE_IN_INCHES = 5.25
+    ENCODING = "MFM"
     TRACKS = 41 # tracks numbered 0-40
     SECTORS = 28 # sectors per track numbered 1-28
 
 class FiveInchQuadDensityDiskImage(DiskImage):
     SIZE_IN_INCHES = 5.25
+    ENCODING = "MFM"
     TRACKS = 81 # tracks numbered 0-80
     SECTORS = 28 # sectors per track numbered 1-28
 
-class EightInchDiskImage(DiskImage):
-    SIZE_IN_INCHES = 8
-    TRACKS = 77 # tracks numbered 0-76
-    SECTORS = 26 # sectors per track numbered 1-26
+class FiveInchQuadDensity19SectorDiskImage(DiskImage):
+    SIZE_IN_INCHES = 5.25
+    ENCODING = "MFM"
+    TRACKS = 81 # tracks numbered 0-80
+    SECTORS = 19 # sectors per track numbered 1-19
 
 class Filesystem(object):
     '''High-level manipulation of the filesystem on a PEDISK disk image'''
@@ -328,6 +346,7 @@ class Filesystem(object):
         if entry.filetype in (FileTypes.ASM, FileTypes.BAS):
             if entry.size == 0xFFFF: # hit max limit of size field
                 return size_of_sectors
+            return size_of_sectors
             if entry.size <= size_of_sectors: # ensure size field is valid
                 return entry.size
         return size_of_sectors
