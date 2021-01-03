@@ -1,0 +1,50 @@
+name: Run all tests
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install acme
+      run: |
+        wget https://www.mirrorservice.org/sites/ftp.cs.vu.nl/pub/minix/distfiles/backup/acme091src.tar.gz
+        tar xzf acme091src.tar.gz
+        make -C acme091/src install BINDIR=$PWD/acme-bin
+        echo "$PWD/acme-bin" >> $GITHUB_PATH
+
+    - name: Install vice
+      run: sudo apt-get install -y vice
+
+    - name: Show Python version
+      run: python -V
+
+    - name: Disassemblies should re-assemble to identical binaries
+      run: python tools/test_historic.py
+
+    - name: Run tests on image file utilities
+      run: python tools/test_imageutil.py
+
+    - name: Make a CBM DOS disk that creates a 5.25" PEDISK II boot disk
+      run: |
+        export IMAGE_5_INCH="`mktemp`.img"
+        python tools/makeboot.py 5 "$IMAGE_5_INCH"
+        python tools/makecbm.py "$IMAGE_5_INCH" "`mktemp`.d64"
+
+    - name: Make a CBM DOS disk that creates an 8" PEDISK II boot disk
+      run: |
+        export IMAGE_8_INCH="`mktemp`.img"
+        python tools/makeboot.py 8 "$IMAGE_8_INCH"
+        python tools/makecbm.py "$IMAGE_8_INCH" "`mktemp`.d64"
