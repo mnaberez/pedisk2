@@ -83,6 +83,7 @@ open_sector = $57       ;Next sector open for a new file **
 edit_ptr    = $66       ;Pointer: PEDISK current address of memory editor **
 puts_ptr    = $6c       ;Pointer: PEDISK string to print for puts **
 chrget      = $70       ;Subroutine: Get Next Byte of BASIC Text
+chrgot      = $76       ;Subroutine: Get the Same Byte of BASIC Text again
 txtptr      = $77       ;Pointer: Current Byte of BASIC Text
 target_ptr  = $b7       ;Pointer: PEDISK target address for memory ops **
 dos         = $7800     ;Base address for the RAM-resident portion
@@ -252,8 +253,8 @@ drive_selects:
     !byte %00000100     ;drive 2 select bit pattern
 
 wedge:
-;A patch is installed in CHRGET to jump to this wedge.  The next byte in
-;the current BASIC line will be in A when the patch jumps here.
+;A patch is installed in CHRGET/CHRGOT to jump to this wedge.  The next
+;byte in the current BASIC line will be in A when the patch jumps here.
 ;
     cmp #'!'            ;Is it the lead-in char for PEDISK commands?
     bne check_colon     ;  No: skip over the token check
@@ -269,7 +270,7 @@ wedge:
 check_colon:
     cmp #':'            ;Compare the character with ":"
     bcs bypass_chrget   ;If >= ":" then bail out
-    jmp chrget+$0d      ;  else jump back into CHRGET
+    jmp chrgot+$07      ;  else jump back into CHRGOT
 
 bypass_chrget:
     rts                 ;Return to the caller directly instead of
@@ -453,29 +454,29 @@ load_dos:
                         ;  stop the motors and exit to BASIC
 
 install_wedge:
-;After the DOS sectors have been loaded into RAM, the CHRGET routine in
-;zero page is patched to jump to the wedge.
+;After the DOS sectors have been loaded into RAM, CHRGET/CHRGOT in
+;zero page are patched to jump to the wedge.
 ;
 ;Before:                            After:
 ;
 ;chrget $0070 e6 77    inc $77      chrget $0070 e6 77    inc $77
 ;       $0072 d0 02    bne $76             $0072 d0 02    bne $76
 ;       $0074 e6 78    inc $78             $0074 e6 78    inc $78
-;       $0076 ad xx xx lda $xxxx           $0076 ad xx xx lda $xxxx
-;       $0079 c9 ea    cmp #$ea            $0079 4c 32 ea jmp $ea32  <--
+;chrgot $0076 ad 00 04 lda $0400    chrgot $0076 ad 00 04 lda $0400
+;       $0079 c9 ea    cmp #$ea            $0079 4c 32 ea jmp wedge  <--
 ;       $007b b0 0a    bcs $0087
 ;       $007d c9 20    cmp #$20            $007d c9 20    cmp #$20
 ;       $007f f0 ef    beq $0070           $007f f0 ef    beq $0070
 ;
 ;When the wedge is done, it will either return to the caller directly with
-;RTS, or it will JMP $007D to continue CHRGET processing.
+;RTS, or it will JMP $007D to continue CHRGOT processing.
 ;
     lda #$4c
-    sta chrget+$09      ;Patch opcode for JMP
+    sta chrgot+$03      ;Patch opcode for JMP
     lda #<wedge
-    sta chrget+$0a      ;Patch low byte of wedge address
+    sta chrgot+$04      ;Patch low byte of wedge address
     lda #>wedge
-    sta chrget+$0b      ;Patch high byte of wedge address
+    sta chrgot+$05      ;Patch high byte of wedge address
 
                         ;Fall through into deselect_drive
 
