@@ -1307,8 +1307,5 @@ class FileTypesTest(unittest.TestCase):
     def test_name_of_returns_name_of_number(self):
         self.assertEqual(imageutil.FileTypes.name_of(5), "LD")
 
-def test_suite():
-    return unittest.findTestCases(sys.modules[__name__])
-
 if __name__ == '__main__':
-    unittest.main(defaultTest='test_suite')
+    unittest.main()
